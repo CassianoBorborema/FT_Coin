@@ -1,1 +1,1 @@
-# -FT_Coin-Sistema-de-Apura-o-de-Ganhos-e-Perdas-em-Carteira-de-Moedas
+# FT_Coin
