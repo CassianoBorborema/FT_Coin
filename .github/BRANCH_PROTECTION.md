@@ -29,3 +29,14 @@ Branch name pattern: `main`
 4. Abra um PR — a revisão automática usa [.coderabbit.yaml](../.coderabbit.yaml).
 
 Comando manual em um PR: `@coderabbitai review`
+
+## Script automatizado (opcional)
+
+Após o primeiro PR rodar o workflow (para existir o check **Compile Java**), um admin pode executar:
+
+```powershell
+$env:GITHUB_TOKEN = "ghp_SEU_TOKEN"   # PAT com escopo repo
+pwsh .github/scripts/apply-branch-protection.ps1
+```
+
+O script está em [scripts/apply-branch-protection.ps1](scripts/apply-branch-protection.ps1).
