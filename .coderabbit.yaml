@@ -1,0 +1,27 @@
+language: pt-BR
+
+reviews:
+  profile: chill
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+  path_filters:
+    - "!**/*.md"
+    - "!**/.gitignore"
+  path_instructions:
+    - path: "**/*.java"
+      instructions: |
+        Projeto FT_Coin: sistema Java MVC de carteira de moedas virtuais.
+        Verifique: separação model/DTO/DAO/controller/view, uso de POO
+        (encapsulamento, polimorfismo nas implementações DAO), validações,
+        tratamento com AppException, precisão decimal em valores monetários,
+        e compatibilidade com Java 8+ (sem APIs exclusivas de versões novas
+        sem necessidade). Não exija frameworks externos além da biblioteca padrão.
+    - path: "DAO/mariaDB/**"
+      instructions: |
+        Verifique uso correto de JDBC: PreparedStatement, fechamento de
+        recursos (try-with-resources), tratamento de SQLException e mapeamento
+        consistente com as tabelas Carteira, Movimentacao e Oraculo.
