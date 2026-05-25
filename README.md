@@ -8,37 +8,40 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 
 ```
 FT_Coin/
-├── Main.java                          # Ponto de entrada da aplicação
-├── model/
-│   ├── Carteira.java                  # Entidade carteira
-│   ├── Movimentacao.java              # Entidade movimentação (compra/venda)
-│   └── Oraculo.java                   # Cotação diária da moeda virtual
-├── DTO/
-│   ├── CarteiraDTO.java               # Transferência de dados — carteira
-│   └── MovimentacaoDTO.java           # Transferência de dados — movimentação
-├── DAO/
-│   ├── CarteiraDAO.java               # Contrato de persistência — carteira
-│   ├── MovimentacaoDAO.java           # Contrato de persistência — movimentação
-│   ├── OraculoDAO.java                # Contrato de persistência — oráculo
-│   └── mariaDB/
-│       ├── CarteiraDAOMariaDB.java    # Implementação JDBC — carteira
-│       ├── MovimentacaoDAOMariaDB.java
-│       └── OraculoDAOMariaDB.java
-├── controller/
-│   ├── CarteiraController.java        # Regras de negócio — carteira
-│   ├── MovimentacaoController.java    # Regras de negócio — movimentação
-│   └── RelatorioController.java       # Relatórios e apuração de ganho/perda
-├── view/
-│   ├── ConsolePrinter.java            # Saída formatada e cores no terminal
-│   ├── MenuPrincipal.java             # Menu raiz (Carteira, Movimentação, …)
-│   ├── MenuCarteira.java
-│   ├── MenuMovimentacao.java
-│   ├── MenuRelatorios.java
-│   └── MenuAjuda.java
-├── exception/
-│   └── AppException.java              # Exceções da aplicação
-└── infra/
-    └── ConexaoBD.java                 # Conexão com MariaDB remoto
+├── out                                    # Saídas da aplicação
+└── src
+    ├── app
+    │   └── Main.java                      # Ponto de entrada da aplicação
+    ├── model/
+    │   ├── Carteira.java                  # Entidade carteira
+    │   ├── Movimentacao.java              # Entidade movimentação (compra/venda)
+    │   └── Oraculo.java                   # Cotação diária da moeda virtual
+    ├── DTO/
+    │   ├── CarteiraDTO.java               # Transferência de dados — carteira
+    │   └── MovimentacaoDTO.java           # Transferência de dados — movimentação
+    ├── DAO/
+    │   ├── CarteiraDAO.java               # Contrato de persistência — carteira
+    │   ├── MovimentacaoDAO.java           # Contrato de persistência — movimentação
+    │   ├── OraculoDAO.java                # Contrato de persistência — oráculo
+    │   └── mariaDB/
+    │       ├── CarteiraDAOMariaDB.java    # Implementação JDBC — carteira
+    │       ├── MovimentacaoDAOMariaDB.java
+    │       └── OraculoDAOMariaDB.java
+    ├── controller/
+    │   ├── CarteiraController.java        # Regras de negócio — carteira
+    │   ├── MovimentacaoController.java    # Regras de negócio — movimentação
+    │   └── RelatorioController.java       # Relatórios e apuração de ganho/perda
+    ├── view/
+    │   ├── ConsolePrinter.java            # Saída formatada e cores no terminal
+    │   ├── MenuPrincipal.java             # Menu raiz (Carteira, Movimentação, …)
+    │   ├── MenuCarteira.java
+    │   ├── MenuMovimentacao.java
+    │   ├── MenuRelatorios.java
+    │   └── MenuAjuda.java
+    ├── exception/
+    │   └── AppException.java              # Exceções da aplicação
+    └── infra/
+        └── ConexaoBD.java                 # Conexão com MariaDB remoto
 ```
 
 ### Responsabilidade por camada
