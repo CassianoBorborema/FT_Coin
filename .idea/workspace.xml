@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f0301783-b501-4cd7-8f6d-ad0fe4021fcf" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DAO/CarteiraDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DAO/MovimentacaoDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DAO/OraculoDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DAO/mariaDB/CarteiraDAOMariaDB.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DAO/mariaDB/MovimentacaoDAOMariaDB.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DAO/mariaDB/OraculoDAOMariaDB.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DTO/CarteiraDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DTO/MovimentacaoDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/FT_Coin.iml" beforeDir="false" afterPath="$PROJECT_DIR$/FT_Coin.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/CarteiraController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/MovimentacaoController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/RelatorioController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exception/AppException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/infra/ConexaoBD.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/Carteira.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/Movimentacao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/Oraculo.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/view/MenuAjuda.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuAjuda.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/view/MenuCarteira.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuCarteira.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/view/MenuMovimentacao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuMovimentacao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/view/MenuPrincipal.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuPrincipal.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/view/MenuRelatorios.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuRelatorios.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="3DrvrZOdxmN2CLPJNs7jm0YYZ25" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Main.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "feature/package-view",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "E:/Documents/Unicamp/FT/Disciplinas/3° Semestre - 2026/[SI300] Programação Orientada a Objetos I/Atividades/Projeto FT_Coin/FT_Coin",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "to.speed.mode.migration.done": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Documents\Unicamp\FT\Disciplinas\3° Semestre - 2026\[SI300] Programação Orientada a Objetos I\Atividades\Projeto FT_Coin\FT_Coin\src\app" />
+      <recent name="E:\Documents\Unicamp\FT\Disciplinas\3° Semestre - 2026\[SI300] Programação Orientada a Objetos I\Atividades\Projeto FT_Coin\FT_Coin\src" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f0301783-b501-4cd7-8f6d-ad0fe4021fcf" name="Changes" comment="" />
+      <created>1779053202892</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1779053202892</updated>
+    </task>
+    <servers />
+  </component>
+</project>
