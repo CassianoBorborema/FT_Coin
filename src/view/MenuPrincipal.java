@@ -13,7 +13,7 @@ public class MenuPrincipal {
 
     public void exibirMenuPrincipal() {
         while (true) {
-            System.out.println("Qual opção deseja?");
+            System.out.println("\nQual opção deseja selecionar? (Digite o respectivo número)");
             System.out.println("1. Carteira");
             System.out.println("2. Movimentação");
             System.out.println("3. Relatórios");
@@ -34,10 +34,11 @@ public class MenuPrincipal {
                 case AJUDA:
                     break;
                 case SAIR:
+                    System.out.println("Saindo da aplicação...");
                     input.close();
                     System.exit(0);
                 case INVALIDA:
-                    throw new RuntimeException("Opção inválida");
+                    throw new RuntimeException("Erro: Opção inválida selecionada");
             }
         }
     }

@@ -5,32 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f0301783-b501-4cd7-8f6d-ad0fe4021fcf" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DAO/CarteiraDAO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DAO/MovimentacaoDAO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DAO/OraculoDAO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DAO/mariaDB/CarteiraDAOMariaDB.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DAO/mariaDB/MovimentacaoDAOMariaDB.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DAO/mariaDB/OraculoDAOMariaDB.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DTO/CarteiraDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DTO/MovimentacaoDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/FT_Coin.iml" beforeDir="false" afterPath="$PROJECT_DIR$/FT_Coin.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/controller/CarteiraController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/controller/MovimentacaoController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/controller/RelatorioController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exception/AppException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/infra/ConexaoBD.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/Carteira.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/Movimentacao.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/Oraculo.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/view/MenuAjuda.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuAjuda.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/view/MenuCarteira.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuCarteira.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/view/MenuMovimentacao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuMovimentacao.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/view/MenuPrincipal.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuPrincipal.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/view/MenuRelatorios.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/MenuRelatorios.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,26 +30,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.Main.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "feature/package-view",
-    "ignore.virus.scanning.warn.message": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "E:/Documents/Unicamp/FT/Disciplinas/3° Semestre - 2026/[SI300] Programação Orientada a Objetos I/Atividades/Projeto FT_Coin/FT_Coin",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "to.speed.mode.migration.done": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/package-view&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Documents/Unicamp/FT/Disciplinas/3° Semestre - 2026/[SI300] Programação Orientada a Objetos I/Atividades/Projeto FT_Coin/FT_Coin&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="E:\Documents\Unicamp\FT\Disciplinas\3° Semestre - 2026\[SI300] Programação Orientada a Objetos I\Atividades\Projeto FT_Coin\FT_Coin\src\app" />
