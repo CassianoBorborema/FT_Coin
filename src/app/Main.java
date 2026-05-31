@@ -1,12 +1,20 @@
 package app;
-import view.*;
-import view.opcoes_menus.*;
+
+import DAO.CarteiraDAO;
+import DAO.memoria.CarteiraDAOMemoria;
+import controller.CarteiraController;
+import view.MenuPrincipal;
 import java.util.Scanner;
 
-public class Main{
+public class Main {
+
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
-        MenuPrincipal menu = new MenuPrincipal(input);
+
+        CarteiraDAO carteiraDAO = new CarteiraDAOMemoria();
+        CarteiraController carteiraController = new CarteiraController(carteiraDAO);
+        MenuPrincipal menu = new MenuPrincipal(input, carteiraController);
+
         System.out.println("****************************");
         System.out.println("====Bem vindo ao FT_Coin====");
         System.out.println("****************************");
@@ -20,18 +28,30 @@ public class Main{
 
     public static int lerOpcao(Scanner input) {
         try {
-            // Tenta ler o número
             int opcao = input.nextInt();
-
-            // Limpar buffer
             input.nextLine();
-
             return opcao;
         } catch (Exception e) {
-            // Limpar buffer
             input.nextLine();
             System.out.println("Caracter inválido para seleção da opção");
             return -1;
+        }
+    }
+
+    public static String lerLinha(Scanner input, String mensagem) {
+        System.out.println(mensagem);
+        return input.nextLine().trim();
+    }
+
+    public static int lerInteiro(Scanner input, String mensagem) throws exception.AppException {
+        System.out.println(mensagem);
+        try {
+            int valor = input.nextInt();
+            input.nextLine();
+            return valor;
+        } catch (Exception e) {
+            input.nextLine();
+            throw new exception.AppException("Valor numérico inválido.");
         }
     }
 }

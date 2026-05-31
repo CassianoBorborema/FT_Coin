@@ -1,14 +1,18 @@
 package view;
 
 import app.Main;
-import view.opcoes_menus.*;
+import controller.CarteiraController;
+import view.opcoes_menus.OpcoesMenuPrincipal;
 import java.util.Scanner;
 
 public class MenuPrincipal {
-    private final Scanner input;
 
-    public MenuPrincipal(Scanner input) {
+    private final Scanner input;
+    private final CarteiraController carteiraController;
+
+    public MenuPrincipal(Scanner input, CarteiraController carteiraController) {
         this.input = input;
+        this.carteiraController = carteiraController;
     }
 
     public void exibirMenuPrincipal() {
@@ -24,7 +28,7 @@ public class MenuPrincipal {
 
             switch (selecao) {
                 case CARTEIRA:
-                    MenuCarteira menuCarteira = new MenuCarteira(input);
+                    MenuCarteira menuCarteira = new MenuCarteira(input, carteiraController);
                     menuCarteira.exibirMenuCarteira();
                     break;
                 case MOVIMENTACAO:
