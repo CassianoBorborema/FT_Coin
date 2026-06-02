@@ -4,57 +4,83 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 
 ---
 
-## Estrutura atual do projeto
+## Estado atual do projeto
+
+| Área | Status | Observação |
+|------|--------|------------|
+| **Menu principal** | Parcial | Opção **Carteira** integrada; Movimentação, Relatórios e Ajuda ainda sem navegação no `MenuPrincipal` |
+| **Carteira (CRUD)** | Implementado | Incluir, consultar, editar e excluir com validações e confirmação de exclusão |
+| **Persistência carteira** | Memória | `CarteiraDAOMemoria` (`HashMap` + IDs automáticos); MariaDB em stub |
+| **Movimentação** | Pendente | Menus e enums criados; model, DTO, DAO e controller vazios |
+| **Relatórios** | Pendente | Menu com opções esboçadas; `RelatorioController` vazio |
+| **Oráculo** | Pendente | Model, DTO e DAO em stub |
+| **Infra (MariaDB)** | Pendente | `ConexaoBD` e implementações JDBC em stub |
+
+A aplicação **compila e executa** o fluxo de carteira ponta a ponta. Detalhes de arquitetura e sequência de chamadas: [docs/fluxo-carteira.md](docs/fluxo-carteira.md).
+
+---
+
+## Estrutura do projeto
 
 ```
 FT_Coin/
-├── out                                    # Saídas da aplicação
-└── src
-    ├── app
-    │   └── Main.java                      # Ponto de entrada da aplicação
+├── docs/
+│   ├── README.md                          # Índice da documentação
+│   └── fluxo-carteira.md                  # Fluxo MVC + DAO da carteira
+├── out/                                     # Classes compiladas (ignorado pelo Git)
+└── src/
+    ├── app/
+    │   └── Main.java                      # Entrada; injeta DAO memória e MenuPrincipal
     ├── model/
-    │   ├── Carteira.java                  # Entidade carteira
-    │   ├── Movimentacao.java              # Entidade movimentação (compra/venda)
-    │   └── Oraculo.java                   # Cotação diária da moeda virtual
+    │   ├── Carteira.java                  # Entidade com validação e conversão DTO
+    │   ├── Movimentacao.java              # (stub)
+    │   └── Oraculo.java                   # (stub)
     ├── DTO/
-    │   ├── CarteiraDTO.java               # Transferência de dados — carteira
-    │   └── MovimentacaoDTO.java           # Transferência de dados — movimentação
+    │   ├── CarteiraDTO.java
+    │   └── MovimentacaoDTO.java           # (stub)
     ├── DAO/
-    │   ├── CarteiraDAO.java               # Contrato de persistência — carteira
-    │   ├── MovimentacaoDAO.java           # Contrato de persistência — movimentação
-    │   ├── OraculoDAO.java                # Contrato de persistência — oráculo
+    │   ├── CarteiraDAO.java               # Contrato — carteira
+    │   ├── MovimentacaoDAO.java           # (stub)
+    │   ├── OraculoDAO.java                # (stub)
+    │   ├── memoria/
+    │   │   └── CarteiraDAOMemoria.java    # Implementação em memória
     │   └── mariaDB/
-    │       ├── CarteiraDAOMariaDB.java    # Implementação JDBC — carteira
+    │       ├── CarteiraDAOMariaDB.java    # (stub)
     │       ├── MovimentacaoDAOMariaDB.java
     │       └── OraculoDAOMariaDB.java
     ├── controller/
-    │   ├── CarteiraController.java        # Regras de negócio — carteira
-    │   ├── MovimentacaoController.java    # Regras de negócio — movimentação
-    │   └── RelatorioController.java       # Relatórios e apuração de ganho/perda
+    │   ├── CarteiraController.java
+    │   ├── MovimentacaoController.java    # (stub)
+    │   └── RelatorioController.java       # (stub)
     ├── view/
-    │   ├── ConsolePrinter.java            # Saída formatada e cores no terminal
-    │   ├── MenuPrincipal.java             # Menu raiz (Carteira, Movimentação, …)
+    │   ├── MenuPrincipal.java
     │   ├── MenuCarteira.java
-    │   ├── MenuMovimentacao.java
-    │   ├── MenuRelatorios.java
-    │   └── MenuAjuda.java
+    │   ├── MenuMovimentacao.java          # Estrutura; lógica pendente
+    │   ├── MenuRelatorios.java            # Estrutura; lógica pendente
+    │   ├── MenuAjuda.java                 # Créditos parcial; ajuda pendente
+    │   └── opcoes_menus/
+    │       ├── OpcoesMenuPrincipal.java
+    │       ├── OpcoesMenuCarteira.java
+    │       ├── OpcoesMenuMovimentacao.java
+    │       ├── OpcoesMenuRelatorios.java
+    │       └── OpcoesMenuAjuda.java
     ├── exception/
-    │   └── AppException.java              # Exceções da aplicação
+    │   └── AppException.java              # Exceção checked de negócio/validação
     └── infra/
-        └── ConexaoBD.java                 # Conexão com MariaDB remoto
+        └── ConexaoBD.java                 # (stub)
 ```
 
 ### Responsabilidade por camada
 
-| Camada | Pacote / pasta | Papel |
-|--------|----------------|-------|
-| **Model** | `model/` | Representação das entidades de domínio alinhadas às tabelas do banco |
-| **DTO** | `DTO/` | Objetos para transporte de dados entre camadas |
-| **DAO** | `DAO/`, `DAO/mariaDB/` | Abstração e implementação de persistência (padrão DAO) |
-| **Controller** | `controller/` | Validações, regras de negócio e orquestração |
-| **View** | `view/` | Menus CLI, leitura de entrada e apresentação ao usuário |
-| **Infra** | `infra/` | Recursos técnicos (conexão com banco) |
-| **Exception** | `exception/` | Tratamento centralizado de erros |
+| Camada | Pacote | Papel |
+|--------|--------|-------|
+| **Model** | `model` | Entidades de domínio e validações |
+| **DTO** | `DTO` | Transporte entre view, controller e DAO |
+| **DAO** | `DAO`, `DAO.memoria`, `DAO.mariaDB` | Contrato e implementações de persistência |
+| **Controller** | `controller` | Regras de negócio e orquestração |
+| **View** | `view`, `view.opcoes_menus` | Menus CLI e enums de opções |
+| **Infra** | `infra` | Conexão com banco (futuro) |
+| **Exception** | `exception` | Erros de aplicação centralizados |
 
 ### Modelo de dados (referência)
 
@@ -68,32 +94,50 @@ FT_Coin/
 
 ## Requisitos do sistema (escopo)
 
-- **Interface:** CLI com menu principal (Carteira, Movimentação, Relatórios, Ajuda, Sair) e submenus; uso de cores quando apropriado.
+- **Interface:** CLI com menu principal (Carteira, Movimentação, Relatórios, Ajuda, Sair) e submenus.
 - **Carteira:** incluir, consultar, editar e excluir.
 - **Movimentação:** compra e venda de moeda virtual.
 - **Relatórios:** listagens ordenadas, saldo, histórico e ganho/perda por carteira.
 - **Oráculo:** consulta à cotação diária para cálculos e movimentações.
 - **Persistência:** duas implementações DAO — **memória** (demonstração) e **MariaDB** (remoto).
-- **Boas práticas:** POO, encapsulamento, polimorfismo, constantes/enums, validações, exceções, código sem erros ou avisos na compilação.
+- **Boas práticas:** POO, encapsulamento, polimorfismo, validações, exceções, compilação sem erros.
 
 ---
 
 ## Compilação e execução
 
-> Atualize esta seção assim que `Main.java` e as dependências estiverem implementados.
-
 **Pré-requisito:** JDK 8 ou superior.
 
-```bash
-# Na raiz do projeto (ajuste o classpath conforme novos pacotes forem adicionados)
-javac -encoding UTF-8 -d out Main.java model/*.java DTO/*.java DAO/*.java DAO/mariaDB/*.java controller/*.java view/*.java exception/*.java infra/*.java
+Na raiz do repositório:
 
-java -cp out Main
+```bash
+# Compilar (resolve dependências a partir de src/app/Main.java)
+javac -encoding UTF-8 -sourcepath src -d out src/app/Main.java
+
+# Executar
+java -cp out app.Main
 ```
+
+**PowerShell (Windows):**
+
+```powershell
+javac -encoding UTF-8 -sourcepath src -d out src/app/Main.java
+java -cp out app.Main
+```
+
+> Arquivos `.java` vazios (stubs) não entram na compilação até serem implementados. Ao adicionar novas classes, mantenha `-sourcepath src` ou inclua explicitamente os novos arquivos no `javac`.
+
+---
+
+## Documentação
+
+| Documento | Descrição |
+|-----------|-----------|
+| [docs/fluxo-carteira.md](docs/fluxo-carteira.md) | Arquitetura, menus, CRUD e interação entre componentes da carteira |
+| [docs/README.md](docs/README.md) | Índice da pasta de documentação |
 
 ---
 
 ## Controle de versão
 
 Trabalho em equipe com Git: cada funcionalidade ou camada em branch ou commits pequenos facilita revisão e o relatório de contribuição.
-
