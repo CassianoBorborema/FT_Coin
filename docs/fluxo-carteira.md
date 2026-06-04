@@ -49,8 +49,8 @@ flowchart TB
 
 | Componente | Arquivo | Responsabilidade no fluxo |
 |------------|---------|---------------------------|
-| **Main** | [src/app/Main.java](../src/app/Main.java) | Bootstrap: cria `CarteiraDAOMemoria`, `CarteiraController` e `MenuPrincipal`; fornece helpers de leitura (`lerOpcao`, `lerLinha`, `lerInteiro`) |
-| **MenuPrincipal** | [src/view/MenuPrincipal.java](../src/view/MenuPrincipal.java) | Menu raiz; ao escolher opção **1 (Carteira)**, abre `MenuCarteira` passando o mesmo `Scanner` e `CarteiraController` |
+| **Main** | [src/app/Main.java](../src/app/Main.java) | Bootstrap: cria DAOs em memória, `CarteiraController`, `MovimentacaoController` e `MenuPrincipal`; helpers `lerOpcao`, `lerLinha`, `lerInteiro`, `lerData`, `lerDouble` |
+| **MenuPrincipal** | [src/view/MenuPrincipal.java](../src/view/MenuPrincipal.java) | Menu raiz; opção **1 (Carteira)** abre `MenuCarteira`; opção **2 (Movimentação)** abre `MenuMovimentacao` (ver [fluxo-movimentacao.md](fluxo-movimentacao.md)) |
 | **MenuCarteira** | [src/view/MenuCarteira.java](../src/view/MenuCarteira.java) | Submenu CRUD; lê dados do usuário, chama o controller e exibe resultado ou erro |
 | **CarteiraController** | [src/controller/CarteiraController.java](../src/controller/CarteiraController.java) | Orquestra regras: valida identificador, monta DTO, converte para `Carteira`, valida campos e delega ao DAO |
 | **Carteira (model)** | [src/model/Carteira.java](../src/model/Carteira.java) | Entidade de domínio; valida `nomeTitular` e `corretora`; converte `fromDTO()` / `toDTO()` |
@@ -74,8 +74,8 @@ sequenceDiagram
 
     User->>Main: java -cp out app.Main
     Main->>DAO: new CarteiraDAOMemoria()
-    Main->>Ctrl: new CarteiraController(dao)
-    Main->>MP: new MenuPrincipal(scanner, ctrl)
+    Main->>Ctrl: new CarteiraController(carteiraDAO, movimentacaoDAO)
+    Main->>MP: new MenuPrincipal(scanner, ctrl, movimentacaoCtrl)
     Main->>User: exibe boas-vindas
     Main->>MP: exibirMenuPrincipal()
     User->>MP: digita 1 (Carteira)
@@ -224,15 +224,20 @@ sequenceDiagram
     MC->>User: exibe carteira + pede confirmacao S/N
     alt confirmacao S
         MC->>Ctrl: excluir(id)
-        Ctrl->>DAO: excluir(id)
-        DAO->>DAO: remove do HashMap
-        MC->>User: Carteira excluida
+        alt possui movimentacoes
+            Ctrl-->>MC: AppException
+            MC->>User: Erro mensagem
+        else sem movimentacoes
+            Ctrl->>DAO: excluir(id)
+            DAO->>DAO: remove do HashMap
+            MC->>User: Carteira excluida
+        end
     else confirmacao N ou outro
         MC->>User: Exclusao cancelada
     end
 ```
 
-**Observação:** a exclusão **não verifica movimentações vinculadas** ainda — `MovimentacaoDAO` não está implementado. Isso será relevante quando o fluxo de movimentação for adicionado.
+**Observação:** antes de excluir, `CarteiraController` consulta `MovimentacaoDAO.possuiMovimentacoes(id)`. Carteiras com compras ou vendas **não podem** ser removidas.
 
 ---
 
@@ -279,6 +284,7 @@ flowchart LR
 | Titular/corretora vazios | campos em branco | `Carteira.validar()` → `AppException` | `MenuCarteira` (catch) |
 | ID inválido | id <= 0 | `CarteiraController.validarIdentificador()` | `MenuCarteira` (catch) |
 | Carteira inexistente | id 99 não cadastrado | `CarteiraDAOMemoria.consultarPorId()` | `MenuCarteira` (catch) |
+| Carteira com movimentações | excluir após compra/venda | `CarteiraController.excluir()` | `MenuCarteira` (catch) |
 | Opção inválida no menu principal | digita 9 | `RuntimeException` | `Main.main()` (catch genérico) |
 
 Todas as operações do submenu exibem `Erro: {mensagem}` e **retornam ao loop do menu**, sem encerrar a aplicação.
@@ -313,7 +319,7 @@ src/
 ├── view/
 │   ├── MenuPrincipal.java             ← roteia para MenuCarteira
 │   └── MenuCarteira.java              ← 4 operações CRUD
-├── controller/CarteiraController.java ← orquestração
+├── controller/CarteiraController.java ← orquestração (+ bloqueio exclusão)
 ├── model/Carteira.java                ← validação + conversão
 ├── DTO/CarteiraDTO.java               ← transporte de dados
 ├── DAO/
@@ -327,8 +333,7 @@ src/
 ## 9. Execução manual (referência)
 
 ```powershell
-javac -encoding UTF-8 -d out src/app/Main.java src/model/Carteira.java src/DTO/CarteiraDTO.java src/DAO/CarteiraDAO.java src/DAO/memoria/CarteiraDAOMemoria.java src/controller/CarteiraController.java src/exception/AppException.java src/view/MenuPrincipal.java src/view/MenuCarteira.java src/view/opcoes_menus/OpcoesMenuCarteira.java src/view/opcoes_menus/OpcoesMenuPrincipal.java
-
+javac -encoding UTF-8 -sourcepath src -d out src/app/Main.java
 java -cp out app.Main
 ```
 
@@ -340,5 +345,5 @@ java -cp out app.Main
 
 - `CarteiraController.listarTodas()` existe, mas **não é exposta** no menu — será usada futuramente em Relatórios.
 - Implementação JDBC (`CarteiraDAOMariaDB`) ainda vazia; produção usaria a mesma interface `CarteiraDAO`.
-- Exclusão não bloqueia carteiras com movimentações (camada de movimentação pendente).
-- Menu principal ainda não conecta Movimentação, Relatórios e Ajuda.
+- Exclusão bloqueia carteiras com movimentações vinculadas (ver [fluxo-movimentacao.md](fluxo-movimentacao.md)).
+- Menu principal ainda não conecta Relatórios e Ajuda; Movimentação está integrada (opção 2).

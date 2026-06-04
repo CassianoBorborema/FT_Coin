@@ -8,15 +8,21 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 
 | Área | Status | Observação |
 |------|--------|------------|
-| **Menu principal** | Parcial | Opção **Carteira** integrada; Movimentação, Relatórios e Ajuda ainda sem navegação no `MenuPrincipal` |
+| **Menu principal** | Parcial | **Carteira** (opção 1) e **Movimentação** (opção 2) integradas; Relatórios e Ajuda ainda sem navegação |
 | **Carteira (CRUD)** | Implementado | Incluir, consultar, editar e excluir com validações e confirmação de exclusão |
-| **Persistência carteira** | Memória | `CarteiraDAOMemoria` (`HashMap` + IDs automáticos); MariaDB em stub |
-| **Movimentação** | Pendente | Menus e enums criados; model, DTO, DAO e controller vazios |
+| **Exclusão de carteira** | Implementado | Bloqueada quando existem movimentações vinculadas |
+| **Movimentação** | Implementado | Compra e venda com validação de carteira, cotação (Oráculo) e saldo na venda |
+| **Oráculo** | Mínimo (memória) | Cotações seed no `Main` (hoje e ontem); sem menu de cadastro |
+| **Persistência** | Memória | `CarteiraDAOMemoria`, `MovimentacaoDAOMemoria`, `OraculoDAOMemoria`; MariaDB em stub |
 | **Relatórios** | Pendente | Menu com opções esboçadas; `RelatorioController` vazio |
-| **Oráculo** | Pendente | Model, DTO e DAO em stub |
 | **Infra (MariaDB)** | Pendente | `ConexaoBD` e implementações JDBC em stub |
 
-A aplicação **compila e executa** o fluxo de carteira ponta a ponta. Detalhes de arquitetura e sequência de chamadas: [docs/fluxo-carteira.md](docs/fluxo-carteira.md).
+A aplicação **compila e executa** os fluxos de carteira e movimentação ponta a ponta.
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [docs/fluxo-carteira.md](docs/fluxo-carteira.md) | Arquitetura, menus, CRUD e interação da carteira |
+| [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra/venda, Oráculo, saldo e diagramas de sequência |
 
 ---
 
@@ -25,47 +31,44 @@ A aplicação **compila e executa** o fluxo de carteira ponta a ponta. Detalhes 
 ```
 FT_Coin/
 ├── docs/
-│   ├── README.md                          # Índice da documentação
-│   └── fluxo-carteira.md                  # Fluxo MVC + DAO da carteira
+│   ├── README.md
+│   ├── fluxo-carteira.md
+│   └── fluxo-movimentacao.md
 ├── out/                                     # Classes compiladas (ignorado pelo Git)
 └── src/
     ├── app/
-    │   └── Main.java                      # Entrada; injeta DAO memória e MenuPrincipal
+    │   └── Main.java                      # Bootstrap, seed oráculo, leitura CLI
     ├── model/
-    │   ├── Carteira.java                  # Entidade com validação e conversão DTO
-    │   ├── Movimentacao.java              # (stub)
-    │   └── Oraculo.java                   # (stub)
+    │   ├── Carteira.java
+    │   ├── Movimentacao.java
+    │   ├── TipoMovimentacao.java
+    │   └── Oraculo.java
     ├── DTO/
     │   ├── CarteiraDTO.java
-    │   └── MovimentacaoDTO.java           # (stub)
+    │   ├── MovimentacaoDTO.java
+    │   └── OraculoDTO.java
     ├── DAO/
-    │   ├── CarteiraDAO.java               # Contrato — carteira
-    │   ├── MovimentacaoDAO.java           # (stub)
-    │   ├── OraculoDAO.java                # (stub)
+    │   ├── CarteiraDAO.java
+    │   ├── MovimentacaoDAO.java
+    │   ├── OraculoDAO.java
     │   ├── memoria/
-    │   │   └── CarteiraDAOMemoria.java    # Implementação em memória
-    │   └── mariaDB/
-    │       ├── CarteiraDAOMariaDB.java    # (stub)
-    │       ├── MovimentacaoDAOMariaDB.java
-    │       └── OraculoDAOMariaDB.java
+    │   │   ├── CarteiraDAOMemoria.java
+    │   │   ├── MovimentacaoDAOMemoria.java
+    │   │   └── OraculoDAOMemoria.java
+    │   └── mariaDB/                       # (stubs JDBC)
     ├── controller/
     │   ├── CarteiraController.java
-    │   ├── MovimentacaoController.java    # (stub)
+    │   ├── MovimentacaoController.java
     │   └── RelatorioController.java       # (stub)
     ├── view/
     │   ├── MenuPrincipal.java
     │   ├── MenuCarteira.java
-    │   ├── MenuMovimentacao.java          # Estrutura; lógica pendente
-    │   ├── MenuRelatorios.java            # Estrutura; lógica pendente
-    │   ├── MenuAjuda.java                 # Créditos parcial; ajuda pendente
+    │   ├── MenuMovimentacao.java
+    │   ├── MenuRelatorios.java            # (estrutura)
+    │   ├── MenuAjuda.java
     │   └── opcoes_menus/
-    │       ├── OpcoesMenuPrincipal.java
-    │       ├── OpcoesMenuCarteira.java
-    │       ├── OpcoesMenuMovimentacao.java
-    │       ├── OpcoesMenuRelatorios.java
-    │       └── OpcoesMenuAjuda.java
     ├── exception/
-    │   └── AppException.java              # Exceção checked de negócio/validação
+    │   └── AppException.java
     └── infra/
         └── ConexaoBD.java                 # (stub)
 ```
@@ -111,10 +114,7 @@ FT_Coin/
 Na raiz do repositório:
 
 ```bash
-# Compilar (resolve dependências a partir de src/app/Main.java)
 javac -encoding UTF-8 -sourcepath src -d out src/app/Main.java
-
-# Executar
 java -cp out app.Main
 ```
 
@@ -125,7 +125,25 @@ javac -encoding UTF-8 -sourcepath src -d out src/app/Main.java
 java -cp out app.Main
 ```
 
-> Arquivos `.java` vazios (stubs) não entram na compilação até serem implementados. Ao adicionar novas classes, mantenha `-sourcepath src` ou inclua explicitamente os novos arquivos no `javac`.
+> Com `-sourcepath src`, novas classes referenciadas são compiladas automaticamente. Stubs vazios (JDBC, `RelatorioController`) não entram na compilação até serem implementados.
+
+---
+
+## Teste rápido
+
+### Carteira
+
+1. Menu **1 (Carteira)** → **1 (Incluir)** → titular e corretora → anotar ID
+2. **2 (Consultar)** → informar ID → **0 (Voltar)**
+
+### Movimentação
+
+1. Menu **2 (Movimentação)** → **1 (Compra)** → ID da carteira, data de hoje (`dd/MM/yyyy`), quantidade (ex.: 10)
+2. **2 (Venda)** → mesma carteira, data de hoje, quantidade ≤ saldo (ex.: 5)
+3. Tentar venda acima do saldo → erro esperado
+4. Menu **1 (Carteira)** → **4 (Excluir)** carteira com movimentos → bloqueio
+
+Cotações seed: **hoje** e **ontem** (ver `Main.seedOraculo()`).
 
 ---
 
@@ -133,7 +151,8 @@ java -cp out app.Main
 
 | Documento | Descrição |
 |-----------|-----------|
-| [docs/fluxo-carteira.md](docs/fluxo-carteira.md) | Arquitetura, menus, CRUD e interação entre componentes da carteira |
+| [docs/fluxo-carteira.md](docs/fluxo-carteira.md) | Arquitetura, menus, CRUD e interação da carteira |
+| [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra/venda, Oráculo, saldo e diagramas |
 | [docs/README.md](docs/README.md) | Índice da pasta de documentação |
 
 ---
