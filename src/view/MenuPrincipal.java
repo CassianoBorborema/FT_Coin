@@ -2,6 +2,7 @@ package view;
 
 import app.Main;
 import controller.CarteiraController;
+import controller.MovimentacaoController;
 import view.opcoes_menus.OpcoesMenuPrincipal;
 import java.util.Scanner;
 
@@ -9,10 +10,13 @@ public class MenuPrincipal {
 
     private final Scanner input;
     private final CarteiraController carteiraController;
+    private final MovimentacaoController movimentacaoController;
 
-    public MenuPrincipal(Scanner input, CarteiraController carteiraController) {
+    public MenuPrincipal(Scanner input, CarteiraController carteiraController,
+                         MovimentacaoController movimentacaoController) {
         this.input = input;
         this.carteiraController = carteiraController;
+        this.movimentacaoController = movimentacaoController;
     }
 
     public void exibirMenuPrincipal() {
@@ -32,6 +36,8 @@ public class MenuPrincipal {
                     menuCarteira.exibirMenuCarteira();
                     break;
                 case MOVIMENTACAO:
+                    MenuMovimentacao menuMovimentacao = new MenuMovimentacao(input, movimentacaoController);
+                    menuMovimentacao.exibirMenuMovimentacao();
                     break;
                 case RELATORIOS:
                     break;
