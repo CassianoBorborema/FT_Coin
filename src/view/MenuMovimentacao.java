@@ -1,7 +1,7 @@
 package view;
 
 import app.Main;
-import controller.MovimentacaoController;
+import control.MovimentacaoController;
 import DTO.MovimentacaoDTO;
 import exception.AppException;
 import view.opcoes_menus.OpcoesMenuMovimentacao;

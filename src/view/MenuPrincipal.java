@@ -1,8 +1,9 @@
 package view;
 
 import app.Main;
-import controller.CarteiraController;
-import controller.MovimentacaoController;
+import control.CarteiraController;
+import control.MovimentacaoController;
+import control.RelatorioController;
 import view.opcoes_menus.OpcoesMenuPrincipal;
 import java.util.Scanner;
 
@@ -11,13 +12,15 @@ public class MenuPrincipal {
     private final Scanner input;
     private final CarteiraController carteiraController;
     private final MovimentacaoController movimentacaoController;
+    private final RelatorioController relatorioController;
 
-    public MenuPrincipal(Scanner input, CarteiraController carteiraController,
-                         MovimentacaoController movimentacaoController) {
-        this.input = input;
-        this.carteiraController = carteiraController;
-        this.movimentacaoController = movimentacaoController;
-    }
+
+    public MenuPrincipal(Scanner input, CarteiraController carteiraController, MovimentacaoController movimentacaoController, RelatorioController relatorioController) {
+		this.input = input;
+		this.carteiraController = carteiraController;
+		this.movimentacaoController = movimentacaoController;
+		this.relatorioController = relatorioController;
+	}
 
     public void exibirMenuPrincipal() {
         while (true) {
@@ -40,8 +43,12 @@ public class MenuPrincipal {
                     menuMovimentacao.exibirMenuMovimentacao();
                     break;
                 case RELATORIOS:
+                	MenuRelatorios menuRelatorios = new MenuRelatorios(input, relatorioController);
+                    menuRelatorios.exibirMenuRelatorios();
                     break;
                 case AJUDA:
+                	MenuAjuda menuAjuda = new MenuAjuda(input);
+                    menuAjuda.exibirMenuAjuda();
                     break;
                 case SAIR:
                     System.out.println("Saindo da aplicação...");

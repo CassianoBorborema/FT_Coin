@@ -7,8 +7,9 @@ import DAO.memoria.CarteiraDAOMemoria;
 import DAO.memoria.MovimentacaoDAOMemoria;
 import DAO.memoria.OraculoDAOMemoria;
 import DTO.OraculoDTO;
-import controller.CarteiraController;
-import controller.MovimentacaoController;
+import control.CarteiraController; 
+import control.MovimentacaoController;
+import control.RelatorioController;
 import exception.AppException;
 import view.MenuPrincipal;
 import java.time.LocalDate;
@@ -33,7 +34,9 @@ public class Main {
         MovimentacaoController movimentacaoController = new MovimentacaoController(
                 movimentacaoDAO, carteiraDAO, oraculoDAO
         );
-        MenuPrincipal menu = new MenuPrincipal(input, carteiraController, movimentacaoController);
+        RelatorioController relatorioController       = new RelatorioController(carteiraDAO, movimentacaoDAO, oraculoDAO);
+        MenuPrincipal menu = new MenuPrincipal(input, carteiraController, movimentacaoController, relatorioController);
+
 
         System.out.println("****************************");
         System.out.println("====Bem vindo ao FT_Coin====");

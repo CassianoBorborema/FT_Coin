@@ -1,7 +1,7 @@
 package view;
 
 import app.Main;
-import controller.CarteiraController;
+import control.CarteiraController;
 import DTO.CarteiraDTO;
 import exception.AppException;
 import view.opcoes_menus.OpcoesMenuCarteira;
