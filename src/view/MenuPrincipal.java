@@ -1,15 +1,26 @@
 package view;
 
 import app.Main;
-import view.opcoes_menus.*;
+import control.CarteiraController;
+import control.MovimentacaoController;
+import control.RelatorioController;
+import view.opcoes_menus.OpcoesMenuPrincipal;
 import java.util.Scanner;
 
 public class MenuPrincipal {
-    private final Scanner input;
 
-    public MenuPrincipal(Scanner input) {
-        this.input = input;
-    }
+    private final Scanner input;
+    private final CarteiraController carteiraController;
+    private final MovimentacaoController movimentacaoController;
+    private final RelatorioController relatorioController;
+
+
+    public MenuPrincipal(Scanner input, CarteiraController carteiraController, MovimentacaoController movimentacaoController, RelatorioController relatorioController) {
+		this.input = input;
+		this.carteiraController = carteiraController;
+		this.movimentacaoController = movimentacaoController;
+		this.relatorioController = relatorioController;
+	}
 
     public void exibirMenuPrincipal() {
         while (true) {
@@ -24,14 +35,20 @@ public class MenuPrincipal {
 
             switch (selecao) {
                 case CARTEIRA:
-                    MenuCarteira menuCarteira = new MenuCarteira(input);
+                    MenuCarteira menuCarteira = new MenuCarteira(input, carteiraController);
                     menuCarteira.exibirMenuCarteira();
                     break;
                 case MOVIMENTACAO:
+                    MenuMovimentacao menuMovimentacao = new MenuMovimentacao(input, movimentacaoController);
+                    menuMovimentacao.exibirMenuMovimentacao();
                     break;
                 case RELATORIOS:
+                	MenuRelatorios menuRelatorios = new MenuRelatorios(input, relatorioController);
+                    menuRelatorios.exibirMenuRelatorios();
                     break;
                 case AJUDA:
+                	MenuAjuda menuAjuda = new MenuAjuda(input);
+                    menuAjuda.exibirMenuAjuda();
                     break;
                 case SAIR:
                     System.out.println("Saindo da aplicação...");

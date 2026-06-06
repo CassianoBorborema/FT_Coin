@@ -1,19 +1,26 @@
 package view;
 
 import app.Main;
-import view.opcoes_menus.*;
+import control.MovimentacaoController;
+import DTO.MovimentacaoDTO;
+import exception.AppException;
+import view.opcoes_menus.OpcoesMenuMovimentacao;
+import java.time.LocalDate;
 import java.util.Scanner;
 
 public class MenuMovimentacao {
-    private final Scanner input;
 
-    public MenuMovimentacao(Scanner input) {
+    private final Scanner input;
+    private final MovimentacaoController controller;
+
+    public MenuMovimentacao(Scanner input, MovimentacaoController controller) {
         this.input = input;
+        this.controller = controller;
     }
 
     public void exibirMenuMovimentacao() {
         while (true) {
-            System.out.println("Qual opção deseja?");
+            System.out.println("\nQual opção deseja?");
             System.out.println("1. Compra de moeda virtual");
             System.out.println("2. Venda de moeda virtual");
             System.out.println("0. Voltar");
@@ -22,18 +29,43 @@ public class MenuMovimentacao {
 
             switch (selecao) {
                 case COMPRA:
-                    //menu
+                    registrarCompra();
                     break;
                 case VENDA:
-                    //menu
+                    registrarVenda();
                     break;
                 case VOLTAR:
                     return;
                 case INVALIDA:
-                    throw new RuntimeException("Opção inválida");
+                    System.out.println("Opção inválida. Tente novamente.");
+                    break;
             }
         }
     }
 
+    private void registrarCompra() {
+        try {
+            int idCarteira = Main.lerInteiro(input, "Digite o identificador da carteira:");
+            LocalDate data = Main.lerData(input, "Digite a data da compra");
+            double quantidade = Main.lerDouble(input, "Digite a quantidade:");
+            MovimentacaoDTO movimentacao = controller.registrarCompra(idCarteira, data, quantidade);
+            System.out.println("Compra registrada com sucesso:");
+            System.out.println(movimentacao);
+        } catch (AppException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
 
+    private void registrarVenda() {
+        try {
+            int idCarteira = Main.lerInteiro(input, "Digite o identificador da carteira:");
+            LocalDate data = Main.lerData(input, "Digite a data da venda");
+            double quantidade = Main.lerDouble(input, "Digite a quantidade:");
+            MovimentacaoDTO movimentacao = controller.registrarVenda(idCarteira, data, quantidade);
+            System.out.println("Venda registrada com sucesso:");
+            System.out.println(movimentacao);
+        } catch (AppException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
 }
