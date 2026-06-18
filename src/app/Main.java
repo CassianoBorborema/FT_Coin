@@ -9,12 +9,13 @@ import DAO.memoria.OraculoDAOMemoria;
 import DTO.OraculoDTO;
 import controller.CarteiraController;
 import controller.MovimentacaoController;
+import controller.RelatorioController;
 import exception.AppException;
-import view.MenuPrincipal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
+import view.MenuPrincipal;
 
 public class Main {
 
@@ -23,17 +24,23 @@ public class Main {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
 
-        CarteiraDAO carteiraDAO = new CarteiraDAOMemoria();
-        OraculoDAO oraculoDAO = new OraculoDAOMemoria();
+        CarteiraDAO     carteiraDAO     = new CarteiraDAOMemoria();
+        OraculoDAO      oraculoDAO      = new OraculoDAOMemoria();
         MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAOMemoria();
 
         seedOraculo(oraculoDAO);
 
-        CarteiraController carteiraController = new CarteiraController(carteiraDAO, movimentacaoDAO);
+        CarteiraController     carteiraController     = new CarteiraController(carteiraDAO, movimentacaoDAO);
         MovimentacaoController movimentacaoController = new MovimentacaoController(
                 movimentacaoDAO, carteiraDAO, oraculoDAO
         );
-        MenuPrincipal menu = new MenuPrincipal(input, carteiraController, movimentacaoController);
+        RelatorioController relatorioController = new RelatorioController(
+                carteiraDAO, movimentacaoDAO, oraculoDAO
+        );
+
+        MenuPrincipal menu = new MenuPrincipal(
+                input, carteiraController, movimentacaoController, relatorioController
+        );
 
         System.out.println("****************************");
         System.out.println("====Bem vindo ao FT_Coin====");
@@ -52,7 +59,7 @@ public class Main {
             oraculoDAO.incluir(new OraculoDTO(hoje, 150.0));
             oraculoDAO.incluir(new OraculoDTO(hoje.minusDays(1), 145.0));
         } catch (AppException e) {
-            System.out.println("Aviso ao carregar cotações iniciais: " + e.getMessage());
+            System.out.println("Aviso ao carregar cotacoes iniciais: " + e.getMessage());
         }
     }
 
@@ -63,7 +70,7 @@ public class Main {
             return opcao;
         } catch (Exception e) {
             input.nextLine();
-            System.out.println("Caracter inválido para seleção da opção");
+            System.out.println("Caracter invalido para selecao da opcao");
             return -1;
         }
     }
@@ -81,7 +88,7 @@ public class Main {
             return valor;
         } catch (Exception e) {
             input.nextLine();
-            throw new AppException("Valor numérico inválido.");
+            throw new AppException("Valor numerico invalido.");
         }
     }
 
@@ -93,7 +100,7 @@ public class Main {
             return valor;
         } catch (Exception e) {
             input.nextLine();
-            throw new AppException("Valor decimal inválido.");
+            throw new AppException("Valor decimal invalido.");
         }
     }
 
@@ -102,7 +109,7 @@ public class Main {
         try {
             return LocalDate.parse(texto, FORMATO_DATA);
         } catch (DateTimeParseException e) {
-            throw new AppException("Data inválida. Use o formato dd/MM/yyyy.");
+            throw new AppException("Data invalida. Use o formato dd/MM/yyyy.");
         }
     }
 }
