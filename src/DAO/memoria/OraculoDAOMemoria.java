@@ -5,7 +5,10 @@ import DTO.OraculoDTO;
 import exception.AppException;
 import model.Oraculo;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class OraculoDAOMemoria implements OraculoDAO {
@@ -30,6 +33,16 @@ public class OraculoDAOMemoria implements OraculoDAO {
             throw new AppException("Não há cotação cadastrada para a data " + data + ".");
         }
         return new OraculoDTO(oraculo.getData(), oraculo.getCotacao());
+    }
+
+    @Override
+    public List<OraculoDTO> listarTodas() throws AppException {
+        List<OraculoDTO> lista = new ArrayList<>();
+        for (OraculoDTO cotacao : cotacoes.values()) {
+            lista.add(new OraculoDTO(cotacao.getData(), cotacao.getCotacao()));
+        }
+        lista.sort(Comparator.comparing(OraculoDTO::getData));
+        return lista;
     }
 
     @Override
