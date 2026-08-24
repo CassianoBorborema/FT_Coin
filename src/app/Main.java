@@ -9,6 +9,7 @@ import DAO.memoria.OraculoDAOMemoria;
 import DTO.OraculoDTO;
 import controller.CarteiraController;
 import controller.MovimentacaoController;
+import controller.OraculoController;
 import controller.RelatorioController;
 import exception.AppException;
 import java.time.LocalDate;
@@ -34,12 +35,12 @@ public class Main {
         MovimentacaoController movimentacaoController = new MovimentacaoController(
                 movimentacaoDAO, carteiraDAO, oraculoDAO
         );
+        OraculoController oraculoController = new OraculoController(oraculoDAO);
         RelatorioController relatorioController = new RelatorioController(
                 carteiraDAO, movimentacaoDAO, oraculoDAO
         );
-
         MenuPrincipal menu = new MenuPrincipal(
-                input, carteiraController, movimentacaoController, relatorioController
+                input, carteiraController, movimentacaoController, oraculoController, relatorioController
         );
 
         System.out.println("****************************");

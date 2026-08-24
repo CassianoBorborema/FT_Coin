@@ -51,21 +51,25 @@ flowchart TB
     MenuMovimentacao -->|"captura e exibe"| AppException
 ```
 
+
+
 ### Papel de cada componente
 
-| Componente | Arquivo | Responsabilidade no fluxo |
-|------------|---------|---------------------------|
-| **Main** | [src/app/Main.java](../src/app/Main.java) | Bootstrap: cria DAOs em memória, controllers, seed de cotações; helpers `lerData`, `lerDouble`, `lerInteiro` |
-| **MenuPrincipal** | [src/view/MenuPrincipal.java](../src/view/MenuPrincipal.java) | Menu raiz; opção **2 (Movimentação)** abre `MenuMovimentacao` |
-| **MenuMovimentacao** | [src/view/MenuMovimentacao.java](../src/view/MenuMovimentacao.java) | Submenu compra/venda; lê ID da carteira, data e quantidade |
-| **MovimentacaoController** | [src/controller/MovimentacaoController.java](../src/controller/MovimentacaoController.java) | Valida carteira, cotação na data, saldo (venda); orquestra inclusão |
-| **Movimentacao (model)** | [src/model/Movimentacao.java](../src/model/Movimentacao.java) | Valida campos; `fromDTO()` / `toDTO()` |
-| **TipoMovimentacao** | [src/model/TipoMovimentacao.java](../src/model/TipoMovimentacao.java) | Enum `COMPRA (C)` e `VENDA (V)` |
-| **MovimentacaoDTO** | [src/DTO/MovimentacaoDTO.java](../src/DTO/MovimentacaoDTO.java) | Transporte: `idMovimento`, `idCarteira`, `data`, `tipo`, `quantidade` |
-| **Oraculo / OraculoDTO** | [src/model/Oraculo.java](../src/model/Oraculo.java), [src/DTO/OraculoDTO.java](../src/DTO/OraculoDTO.java) | Cotação diária usada para validar a data da movimentação |
-| **MovimentacaoDAO** | [src/DAO/MovimentacaoDAO.java](../src/DAO/MovimentacaoDAO.java) | Contrato: incluir, consultar, listar por carteira, saldo, vínculos |
-| **MovimentacaoDAOMemoria** | [src/DAO/memoria/MovimentacaoDAOMemoria.java](../src/DAO/memoria/MovimentacaoDAOMemoria.java) | `HashMap` + `proximoId` global |
-| **OraculoDAOMemoria** | [src/DAO/memoria/OraculoDAOMemoria.java](../src/DAO/memoria/OraculoDAOMemoria.java) | `Map<LocalDate, OraculoDTO>` |
+
+| Componente                 | Arquivo                                                                                                    | Responsabilidade no fluxo                                                                                    |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Main**                   | [src/app/Main.java](../src/app/Main.java)                                                                  | Bootstrap: cria DAOs em memória, controllers, seed de cotações; helpers `lerData`, `lerDouble`, `lerInteiro` |
+| **MenuPrincipal**          | [src/view/MenuPrincipal.java](../src/view/MenuPrincipal.java)                                              | Menu raiz; opção **2 (Movimentação)** abre `MenuMovimentacao`                                                |
+| **MenuMovimentacao**       | [src/view/MenuMovimentacao.java](../src/view/MenuMovimentacao.java)                                        | Submenu compra/venda; lê ID da carteira, data e quantidade                                                   |
+| **MovimentacaoController** | [src/controller/MovimentacaoController.java](../src/controller/MovimentacaoController.java)                | Valida carteira, cotação na data, saldo (venda); orquestra inclusão                                          |
+| **Movimentacao (model)**   | [src/model/Movimentacao.java](../src/model/Movimentacao.java)                                              | Valida campos; `fromDTO()` / `toDTO()`                                                                       |
+| **TipoMovimentacao**       | [src/model/TipoMovimentacao.java](../src/model/TipoMovimentacao.java)                                      | Enum `COMPRA (C)` e `VENDA (V)`                                                                              |
+| **MovimentacaoDTO**        | [src/DTO/MovimentacaoDTO.java](../src/DTO/MovimentacaoDTO.java)                                            | Transporte: `idMovimento`, `idCarteira`, `data`, `tipo`, `quantidade`                                        |
+| **Oraculo / OraculoDTO**   | [src/model/Oraculo.java](../src/model/Oraculo.java), [src/DTO/OraculoDTO.java](../src/DTO/OraculoDTO.java) | Cotação diária usada para validar a data da movimentação                                                     |
+| **MovimentacaoDAO**        | [src/DAO/MovimentacaoDAO.java](../src/DAO/MovimentacaoDAO.java)                                            | Contrato: incluir, consultar, listar por carteira, saldo, vínculos                                           |
+| **MovimentacaoDAOMemoria** | [src/DAO/memoria/MovimentacaoDAOMemoria.java](../src/DAO/memoria/MovimentacaoDAOMemoria.java)              | `HashMap` + `proximoId` global                                                                               |
+| **OraculoDAOMemoria**      | [src/DAO/memoria/OraculoDAOMemoria.java](../src/DAO/memoria/OraculoDAOMemoria.java)                        | `Map<LocalDate, OraculoDTO>`                                                                                 |
+
 
 ---
 
@@ -92,6 +96,8 @@ sequenceDiagram
     MM->>MM: exibirMenuMovimentacao
 ```
 
+
+
 **Seed do Oráculo:** na inicialização, [Main.java](../src/app/Main.java) cadastra cotações para **hoje** e **ontem** (150,0 e 145,0), permitindo testar compra/venda sem menu de cotação.
 
 **Injeção de dependências:** controllers recebem interfaces `*DAO`, não implementações concretas.
@@ -111,6 +117,8 @@ stateDiagram-v2
     Venda --> MenuMovimentacao: conclui ou erro
     MenuPrincipal --> [*]: opcao 0 Sair
 ```
+
+
 
 **Comportamento do loop:**
 
@@ -150,6 +158,8 @@ sequenceDiagram
     MM->>User: exibe sucesso + toString
 ```
 
+
+
 ---
 
 ### 4.2 Venda de moeda virtual
@@ -173,6 +183,8 @@ sequenceDiagram
         MM->>User: exibe sucesso
     end
 ```
+
+
 
 **Saldo:** `saldo = Σ compras − Σ vendas` por carteira, calculado em `MovimentacaoDAOMemoria.calcularSaldo()`.
 
@@ -205,19 +217,23 @@ flowchart LR
     DTO2 --> view
 ```
 
+
+
 ---
 
 ## 6. Tratamento de erros
 
-| Origem | Exemplo | Quem lança | Quem captura |
-|--------|---------|------------|--------------|
-| Entrada numérica inválida | "abc" como ID | `Main.lerInteiro()` | `MenuMovimentacao` |
-| Data inválida | formato errado | `Main.lerData()` | `MenuMovimentacao` |
-| Quantidade inválida | ≤ 0 | `Movimentacao.validar()` | `MenuMovimentacao` |
-| Carteira inexistente | ID não cadastrado | `MovimentacaoController` | `MenuMovimentacao` |
-| Sem cotação na data | data sem seed | `OraculoDAOMemoria` | `MenuMovimentacao` |
-| Saldo insuficiente | venda acima do saldo | `MovimentacaoController` | `MenuMovimentacao` |
-| Exclusão de carteira com movimentos | excluir após compra | `CarteiraController.excluir()` | `MenuCarteira` |
+
+| Origem                              | Exemplo              | Quem lança                     | Quem captura       |
+| ----------------------------------- | -------------------- | ------------------------------ | ------------------ |
+| Entrada numérica inválida           | "abc" como ID        | `Main.lerInteiro()`            | `MenuMovimentacao` |
+| Data inválida                       | formato errado       | `Main.lerData()`               | `MenuMovimentacao` |
+| Quantidade inválida                 | ≤ 0                  | `Movimentacao.validar()`       | `MenuMovimentacao` |
+| Carteira inexistente                | ID não cadastrado    | `MovimentacaoController`       | `MenuMovimentacao` |
+| Sem cotação na data                 | data sem seed        | `OraculoDAOMemoria`            | `MenuMovimentacao` |
+| Saldo insuficiente                  | venda acima do saldo | `MovimentacaoController`       | `MenuMovimentacao` |
+| Exclusão de carteira com movimentos | excluir após compra  | `CarteiraController.excluir()` | `MenuCarteira`     |
+
 
 ---
 
@@ -238,6 +254,8 @@ flowchart TB
     incluirOp --> map
     saldoOp["calcularSaldo()"] --> map
 ```
+
+
 
 ---
 
@@ -290,10 +308,10 @@ java -cp out app.Main
 
 ---
 
-## 10. Limitações atuais (contexto para evolução)
+## 10. Integrações e limitações
 
-- `MovimentacaoDAO.listarPorCarteira()` e `calcularSaldo()` existem, mas **não são expostos** no menu — serão usados em Relatórios.
+- `MovimentacaoDAO.listarPorCarteira()` e `calcularSaldo()` são reutilizados pelos Relatórios (ver [fluxo-relatorios.md](fluxo-relatorios.md)).
 - Não há edição nem exclusão de movimentação individual no menu.
-- Implementações JDBC (`MovimentacaoDAOMariaDB`, `OraculoDAOMariaDB`) ainda em stub.
-- Cotações só são carregadas via seed no `Main`; não há menu para cadastrar cotação em runtime.
-- Menu principal ainda não conecta Relatórios e Ajuda.
+- As cotações podem ser cadastradas/consultadas/listadas em runtime pelo menu Oráculo (ver [fluxo-oraculo.md](fluxo-oraculo.md)), além do seed inicial no `Main`.
+- A persistência é exclusivamente em memória (sem banco de dados).
+

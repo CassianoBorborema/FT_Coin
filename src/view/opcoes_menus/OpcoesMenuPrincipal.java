@@ -1,7 +1,7 @@
 package view.opcoes_menus;
 
 public enum OpcoesMenuPrincipal {
-    CARTEIRA(1), MOVIMENTACAO(2), RELATORIOS(3), AJUDA(4), SAIR(0), INVALIDA(-1);
+    CARTEIRA(1), MOVIMENTACAO(2), ORACULO(3), RELATORIOS(4), AJUDA(5), SAIR(0), INVALIDA(-1);
 
     private int valor;
 
