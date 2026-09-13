@@ -1,0 +1,49 @@
+=========================================================
+ FT_COIN
+ Sistema de Apuracao de Ganhos e Perdas
+ em Carteira de Moedas Virtuais
+=========================================================
+
+ Versao: 1.0.0
+ Data  : Junho de 2026
+
+ Desenvolvido para a disciplina:
+ SI300 - Programacao Orientada a Objetos I
+
+ Universidade Estadual de Campinas - UNICAMP
+
+---------------------------------------------------------
+ AUTORES
+---------------------------------------------------------
+
+  Vinicius Pommer Petto      - RA 252160
+  Vinicius Eduardo Machado   - RA 267014
+  Vinicius Correia Leite     - RA 195444
+  Nicolas Fogaca da Costa    - RA 241143
+  Joao Paulo S. Pacolla      - RA 221170
+  Gabriel Rodrigues Firmino  - RA 219400
+  Guilherme Leal Ribeiro     - RA 237816
+  Cassiano Ladeia Borborema  - RA 257721
+
+---------------------------------------------------------
+ TECNOLOGIAS
+---------------------------------------------------------
+
+  - Java 8+
+  - Arquitetura MVC
+  - Padrao DAO
+  - Interface CLI
+
+---------------------------------------------------------
+ COPYRIGHT
+---------------------------------------------------------
+
+  (c) 2026 Equipe FT_Coin.
+
+  Este software foi desenvolvido exclusivamente para fins
+  academicos como projeto da disciplina SI300 -
+  Programacao Orientada a Objetos I.
+
+  Todos os direitos reservados aos autores.
+
+=========================================================

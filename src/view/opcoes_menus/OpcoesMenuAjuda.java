@@ -1,7 +1,7 @@
 package view.opcoes_menus;
 
 public enum OpcoesMenuAjuda {
-    TEXTO_AJUDA(1), VOLTAR(0), INVALIDA(-1);
+    TEXTO_AJUDA(1), VOLTAR(0), INVALIDA(-1), CREDITOS(2);
 
     private int valor;
 

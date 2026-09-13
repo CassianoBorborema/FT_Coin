@@ -1,0 +1,17 @@
+=== COMO FUNCIONA O FT_COIN ===
+O FT_Coin apura ganhos e perdas em uma carteira de moedas virtuais.
+Navegue digitando o número da opção desejada e use 0 para voltar/sair.
+
+1. Carteira: incluir, consultar, editar e excluir carteiras.
+   A exclusão é bloqueada quando há movimentações vinculadas.
+2. Movimentação: registrar compras e vendas de moeda virtual.
+   A data informada precisa ter cotação cadastrada no Oráculo,
+   e a venda exige saldo suficiente na carteira.
+3. Oráculo: cadastrar, consultar e listar as cotações diárias,
+   usadas para validar movimentações e calcular relatórios.
+4. Relatórios: listar carteiras (por identificador ou titular),
+   consultar saldo atual, histórico de movimentação e o
+   ganho/perda total de cada carteira.
+5. Ajuda: este guia de uso do sistema.
+
+Datas devem ser informadas no formato dd/MM/yyyy.
