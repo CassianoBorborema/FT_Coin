@@ -1,81 +1,41 @@
 package view;
 
-import app.Main;
 import controller.MovimentacaoController;
 import dto.MovimentacaoDTO;
 import exception.AppException;
-import view.opcoes_menus.OpcoesMenuMovimentacao;
-import java.time.LocalDate;
-import java.util.Scanner;
 
-public class MenuMovimentacao {
+/**
+ * Compra e venda de FTCoins. As operações são registradas na data de hoje, à cotação do dia.
+ */
+public class MenuMovimentacao extends Menu {
 
-    private final Scanner input;
     private final MovimentacaoController controller;
 
-    public MenuMovimentacao(Scanner input, MovimentacaoController controller) {
-        this.input = input;
+    public MenuMovimentacao(Console console, MovimentacaoController controller) {
+        super(console, "Movimentação");
         this.controller = controller;
+        adicionarOpcao("Compra de moeda virtual", () -> registrar("Compra", controller::registrarCompra));
+        adicionarOpcao("Venda de moeda virtual", () -> registrar("Venda", controller::registrarVenda));
     }
 
-    public void exibirMenuMovimentacao() {
-        while (true) {
-            System.out.println("\nQual opção deseja?");
-            System.out.println("1. Compra de moeda virtual");
-            System.out.println("2. Venda de moeda virtual");
-            System.out.println("0. Voltar");
-
-            OpcoesMenuMovimentacao selecao = OpcoesMenuMovimentacao.opcao(Main.lerOpcao(input));
-
-            switch (selecao) {
-                case COMPRA:
-                    registrarCompra();
-                    break;
-                case VENDA:
-                    registrarVenda();
-                    break;
-                case VOLTAR:
-                    return;
-                case INVALIDA:
-                    System.out.println("Opção inválida. Tente novamente.");
-                    break;
-            }
-        }
+    /** Operação de registro do controller (compra ou venda). */
+    @FunctionalInterface
+    private interface Registro {
+        MovimentacaoDTO registrar(int idCarteira, double quantidade) throws AppException;
     }
 
-    /**
-     * Lê o identificador da carteira e já confirma que ela existe,
-     * interrompendo a operação antes de pedir os demais dados.
-     */
-    private int lerCarteiraExistente() throws AppException {
-        int idCarteira = Main.lerInteiro(input, "Digite o identificador da carteira:");
+    private void registrar(String operacao, Registro registro) throws AppException {
+        int idCarteira = console.lerInteiro("Digite o identificador da carteira:");
         controller.validarCarteiraExiste(idCarteira);
-        return idCarteira;
-    }
 
-    private void registrarCompra() {
-        try {
-            int idCarteira = lerCarteiraExistente();
-            LocalDate data = Main.lerData(input, "Digite a data da compra");
-            double quantidade = Main.lerDouble(input, "Digite a quantidade:");
-            MovimentacaoDTO movimentacao = controller.registrarCompra(idCarteira, data, quantidade);
-            System.out.println("Compra registrada com sucesso:");
-            System.out.println(movimentacao);
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
+        double cotacao = controller.cotacaoDeHoje();
+        console.exibir("Cotação de hoje: " + Formatador.moeda(cotacao));
+        double quantidade = console.lerDecimal("Digite a quantidade:");
 
-    private void registrarVenda() {
-        try {
-            int idCarteira = lerCarteiraExistente();
-            LocalDate data = Main.lerData(input, "Digite a data da venda");
-            double quantidade = Main.lerDouble(input, "Digite a quantidade:");
-            MovimentacaoDTO movimentacao = controller.registrarVenda(idCarteira, data, quantidade);
-            System.out.println("Venda registrada com sucesso:");
-            System.out.println(movimentacao);
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
+        MovimentacaoDTO movimentacao = registro.registrar(idCarteira, quantidade);
+        console.exibir(operacao + " registrada com sucesso: "
+                + Formatador.quantidade(movimentacao.getQuantidade()) + " FTCoins em "
+                + Formatador.data(movimentacao.getData()) + " a " + Formatador.moeda(cotacao)
+                + " (total " + Formatador.moeda(movimentacao.getQuantidade() * cotacao) + ").");
     }
 }

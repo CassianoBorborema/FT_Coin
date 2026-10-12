@@ -27,7 +27,7 @@ public class CarteiraController {
     }
 
     public CarteiraDTO consultar(int identificador) throws AppException {
-        validarIdentificador(identificador);
+        ValidadorCarteira.validarIdentificador(identificador);
         return carteiraDAO.consultarPorId(identificador);
     }
 
@@ -36,7 +36,7 @@ public class CarteiraController {
     }
 
     public CarteiraDTO editar(int identificador, String nomeTitular, String corretora) throws AppException {
-        validarIdentificador(identificador);
+        ValidadorCarteira.validarIdentificador(identificador);
         CarteiraDTO dto = new CarteiraDTO(identificador, nomeTitular, corretora);
         Carteira carteira = Carteira.fromDTO(dto);
         carteira.validar();
@@ -45,18 +45,12 @@ public class CarteiraController {
     }
 
     public void excluir(int identificador) throws AppException {
-        validarIdentificador(identificador);
+        ValidadorCarteira.validarIdentificador(identificador);
         if (movimentacaoDAO.possuiMovimentacoes(identificador)) {
             throw new AppException(
                     "Não é possível excluir a carteira " + identificador + " pois existem movimentações vinculadas."
             );
         }
         carteiraDAO.excluir(identificador);
-    }
-
-    private void validarIdentificador(int identificador) throws AppException {
-        if (identificador <= 0) {
-            throw new AppException("Identificador da carteira deve ser maior que zero.");
-        }
     }
 }

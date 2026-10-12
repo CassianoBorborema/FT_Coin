@@ -1,109 +1,59 @@
 package view;
 
-import app.Main;
 import controller.CarteiraController;
 import dto.CarteiraDTO;
 import exception.AppException;
-import view.opcoes_menus.OpcoesMenuCarteira;
-import java.util.Scanner;
 
-public class MenuCarteira {
+/**
+ * Cadastro de carteiras: inclusão, consulta, edição e exclusão.
+ */
+public class MenuCarteira extends Menu {
 
-    private final Scanner input;
     private final CarteiraController controller;
 
-    public MenuCarteira(Scanner input, CarteiraController controller) {
-        this.input = input;
+    public MenuCarteira(Console console, CarteiraController controller) {
+        super(console, "Carteira");
         this.controller = controller;
+        adicionarOpcao("Incluir carteira", this::incluirCarteira);
+        adicionarOpcao("Consultar carteira", this::consultarCarteira);
+        adicionarOpcao("Editar carteira", this::editarCarteira);
+        adicionarOpcao("Excluir carteira", this::excluirCarteira);
     }
 
-    public void exibirMenuCarteira() {
-        while (true) {
-            System.out.println("\nQual opção deseja?");
-            System.out.println("1. Incluir carteira");
-            System.out.println("2. Consultar carteira");
-            System.out.println("3. Editar carteira");
-            System.out.println("4. Excluir carteira");
-            System.out.println("0. Voltar");
-
-            OpcoesMenuCarteira selecao = OpcoesMenuCarteira.opcao(Main.lerOpcao(input));
-
-            switch (selecao) {
-                case INCLUIR:
-                    incluirCarteira();
-                    break;
-                case CONSULTAR:
-                    consultarCarteira();
-                    break;
-                case EDITAR:
-                    editarCarteira();
-                    break;
-                case EXCLUIR:
-                    excluirCarteira();
-                    break;
-                case VOLTAR:
-                    return;
-                case INVALIDA:
-                    System.out.println("Opção inválida. Tente novamente.");
-                    break;
-            }
-        }
+    private void incluirCarteira() throws AppException {
+        String nomeTitular = console.lerLinha("Digite o nome do titular:");
+        String corretora = console.lerLinha("Digite a corretora:");
+        CarteiraDTO carteira = controller.incluir(nomeTitular, corretora);
+        console.exibir("Carteira incluída com sucesso: " + Formatador.carteira(carteira));
     }
 
-    private void incluirCarteira() {
-        try {
-            String nomeTitular = Main.lerLinha(input, "Digite o nome do titular:");
-            String corretora = Main.lerLinha(input, "Digite a corretora:");
-            CarteiraDTO carteira = controller.incluir(nomeTitular, corretora);
-            System.out.println("Carteira incluída com sucesso:");
-            System.out.println(carteira);
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
+    private void consultarCarteira() throws AppException {
+        int identificador = console.lerInteiro("Digite o identificador da carteira:");
+        CarteiraDTO carteira = controller.consultar(identificador);
+        console.exibir("Carteira encontrada: " + Formatador.carteira(carteira));
     }
 
-    private void consultarCarteira() {
-        try {
-            int identificador = Main.lerInteiro(input, "Digite o identificador da carteira:");
-            CarteiraDTO carteira = controller.consultar(identificador);
-            System.out.println("Carteira encontrada:");
-            System.out.println(carteira);
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
+    private void editarCarteira() throws AppException {
+        int identificador = console.lerInteiro("Digite o identificador da carteira a editar:");
+        CarteiraDTO atual = controller.consultar(identificador);
+        console.exibir("Carteira atual: " + Formatador.carteira(atual));
+
+        String nomeTitular = console.lerLinha("Digite o novo nome do titular:");
+        String corretora = console.lerLinha("Digite a nova corretora:");
+        CarteiraDTO atualizada = controller.editar(identificador, nomeTitular, corretora);
+        console.exibir("Carteira atualizada com sucesso: " + Formatador.carteira(atualizada));
     }
 
-    private void editarCarteira() {
-        try {
-            int identificador = Main.lerInteiro(input, "Digite o identificador da carteira a editar:");
-            CarteiraDTO atual = controller.consultar(identificador);
-            System.out.println("Carteira atual: " + atual);
+    private void excluirCarteira() throws AppException {
+        int identificador = console.lerInteiro("Digite o identificador da carteira a excluir:");
+        CarteiraDTO carteira = controller.consultar(identificador);
+        console.exibir("Carteira a excluir: " + Formatador.carteira(carteira));
 
-            String nomeTitular = Main.lerLinha(input, "Digite o novo nome do titular:");
-            String corretora = Main.lerLinha(input, "Digite a nova corretora:");
-            CarteiraDTO atualizada = controller.editar(identificador, nomeTitular, corretora);
-            System.out.println("Carteira atualizada com sucesso:");
-            System.out.println(atualizada);
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
-    private void excluirCarteira() {
-        try {
-            int identificador = Main.lerInteiro(input, "Digite o identificador da carteira a excluir:");
-            CarteiraDTO carteira = controller.consultar(identificador);
-            System.out.println("Carteira a excluir: " + carteira);
-            String confirmacao = Main.lerLinha(input, "Confirma exclusão? (S/N):");
-
-            if (confirmacao.equalsIgnoreCase("S")) {
-                controller.excluir(identificador);
-                System.out.println("Carteira excluída com sucesso.");
-            } else {
-                System.out.println("Exclusão cancelada.");
-            }
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
+        if (console.confirmar("Confirma exclusão?")) {
+            controller.excluir(identificador);
+            console.exibir("Carteira excluída com sucesso.");
+        } else {
+            console.exibir("Exclusão cancelada.");
         }
     }
 }

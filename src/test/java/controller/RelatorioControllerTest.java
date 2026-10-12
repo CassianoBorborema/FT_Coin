@@ -5,14 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dao.CarteiraDAO;
 import dao.MovimentacaoDAO;
-import dao.OraculoDAO;
 import dao.memoria.CarteiraDAOMemoria;
 import dao.memoria.MovimentacaoDAOMemoria;
-import dao.memoria.OraculoDAOMemoria;
 import dto.ApuracaoDTO;
 import dto.CarteiraDTO;
 import dto.MovimentacaoDTO;
-import dto.OraculoDTO;
 import exception.AppException;
 import java.time.LocalDate;
 import java.util.List;
@@ -20,24 +17,26 @@ import java.util.stream.Collectors;
 import model.TipoMovimentacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import testutil.CotacoesFixas;
 
 class RelatorioControllerTest {
 
     private static final double TOLERANCIA = 1e-9;
-    private static final LocalDate HOJE = LocalDate.now();
+    private static final LocalDate HOJE = LocalDate.of(2026, 1, 30);
     private static final LocalDate ONTEM = HOJE.minusDays(1);
 
     private CarteiraDAO carteiraDAO;
     private MovimentacaoDAO movimentacaoDAO;
-    private OraculoDAO oraculoDAO;
+    private CotacoesFixas cotacoes;
     private RelatorioController controller;
 
     @BeforeEach
     void setUp() {
         carteiraDAO = new CarteiraDAOMemoria();
         movimentacaoDAO = new MovimentacaoDAOMemoria();
-        oraculoDAO = new OraculoDAOMemoria();
-        controller = new RelatorioController(carteiraDAO, movimentacaoDAO, oraculoDAO);
+        cotacoes = new CotacoesFixas();
+        controller = new RelatorioController(carteiraDAO, movimentacaoDAO, cotacoes,
+                CotacoesFixas.relogioEm(HOJE));
     }
 
     @Test
@@ -62,8 +61,7 @@ class RelatorioControllerTest {
     @Test
     void apurarValoraSaldoPelaCotacaoDeHoje() throws AppException {
         carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
-        oraculoDAO.incluir(new OraculoDTO(ONTEM, 10.0));
-        oraculoDAO.incluir(new OraculoDTO(HOJE, 12.0));
+        cotacoes.com(ONTEM, 10.0).com(HOJE, 12.0);
         movimentacaoDAO.incluir(new MovimentacaoDTO(0, 1, ONTEM, TipoMovimentacao.COMPRA, 100));
 
         ApuracaoDTO apuracao = controller.apurar(1);
@@ -72,6 +70,15 @@ class RelatorioControllerTest {
         assertEquals(1_200, apuracao.getSaldoMercado(), TOLERANCIA);
         assertEquals(200, apuracao.getResultadoMercado(), TOLERANCIA);
         assertEquals(0, apuracao.getResultadoCustoMedio(), TOLERANCIA);
+    }
+
+    @Test
+    void apurarSemCotacaoDeHojeFalha() throws AppException {
+        carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
+        cotacoes.com(ONTEM, 10.0);
+        movimentacaoDAO.incluir(new MovimentacaoDTO(0, 1, ONTEM, TipoMovimentacao.COMPRA, 100));
+
+        assertThrows(AppException.class, () -> controller.apurar(1));
     }
 
     @Test

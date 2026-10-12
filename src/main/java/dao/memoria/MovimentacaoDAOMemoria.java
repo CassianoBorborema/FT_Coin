@@ -3,7 +3,6 @@ package dao.memoria;
 import dao.MovimentacaoDAO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
-import model.TipoMovimentacao;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,13 +55,8 @@ public class MovimentacaoDAOMemoria implements MovimentacaoDAO {
     public double calcularSaldo(int idCarteira) throws AppException {
         double saldo = 0;
         for (MovimentacaoDTO movimentacao : movimentacoes.values()) {
-            if (movimentacao.getIdCarteira() != idCarteira) {
-                continue;
-            }
-            if (movimentacao.getTipo() == TipoMovimentacao.COMPRA) {
-                saldo += movimentacao.getQuantidade();
-            } else if (movimentacao.getTipo() == TipoMovimentacao.VENDA) {
-                saldo -= movimentacao.getQuantidade();
+            if (movimentacao.getIdCarteira() == idCarteira) {
+                saldo += movimentacao.getTipo().getSinal() * movimentacao.getQuantidade();
             }
         }
         return saldo;

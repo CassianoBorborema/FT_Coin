@@ -1,116 +1,82 @@
 package app;
 
+import config.Configuracao;
+import controller.CarteiraController;
+import controller.MovimentacaoController;
+import controller.OraculoController;
+import controller.RelatorioController;
 import dao.CarteiraDAO;
 import dao.MovimentacaoDAO;
 import dao.OraculoDAO;
 import dao.memoria.CarteiraDAOMemoria;
 import dao.memoria.MovimentacaoDAOMemoria;
 import dao.memoria.OraculoDAOMemoria;
-import dto.OraculoDTO;
-import controller.CarteiraController;
-import controller.MovimentacaoController;
-import controller.OraculoController;
-import controller.RelatorioController;
 import exception.AppException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.Scanner;
+import java.time.Clock;
+import java.util.NoSuchElementException;
+import model.ProvedorCotacao;
+import oraculo.CotacaoComHistorico;
+import oraculo.OraculoSimulado;
+import oraculo.ParametrosOraculoSimulado;
+import view.Console;
+import view.MenuAjuda;
+import view.MenuCarteira;
+import view.MenuMovimentacao;
+import view.MenuOraculo;
 import view.MenuPrincipal;
+import view.MenuRelatorios;
 
-public class Main {
+/**
+ * Ponto de entrada do FT_Coin: monta as dependências da aplicação e abre o menu principal.
+ */
+public final class Main {
 
-    private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private Main() {
+    }
 
     public static void main(String[] args) {
-        Scanner input = new Scanner(System.in);
-
-        CarteiraDAO     carteiraDAO     = new CarteiraDAOMemoria();
-        OraculoDAO      oraculoDAO      = new OraculoDAOMemoria();
-        MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAOMemoria();
-
-        seedOraculo(oraculoDAO);
-
-        CarteiraController     carteiraController     = new CarteiraController(carteiraDAO, movimentacaoDAO);
-        MovimentacaoController movimentacaoController = new MovimentacaoController(
-                movimentacaoDAO, carteiraDAO, oraculoDAO
-        );
-        OraculoController oraculoController = new OraculoController(oraculoDAO);
-        RelatorioController relatorioController = new RelatorioController(
-                carteiraDAO, movimentacaoDAO, oraculoDAO
-        );
-        MenuPrincipal menu = new MenuPrincipal(
-                input, carteiraController, movimentacaoController, oraculoController, relatorioController
-        );
-
-        System.out.println("****************************");
-        System.out.println("====Bem vindo ao FT_Coin====");
-        System.out.println("****************************");
-
+        Console console = new Console(System.in, System.out);
         try {
-            menu.exibirMenuPrincipal();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    private static void seedOraculo(OraculoDAO oraculoDAO) {
-        try {
-            LocalDate hoje = LocalDate.now();
-            oraculoDAO.incluir(new OraculoDTO(hoje, 150.0));
-            oraculoDAO.incluir(new OraculoDTO(hoje.minusDays(1), 145.0));
+            MenuPrincipal menu = montarAplicacao(console);
+            exibirBoasVindas(console);
+            menu.exibir();
+            console.exibir("Saindo da aplicação...");
         } catch (AppException e) {
-            System.out.println("Aviso ao carregar cotacoes iniciais: " + e.getMessage());
+            console.exibirErro("Não foi possível iniciar o FT_Coin. " + e.getMessage());
+        } catch (NoSuchElementException e) {
+            console.exibir("\nEntrada encerrada. Saindo da aplicação...");
         }
     }
 
-    public static int lerOpcao(Scanner input) {
-        try {
-            int opcao = input.nextInt();
-            input.nextLine();
-            return opcao;
-        } catch (Exception e) {
-            input.nextLine();
-            System.out.println("Caracter invalido para selecao da opcao");
-            return -1;
-        }
+    private static MenuPrincipal montarAplicacao(Console console) throws AppException {
+        Configuracao configuracao = Configuracao.carregar();
+        Clock relogio = Clock.systemDefaultZone();
+
+        CarteiraDAO carteiraDAO = new CarteiraDAOMemoria();
+        MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAOMemoria();
+        OraculoDAO oraculoDAO = new OraculoDAOMemoria();
+
+        ProvedorCotacao cotacoes = new CotacaoComHistorico(
+                new OraculoSimulado(ParametrosOraculoSimulado.carregar(configuracao), relogio), oraculoDAO);
+
+        CarteiraController carteiraController = new CarteiraController(carteiraDAO, movimentacaoDAO);
+        MovimentacaoController movimentacaoController =
+                new MovimentacaoController(movimentacaoDAO, carteiraDAO, cotacoes, relogio);
+        OraculoController oraculoController = new OraculoController(cotacoes, relogio);
+        RelatorioController relatorioController =
+                new RelatorioController(carteiraDAO, movimentacaoDAO, cotacoes, relogio);
+
+        return new MenuPrincipal(console,
+                new MenuCarteira(console, carteiraController),
+                new MenuMovimentacao(console, movimentacaoController),
+                new MenuOraculo(console, oraculoController),
+                new MenuRelatorios(console, relatorioController),
+                new MenuAjuda(console));
     }
 
-    public static String lerLinha(Scanner input, String mensagem) {
-        System.out.println(mensagem);
-        return input.nextLine().trim();
-    }
-
-    public static int lerInteiro(Scanner input, String mensagem) throws AppException {
-        System.out.println(mensagem);
-        try {
-            int valor = input.nextInt();
-            input.nextLine();
-            return valor;
-        } catch (Exception e) {
-            input.nextLine();
-            throw new AppException("Valor numerico invalido.");
-        }
-    }
-
-    public static double lerDouble(Scanner input, String mensagem) throws AppException {
-        System.out.println(mensagem);
-        try {
-            double valor = input.nextDouble();
-            input.nextLine();
-            return valor;
-        } catch (Exception e) {
-            input.nextLine();
-            throw new AppException("Valor decimal invalido.");
-        }
-    }
-
-    public static LocalDate lerData(Scanner input, String mensagem) throws AppException {
-        String texto = lerLinha(input, mensagem + " (dd/MM/yyyy):");
-        try {
-            return LocalDate.parse(texto, FORMATO_DATA);
-        } catch (DateTimeParseException e) {
-            throw new AppException("Data invalida. Use o formato dd/MM/yyyy.");
-        }
+    private static void exibirBoasVindas(Console console) {
+        console.exibir("****************************");
+        console.exibir("====Bem vindo ao FT_Coin====");
+        console.exibir("****************************");
     }
 }

@@ -12,8 +12,8 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 | **Menu principal**       | Implementado | Carteira (1), Movimentação (2), Oráculo (3), Relatórios (4) e Ajuda (5) integrados |
 | **Carteira (CRUD)**      | Implementado | Incluir, consultar, editar e excluir com validações e confirmação de exclusão      |
 | **Exclusão de carteira** | Implementado | Bloqueada quando existem movimentações vinculadas                                  |
-| **Movimentação**         | Implementado | Compra e venda com validação de carteira, cotação (Oráculo) e saldo na venda       |
-| **Oráculo**              | Implementado | Cadastrar, consultar e listar cotações; seed no `Main` (hoje e ontem)              |
+| **Movimentação**         | Implementado | Compra e venda na data do sistema, à cotação do dia, com validação de saldo        |
+| **Oráculo**              | Simulado     | Cotação de hoje, por data e por período, gerada pela fórmula da planilha           |
 | **Relatórios**           | Implementado | Listagens (id/titular), saldo, histórico e ganho/perda (custo médio e mercado)  |
 | **Ajuda**                | Implementado | Texto "Como funciona" (guia de uso)                                                |
 | **Persistência**         | Memória      | `CarteiraDAOMemoria`, `MovimentacaoDAOMemoria`, `OraculoDAOMemoria`                |
@@ -26,7 +26,7 @@ A aplicação **compila e executa** todos os fluxos ponta a ponta.
 | -------------------------------------------------------- | ----------------------------------------------------- |
 | [docs/fluxo-carteira.md](docs/fluxo-carteira.md)         | Arquitetura, menus, CRUD e interação da carteira      |
 | [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra/venda, Oráculo, saldo e diagramas de sequência |
-| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Cadastro, consulta e listagem de cotações             |
+| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Consulta e listagem de cotações                       |
 | [docs/fluxo-relatorios.md](docs/fluxo-relatorios.md)     | Listagens, saldo, histórico e cálculo de ganho/perda  |
 
 
@@ -47,14 +47,21 @@ FT_Coin/
     ├── main/
     │   ├── java/
     │   │   ├── app/
-    │   │   │   └── Main.java                # Bootstrap, seed oráculo, leitura CLI
+    │   │   │   └── Main.java                # Monta as dependências e abre o menu principal
+    │   │   ├── config/
+    │   │   │   └── Configuracao.java        # Leitura do ftcoin.properties
     │   │   ├── model/
     │   │   │   ├── Carteira.java
     │   │   │   ├── Movimentacao.java
-    │   │   │   ├── TipoMovimentacao.java
+    │   │   │   ├── TipoMovimentacao.java    # Compra/venda aplicadas à posição (polimorfismo)
     │   │   │   ├── Oraculo.java
-    │   │   │   ├── ApuracaoCarteira.java    # Custo médio e resultados da carteira
+    │   │   │   ├── Posicao.java             # Quantidade, custo médio e totais da carteira
+    │   │   │   ├── ApuracaoCarteira.java    # Histórico e resultados da carteira
     │   │   │   └── ProvedorCotacao.java     # Contrato de cotação por data
+    │   │   ├── oraculo/
+    │   │   │   ├── OraculoSimulado.java     # Cotação pela fórmula da planilha
+    │   │   │   ├── ParametrosOraculoSimulado.java
+    │   │   │   └── CotacaoComHistorico.java # Registra cada cotação obtida no OraculoDAO
     │   │   ├── dto/
     │   │   │   ├── CarteiraDTO.java
     │   │   │   ├── MovimentacaoDTO.java
@@ -75,16 +82,20 @@ FT_Coin/
     │   │   │   ├── OraculoController.java
     │   │   │   └── RelatorioController.java
     │   │   ├── view/
+    │   │   │   ├── Console.java             # Entrada e saída de texto
+    │   │   │   ├── Menu.java                # Base dos menus (opções, laço e erros)
+    │   │   │   ├── OpcaoMenu.java
+    │   │   │   ├── Formatador.java          # Datas, moeda e quantidades
     │   │   │   ├── MenuPrincipal.java
     │   │   │   ├── MenuCarteira.java
     │   │   │   ├── MenuMovimentacao.java
     │   │   │   ├── MenuOraculo.java
     │   │   │   ├── MenuRelatorios.java
-    │   │   │   ├── MenuAjuda.java
-    │   │   │   └── opcoes_menus/
+    │   │   │   └── MenuAjuda.java
     │   │   └── exception/
     │   │       └── AppException.java
     │   └── resources/
+    │       ├── ftcoin.properties            # Configuração (parâmetros do oráculo simulado)
     │       └── textos/
     │           ├── ajuda.txt                # Texto longo da tela de ajuda
     │           └── creditos.txt             # Tela de créditos
@@ -93,10 +104,10 @@ FT_Coin/
             ├── model/
             │   ├── ApuracaoCarteiraTest.java
             │   └── ApuracaoCarteiraPlanilhaTest.java   # Reproduz a planilha de apuração de referência
-            └── controller/
-                ├── CarteiraControllerTest.java
-                ├── MovimentacaoControllerTest.java
-                └── RelatorioControllerTest.java
+            ├── controller/                              # Controllers com DAOs em memória
+            ├── oraculo/                                 # Oráculo simulado e histórico de cotações
+            ├── view/                                    # Menu e Console
+            └── testutil/                                # Cotações fixas e relógio parado para testes
 ```
 
 ### Responsabilidade por camada
@@ -104,11 +115,13 @@ FT_Coin/
 
 | Camada         | Pacote                      | Papel                                               |
 | -------------- | --------------------------- | --------------------------------------------------- |
-| **Model**      | `model`                     | Entidades de domínio e validações                   |
+| **Model**      | `model`                     | Entidades de domínio, validações e apuração         |
 | **DTO**        | `dto`                       | Transporte entre view, controller e DAO             |
 | **DAO**        | `dao`, `dao.memoria`        | Contrato e implementação de persistência em memória |
 | **Controller** | `controller`                | Regras de negócio e orquestração                    |
-| **View**       | `view`, `view.opcoes_menus` | Menus CLI e enums de opções                         |
+| **View**       | `view`                      | Menus CLI, entrada/saída e formatação               |
+| **Oráculo**    | `oraculo`                   | Fontes de cotação (simulada) e histórico            |
+| **Config**     | `config`                    | Configuração da aplicação (`ftcoin.properties`)     |
 | **Exception**  | `exception`                 | Erros de aplicação centralizados                    |
 
 
@@ -129,7 +142,7 @@ FT_Coin/
 - **Interface:** CLI com menu principal (Carteira, Movimentação, Oráculo, Relatórios, Ajuda, Sair) e submenus.
 - **Carteira:** incluir, consultar, editar e excluir.
 - **Movimentação:** compra e venda de moeda virtual.
-- **Oráculo:** cadastrar, consultar e listar cotações diárias para cálculos e movimentações.
+- **Oráculo:** consultar cotações diárias, usadas nas movimentações e nos cálculos. Até a API existir, as cotações são simuladas pela fórmula da planilha de referência.
 - **Relatórios:** listagens ordenadas, saldo, histórico e ganho/perda por carteira, valorizados a custo médio e a mercado.
 - **Persistência:** implementação DAO **em memória**.
 - **Boas práticas:** POO, encapsulamento, polimorfismo, validações, exceções, compilação sem erros.
@@ -168,23 +181,37 @@ Outros comandos úteis:
 
 ### Movimentação
 
-1. Menu **2 (Movimentação)** → **1 (Compra)** → ID da carteira, data de hoje (`dd/MM/yyyy`), quantidade (ex.: 10)
-2. **2 (Venda)** → mesma carteira, data de hoje, quantidade ≤ saldo (ex.: 5)
+1. Menu **2 (Movimentação)** → **1 (Compra)** → ID da carteira → conferir a cotação de hoje → quantidade (ex.: 10)
+2. **2 (Venda)** → mesma carteira, quantidade ≤ saldo (ex.: 5)
 3. Tentar venda acima do saldo → erro esperado
 4. Menu **1 (Carteira)** → **4 (Excluir)** carteira com movimentos → bloqueio
 
 ### Oráculo
 
-1. Menu **3 (Oráculo)** → **1 (Cadastrar)** → data e cotação
-2. **3 (Listar)** → conferir cotações cadastradas → **0 (Voltar)**
+1. Menu **3 (Oráculo)** → **1 (Cotação de hoje)**
+2. **3 (Listar por período)** → ex.: `01/10/2026` a `05/10/2026` → **0 (Voltar)**
 
 ### Relatórios
 
 1. Menu **4 (Relatórios)** → **1/2** listar carteiras por id/titular
 2. **3 (Saldo atual)** e **4 (Histórico)** → informar ID da carteira
-3. **5 (Ganhos e perdas)** → resultado por carteira a custo médio e a mercado (requer cotação de hoje no Oráculo)
+3. **5 (Ganhos e perdas)** → resultado por carteira a custo médio e a mercado (cotação de hoje)
 
-Cotações seed: **hoje** e **ontem** (ver `Main.seedOraculo()`).
+### Oráculo simulado
+
+Até a API do Oráculo existir, cada cotação é calculada pela fórmula da planilha de referência:
+
+```
+cotação = base + flutuação + valorização
+valorização = 1,40 + 0,435 · ln(n)        (n = dias desde a data inicial; a data inicial é o dia 1)
+flutuação   = sorteio em [-2,5; +2,5], sempre o mesmo para a mesma data
+```
+
+Não há cotação antes da data inicial (`01/01/2026`) nem para datas futuras. Os parâmetros ficam em
+`src/main/resources/ftcoin.properties` e podem ser sobrescritos na execução, por exemplo
+`java -Doraculo.base=20 -jar target/ft-coin-1.0.0-SNAPSHOT.jar`.
+
+> No terminal do Windows, use `java -Dstdout.encoding=UTF-8 -jar ...` para os acentos aparecerem corretamente.
 
 ---
 
@@ -195,7 +222,7 @@ Cotações seed: **hoje** e **ontem** (ver `Main.seedOraculo()`).
 | -------------------------------------------------------- | ------------------------------------------------ |
 | [docs/fluxo-carteira.md](docs/fluxo-carteira.md)         | Arquitetura, menus, CRUD e interação da carteira |
 | [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra/venda, Oráculo, saldo e diagramas         |
-| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Cadastro, consulta e listagem de cotações        |
+| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Consulta e listagem de cotações                  |
 | [docs/fluxo-relatorios.md](docs/fluxo-relatorios.md)     | Listagens, saldo, histórico e ganho/perda        |
 | [docs/README.md](docs/README.md)                         | Índice da pasta de documentação                  |
 

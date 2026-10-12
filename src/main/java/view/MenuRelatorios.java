@@ -1,199 +1,113 @@
 package view;
 
+import controller.RelatorioController;
 import dto.ApuracaoDTO;
 import dto.CarteiraDTO;
 import dto.LinhaApuracaoDTO;
-import app.Main;
-import controller.RelatorioController;
 import exception.AppException;
-import model.TipoMovimentacao;
-import view.opcoes_menus.OpcoesMenuRelatorios;
-import java.text.DecimalFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Scanner;
+import model.TipoMovimentacao;
 
-public class MenuRelatorios {
+/**
+ * Relatórios das carteiras: listagens, saldo atual, histórico e ganho/perda.
+ */
+public class MenuRelatorios extends Menu {
 
-    private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String FORMATO_TABELA = "%-10s %-6s %12s %13s %14s %12s %13s %15s%n";
-    private static final double ARREDONDA_ZERO = 0.005;
 
-    private final Scanner input;
     private final RelatorioController controller;
 
-    public MenuRelatorios(Scanner input, RelatorioController controller) {
-        this.input = input;
+    public MenuRelatorios(Console console, RelatorioController controller) {
+        super(console, "Relatórios");
         this.controller = controller;
-    }
-
-    public void exibirMenuRelatorios() {
-        while (true) {
-            System.out.println("\nQual opção deseja?");
-            System.out.println("1. Buscar por identificador");
-            System.out.println("2. Buscar por titular");
-            System.out.println("3. Saldo atual");
-            System.out.println("4. Histórico de movimentação");
-            System.out.println("5. Ganhos e perdas");
-            System.out.println("0. Voltar");
-
-            OpcoesMenuRelatorios selecao = OpcoesMenuRelatorios.opcao(Main.lerOpcao(input));
-
-            switch (selecao) {
-                case LISTAR_POR_ID:
-                    listarPorIdentificador();
-                    break;
-                case LISTAR_POR_NOME:
-                    listarPorTitular();
-                    break;
-                case EXIBIR_SALDO:
-                    exibirSaldo();
-                    break;
-                case HISTORICO_MOVIMENTACAO:
-                    exibirHistorico();
-                    break;
-                case GANHO_PERDA:
-                    exibirGanhoPerda();
-                    break;
-                case VOLTAR:
-                    return;
-                case INVALIDA:
-                    System.out.println("Opção inválida. Tente novamente.");
-                    break;
-            }
-        }
-    }
-
-    private void listarPorIdentificador() {
-        try {
-            List<CarteiraDTO> carteiras = controller.listarPorIdentificador();
-            exibirCarteiras(carteiras, "identificador");
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
-    private void listarPorTitular() {
-        try {
-            List<CarteiraDTO> carteiras = controller.listarPorTitular();
-            exibirCarteiras(carteiras, "titular");
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
-    private void exibirSaldo() {
-        try {
-            int identificador = Main.lerInteiro(input, "Digite o identificador da carteira:");
-            ApuracaoDTO apuracao = controller.apurar(identificador);
-            System.out.println("Saldo atual da carteira " + identificador + ":");
-            exibirCampo("Quantidade (FTCoins)", formatarQuantidade(apuracao.getSaldoQuantidade()));
-            exibirCampo("Custo médio", formatarMoeda(apuracao.getCustoMedio()));
-            exibirCampo("Valor a custo médio", formatarMoeda(apuracao.getSaldoCustoMedio()));
-            exibirCampo("Cotação atual", formatarMoeda(apuracao.getCotacaoAtual()));
-            exibirCampo("Valor a mercado", formatarMoeda(apuracao.getSaldoMercado()));
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
-    private void exibirHistorico() {
-        try {
-            int identificador = Main.lerInteiro(input, "Digite o identificador da carteira:");
-            List<LinhaApuracaoDTO> linhas = controller.apurar(identificador).getLinhas();
-            if (linhas.isEmpty()) {
-                System.out.println("Nenhuma movimentação registrada para a carteira " + identificador + ".");
-                return;
-            }
-            System.out.println("Histórico da carteira " + identificador + " (valores em R$):");
-            System.out.printf(FORMATO_TABELA, "Data", "Tipo", "Qtd.", "Cotação", "Valor", "Saldo (qtd)",
-                    "Custo médio", "Res. operação");
-            for (LinhaApuracaoDTO linha : linhas) {
-                System.out.printf(FORMATO_TABELA,
-                        linha.getData().format(FORMATO_DATA),
-                        linha.getTipo() == TipoMovimentacao.COMPRA ? "Compra" : "Venda",
-                        formatarQuantidade(linha.getQuantidade()),
-                        formatarNumero(linha.getCotacao()),
-                        formatarNumero(linha.getValor()),
-                        formatarQuantidade(linha.getSaldoQuantidade()),
-                        formatarNumero(linha.getCustoMedio()),
-                        formatarNumero(linha.getResultadoOperacao()));
-            }
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
-    private void exibirGanhoPerda() {
-        try {
-            List<CarteiraDTO> carteiras = controller.listarPorIdentificador();
-            if (carteiras.isEmpty()) {
-                System.out.println("Nenhuma carteira cadastrada.");
-                return;
-            }
-            System.out.println("Ganho/perda por carteira:");
-            for (CarteiraDTO carteira : carteiras) {
-                int id = carteira.getIdentificador();
-                System.out.println("\nCarteira " + id + " (" + carteira.getNomeTitular() + ")");
-                try {
-                    exibirResultados(controller.apurar(id));
-                } catch (AppException e) {
-                    System.out.println("  " + e.getMessage());
-                }
-            }
-        } catch (AppException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
-    private void exibirResultados(ApuracaoDTO apuracao) {
-        exibirCampo("Total comprado", formatarMoeda(apuracao.getTotalComprado()));
-        exibirCampo("Total vendido", formatarMoeda(apuracao.getTotalVendido()));
-        exibirCampo(apuracao.getResultadoOperacional() >= 0 ? "Lucro operacional" : "Prejuízo operacional",
-                formatarMoeda(apuracao.getResultadoOperacional()));
-        exibirCampo("Saldo (FTCoins)", formatarQuantidade(apuracao.getSaldoQuantidade()));
-        exibirCampo("Valor a custo médio", formatarMoeda(apuracao.getSaldoCustoMedio()));
-        exibirCampo("Valor a mercado", formatarMoeda(apuracao.getSaldoMercado())
-                + " (cotação atual " + formatarMoeda(apuracao.getCotacaoAtual()) + ")");
-        exibirCampo("Resultado a custo médio", formatarResultado(
-                apuracao.getResultadoCustoMedio(), apuracao.getPercentualCustoMedio()));
-        exibirCampo("Resultado a mercado", formatarResultado(
-                apuracao.getResultadoMercado(), apuracao.getPercentualMercado()));
+        adicionarOpcao("Listar carteiras por identificador",
+                () -> exibirCarteiras(controller.listarPorIdentificador(), "identificador"));
+        adicionarOpcao("Listar carteiras por titular",
+                () -> exibirCarteiras(controller.listarPorTitular(), "titular"));
+        adicionarOpcao("Saldo atual", this::exibirSaldo);
+        adicionarOpcao("Histórico de movimentação", this::exibirHistorico);
+        adicionarOpcao("Ganhos e perdas", this::exibirGanhoPerda);
     }
 
     private void exibirCarteiras(List<CarteiraDTO> carteiras, String criterio) {
         if (carteiras.isEmpty()) {
-            System.out.println("Nenhuma carteira cadastrada.");
+            console.exibir("Nenhuma carteira cadastrada.");
             return;
         }
-        System.out.println("Carteiras ordenadas por " + criterio + ":");
+        console.exibir("Carteiras ordenadas por " + criterio + ":");
         for (CarteiraDTO carteira : carteiras) {
-            System.out.println(carteira);
+            console.exibir("  " + Formatador.carteira(carteira));
         }
+    }
+
+    private void exibirSaldo() throws AppException {
+        int identificador = console.lerInteiro("Digite o identificador da carteira:");
+        ApuracaoDTO apuracao = controller.apurar(identificador);
+        console.exibir("Saldo atual da carteira " + identificador + ":");
+        exibirCampo("Quantidade (FTCoins)", Formatador.quantidade(apuracao.getSaldoQuantidade()));
+        exibirCampo("Custo médio", Formatador.moeda(apuracao.getCustoMedio()));
+        exibirCampo("Valor a custo médio", Formatador.moeda(apuracao.getSaldoCustoMedio()));
+        exibirCampo("Cotação atual", Formatador.moeda(apuracao.getCotacaoAtual()));
+        exibirCampo("Valor a mercado", Formatador.moeda(apuracao.getSaldoMercado()));
+    }
+
+    private void exibirHistorico() throws AppException {
+        int identificador = console.lerInteiro("Digite o identificador da carteira:");
+        List<LinhaApuracaoDTO> linhas = controller.apurar(identificador).getLinhas();
+        if (linhas.isEmpty()) {
+            console.exibir("Nenhuma movimentação registrada para a carteira " + identificador + ".");
+            return;
+        }
+        console.exibir("Histórico da carteira " + identificador + " (valores em R$):");
+        console.exibirFormatado(FORMATO_TABELA, "Data", "Tipo", "Qtd.", "Cotação", "Valor", "Saldo (qtd)",
+                "Custo médio", "Res. operação");
+        for (LinhaApuracaoDTO linha : linhas) {
+            console.exibirFormatado(FORMATO_TABELA,
+                    Formatador.data(linha.getData()),
+                    linha.getTipo() == TipoMovimentacao.COMPRA ? "Compra" : "Venda",
+                    Formatador.quantidade(linha.getQuantidade()),
+                    Formatador.numero(linha.getCotacao()),
+                    Formatador.numero(linha.getValor()),
+                    Formatador.quantidade(linha.getSaldoQuantidade()),
+                    Formatador.numero(linha.getCustoMedio()),
+                    Formatador.numero(linha.getResultadoOperacao()));
+        }
+    }
+
+    private void exibirGanhoPerda() throws AppException {
+        List<CarteiraDTO> carteiras = controller.listarPorIdentificador();
+        if (carteiras.isEmpty()) {
+            console.exibir("Nenhuma carteira cadastrada.");
+            return;
+        }
+        console.exibir("Ganho/perda por carteira:");
+        for (CarteiraDTO carteira : carteiras) {
+            console.exibir("\n" + Formatador.carteira(carteira));
+            try {
+                exibirResultados(controller.apurar(carteira.getIdentificador()));
+            } catch (AppException e) {
+                // Uma carteira com problema não impede o relatório das demais.
+                console.exibir("  " + e.getMessage());
+            }
+        }
+    }
+
+    private void exibirResultados(ApuracaoDTO apuracao) {
+        exibirCampo("Total comprado", Formatador.moeda(apuracao.getTotalComprado()));
+        exibirCampo("Total vendido", Formatador.moeda(apuracao.getTotalVendido()));
+        exibirCampo(apuracao.getResultadoOperacional() >= 0 ? "Lucro operacional" : "Prejuízo operacional",
+                Formatador.moeda(apuracao.getResultadoOperacional()));
+        exibirCampo("Saldo (FTCoins)", Formatador.quantidade(apuracao.getSaldoQuantidade()));
+        exibirCampo("Valor a custo médio", Formatador.moeda(apuracao.getSaldoCustoMedio()));
+        exibirCampo("Valor a mercado", Formatador.moeda(apuracao.getSaldoMercado())
+                + " (cotação atual " + Formatador.moeda(apuracao.getCotacaoAtual()) + ")");
+        exibirCampo("Resultado a custo médio",
+                Formatador.resultado(apuracao.getResultadoCustoMedio(), apuracao.getPercentualCustoMedio()));
+        exibirCampo("Resultado a mercado",
+                Formatador.resultado(apuracao.getResultadoMercado(), apuracao.getPercentualMercado()));
     }
 
     private void exibirCampo(String rotulo, String valor) {
-        System.out.printf("  %-24s: %s%n", rotulo, valor);
-    }
-
-    private String formatarResultado(double resultado, double percentual) {
-        return formatarMoeda(resultado) + " (" + String.format("%.2f%%", zerarSeInsignificante(percentual)) + ")";
-    }
-
-    private String formatarMoeda(double valor) {
-        return "R$ " + formatarNumero(valor);
-    }
-
-    private String formatarNumero(double valor) {
-        return String.format("%,.2f", zerarSeInsignificante(valor));
-    }
-
-    private String formatarQuantidade(double quantidade) {
-        return new DecimalFormat("#,##0.########").format(quantidade);
-    }
-
-    /** Evita exibir "-0,00" para valores que arredondam para zero. */
-    private double zerarSeInsignificante(double valor) {
-        return Math.abs(valor) < ARREDONDA_ZERO ? 0 : valor;
+        console.exibirFormatado("  %-24s: %s%n", rotulo, valor);
     }
 }

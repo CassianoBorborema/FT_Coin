@@ -2,12 +2,13 @@ package controller;
 
 import dao.CarteiraDAO;
 import dao.MovimentacaoDAO;
-import dao.OraculoDAO;
 import dto.ApuracaoDTO;
 import dto.CarteiraDTO;
 import exception.AppException;
-import model.ApuracaoCarteira;
+import java.time.Clock;
 import java.time.LocalDate;
+import model.ApuracaoCarteira;
+import model.ProvedorCotacao;
 import java.util.Comparator;
 import java.util.List;
 
@@ -15,12 +16,23 @@ public class RelatorioController {
 
     private final CarteiraDAO carteiraDAO;
     private final MovimentacaoDAO movimentacaoDAO;
-    private final OraculoDAO oraculoDAO;
+    private final ValidadorCarteira validadorCarteira;
+    private final ProvedorCotacao cotacoes;
+    private final Clock relogio;
 
-    public RelatorioController(CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO, OraculoDAO oraculoDAO) {
+    /**
+     * @param carteiraDAO     persistência das carteiras
+     * @param movimentacaoDAO persistência das movimentações
+     * @param cotacoes        fonte das cotações (Oráculo)
+     * @param relogio         relógio que define a cotação atual (a de hoje)
+     */
+    public RelatorioController(CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO,
+                               ProvedorCotacao cotacoes, Clock relogio) {
         this.carteiraDAO = carteiraDAO;
         this.movimentacaoDAO = movimentacaoDAO;
-        this.oraculoDAO = oraculoDAO;
+        this.validadorCarteira = new ValidadorCarteira(carteiraDAO);
+        this.cotacoes = cotacoes;
+        this.relogio = relogio;
     }
 
     public List<CarteiraDTO> listarPorIdentificador() throws AppException {
@@ -48,28 +60,10 @@ public class RelatorioController {
      *                      ou se o histórico da carteira for inconsistente
      */
     public ApuracaoDTO apurar(int idCarteira) throws AppException {
-        validarCarteiraExiste(idCarteira);
+        validadorCarteira.validarExistente(idCarteira);
         ApuracaoCarteira apuracao = ApuracaoCarteira.calcular(
-                movimentacaoDAO.listarPorCarteira(idCarteira), this::cotacaoNaData
+                movimentacaoDAO.listarPorCarteira(idCarteira), cotacoes
         );
-        return apuracao.toDTO(idCarteira, cotacaoNaData(LocalDate.now()));
-    }
-
-    private double cotacaoNaData(LocalDate data) throws AppException {
-        if (!oraculoDAO.existe(data)) {
-            throw new AppException(
-                    "Não há cotação cadastrada para a data " + data + ". Cadastre-a no menu Oráculo."
-            );
-        }
-        return oraculoDAO.consultarPorData(data).getCotacao();
-    }
-
-    private void validarCarteiraExiste(int idCarteira) throws AppException {
-        if (idCarteira <= 0) {
-            throw new AppException("Identificador da carteira deve ser maior que zero.");
-        }
-        if (!carteiraDAO.existe(idCarteira)) {
-            throw new AppException("Carteira com identificador " + idCarteira + " não encontrada.");
-        }
+        return apuracao.toDTO(idCarteira, cotacoes.cotacaoEm(LocalDate.now(relogio)));
     }
 }

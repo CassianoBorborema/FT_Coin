@@ -12,16 +12,11 @@ import java.util.List;
 /**
  * Apuração dos resultados de uma carteira a partir do seu histórico de movimentações.
  * <p>
- * As movimentações são percorridas em ordem cronológica (empates pela ordem de registro).
- * O custo médio é uma média ponderada recalculada apenas nas compras; as vendas reduzem a
- * quantidade mantendo o custo médio e geram o resultado da operação, igual à quantidade
- * vendida multiplicada pela diferença entre a cotação e o custo médio.
+ * As movimentações são aplicadas a uma {@link Posicao} em ordem cronológica (empates pela ordem
+ * de registro), e cada uma gera uma linha do histórico com a posição logo após a operação.
  * </p>
  */
 public class ApuracaoCarteira {
-
-    /** Tolerância para comparar quantidades em ponto flutuante. */
-    private static final double TOLERANCIA = 1e-9;
 
     private static final double CEM_PORCENTO = 100.0;
 
@@ -31,13 +26,12 @@ public class ApuracaoCarteira {
     private final double totalComprado;
     private final double totalVendido;
 
-    private ApuracaoCarteira(List<LinhaApuracaoDTO> linhas, double saldoQuantidade, double custoMedio,
-                             double totalComprado, double totalVendido) {
+    private ApuracaoCarteira(List<LinhaApuracaoDTO> linhas, Posicao posicao) {
         this.linhas = Collections.unmodifiableList(linhas);
-        this.saldoQuantidade = saldoQuantidade;
-        this.custoMedio = custoMedio;
-        this.totalComprado = totalComprado;
-        this.totalVendido = totalVendido;
+        this.saldoQuantidade = posicao.getQuantidade();
+        this.custoMedio = posicao.temSaldo() ? posicao.getCustoMedio() : 0;
+        this.totalComprado = posicao.getTotalComprado();
+        this.totalVendido = posicao.getTotalVendido();
     }
 
     /**
@@ -56,11 +50,7 @@ public class ApuracaoCarteira {
                 .thenComparingInt(MovimentacaoDTO::getIdMovimento));
 
         List<LinhaApuracaoDTO> linhas = new ArrayList<>();
-        double saldo = 0;
-        double custoMedio = 0;
-        double totalComprado = 0;
-        double totalVendido = 0;
-        double resultadoAcumulado = 0;
+        Posicao posicao = new Posicao();
 
         for (MovimentacaoDTO movimentacao : ordenadas) {
             double quantidade = movimentacao.getQuantidade();
@@ -70,36 +60,19 @@ public class ApuracaoCarteira {
             }
 
             double cotacao = cotacoes.cotacaoEm(movimentacao.getData());
-            double valor = quantidade * cotacao;
-            double resultadoOperacao = 0;
-
-            if (movimentacao.getTipo() == TipoMovimentacao.COMPRA) {
-                custoMedio = (custoMedio * saldo + valor) / (saldo + quantidade);
-                saldo += quantidade;
-                totalComprado += valor;
-            } else {
-                if (quantidade > saldo + TOLERANCIA) {
-                    throw new AppException("Histórico inconsistente: a venda de " + quantidade
-                            + " em " + movimentacao.getData() + " excede o saldo disponível (" + saldo + ").");
-                }
-                resultadoOperacao = quantidade * (cotacao - custoMedio);
-                saldo -= quantidade;
-                totalVendido += valor;
+            double resultadoOperacao;
+            try {
+                resultadoOperacao = movimentacao.getTipo().aplicar(posicao, quantidade, cotacao);
+            } catch (AppException e) {
+                throw new AppException("Histórico inconsistente em " + movimentacao.getData() + ": " + e.getMessage());
             }
-            resultadoAcumulado += resultadoOperacao;
 
-            if (saldo <= TOLERANCIA) {
-                saldo = 0;
-            }
             linhas.add(new LinhaApuracaoDTO(movimentacao.getData(), movimentacao.getTipo(), quantidade,
-                    cotacao, valor, saldo, custoMedio, saldo * custoMedio, saldo * cotacao,
-                    resultadoOperacao, resultadoAcumulado));
-
-            if (saldo == 0) {
-                custoMedio = 0;
-            }
+                    cotacao, quantidade * cotacao, posicao.getQuantidade(), posicao.getCustoMedio(),
+                    posicao.getSaldoCustoMedio(), posicao.getQuantidade() * cotacao,
+                    resultadoOperacao, posicao.getResultadoAcumulado()));
         }
-        return new ApuracaoCarteira(linhas, saldo, custoMedio, totalComprado, totalVendido);
+        return new ApuracaoCarteira(linhas, posicao);
     }
 
     /** @return quantidade de FTCoins em carteira */
