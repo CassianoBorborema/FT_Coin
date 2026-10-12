@@ -6,12 +6,14 @@ import controller.MovimentacaoController;
 import controller.OraculoController;
 import controller.RelatorioController;
 import dao.CarteiraDAO;
+import dao.FabricaDAO;
 import dao.MovimentacaoDAO;
-import dao.OraculoDAO;
-import dao.memoria.CarteiraDAOMemoria;
-import dao.memoria.MovimentacaoDAOMemoria;
-import dao.memoria.OraculoDAOMemoria;
+import dao.mariadb.FabricaDAOMariaDB;
+import dao.memoria.FabricaDAOMemoria;
 import exception.AppException;
+import infra.db.ConfiguracaoBanco;
+import infra.db.FabricaConexao;
+import infra.db.InicializadorBanco;
 import java.time.Clock;
 import java.util.NoSuchElementException;
 import model.ProvedorCotacao;
@@ -52,12 +54,13 @@ public final class Main {
         Configuracao configuracao = Configuracao.carregar();
         Clock relogio = Clock.systemDefaultZone();
 
-        CarteiraDAO carteiraDAO = new CarteiraDAOMemoria();
-        MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAOMemoria();
-        OraculoDAO oraculoDAO = new OraculoDAOMemoria();
+        FabricaDAO fabricaDAO = criarFabricaDAO(configuracao, console);
+        CarteiraDAO carteiraDAO = fabricaDAO.carteiraDAO();
+        MovimentacaoDAO movimentacaoDAO = fabricaDAO.movimentacaoDAO();
 
         ProvedorCotacao cotacoes = new CotacaoComHistorico(
-                new OraculoSimulado(ParametrosOraculoSimulado.carregar(configuracao), relogio), oraculoDAO);
+                new OraculoSimulado(ParametrosOraculoSimulado.carregar(configuracao), relogio),
+                fabricaDAO.oraculoDAO());
 
         CarteiraController carteiraController = new CarteiraController(carteiraDAO, movimentacaoDAO);
         MovimentacaoController movimentacaoController =
@@ -72,6 +75,27 @@ public final class Main {
                 new MenuOraculo(console, oraculoController),
                 new MenuRelatorios(console, relatorioController),
                 new MenuAjuda(console));
+    }
+
+    /**
+     * Cria os DAOs da persistência configurada na chave {@code persistencia}. No MariaDB, testa a
+     * conexão e cria as tabelas que faltarem antes de abrir os menus.
+     */
+    private static FabricaDAO criarFabricaDAO(Configuracao configuracao, Console console) throws AppException {
+        String persistencia = configuracao.getTexto("persistencia");
+        switch (persistencia) {
+            case "memoria":
+                console.exibir("Persistência: memória (os dados são perdidos ao sair).");
+                return new FabricaDAOMemoria();
+            case "mariadb":
+                ConfiguracaoBanco banco = ConfiguracaoBanco.carregar(configuracao);
+                FabricaConexao conexoes = new FabricaConexao(banco);
+                new InicializadorBanco(conexoes).inicializar();
+                console.exibir("Persistência: MariaDB (" + banco.url() + ").");
+                return new FabricaDAOMariaDB(conexoes);
+            default:
+                throw new AppException("Persistência desconhecida: " + persistencia + ". Use memoria ou mariadb.");
+        }
     }
 
     private static void exibirBoasVindas(Console console) {

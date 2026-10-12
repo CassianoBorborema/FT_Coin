@@ -1,6 +1,6 @@
 # FT_Coin
 
-Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvolvido em **Java (17+)** com build **Maven** com arquitetura **MVC**, interface **CLI** e persistência via padrão **DAO** (em memória).
+Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvolvido em **Java (17+)** com build **Maven** com arquitetura **MVC**, interface **CLI** e persistência via padrão **DAO** (em memória ou **MariaDB**).
 
 ---
 
@@ -16,7 +16,7 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 | **Oráculo**              | Simulado     | Cotação de hoje, por data e por período, gerada pela fórmula da planilha           |
 | **Relatórios**           | Implementado | Listagens (id/titular), saldo, histórico e ganho/perda (custo médio e mercado)  |
 | **Ajuda**                | Implementado | Texto "Como funciona" (guia de uso)                                                |
-| **Persistência**         | Memória      | `CarteiraDAOMemoria`, `MovimentacaoDAOMemoria`, `OraculoDAOMemoria`                |
+| **Persistência**         | Implementado | Memória (padrão) ou MariaDB, escolhida pela chave `persistencia`                   |
 
 
 A aplicação **compila e executa** todos os fluxos ponta a ponta.
@@ -72,10 +72,21 @@ FT_Coin/
     │   │   │   ├── CarteiraDAO.java
     │   │   │   ├── MovimentacaoDAO.java
     │   │   │   ├── OraculoDAO.java
-    │   │   │   └── memoria/
-    │   │   │       ├── CarteiraDAOMemoria.java
-    │   │   │       ├── MovimentacaoDAOMemoria.java
-    │   │   │       └── OraculoDAOMemoria.java
+    │   │   │   ├── FabricaDAO.java          # Cria os DAOs de uma persistência
+    │   │   │   ├── memoria/
+    │   │   │   │   ├── FabricaDAOMemoria.java
+    │   │   │   │   ├── CarteiraDAOMemoria.java
+    │   │   │   │   ├── MovimentacaoDAOMemoria.java
+    │   │   │   │   └── OraculoDAOMemoria.java
+    │   │   │   └── mariadb/
+    │   │   │       ├── FabricaDAOMariaDB.java
+    │   │   │       ├── CarteiraDAOMariaDB.java
+    │   │   │       ├── MovimentacaoDAOMariaDB.java
+    │   │   │       └── OraculoDAOMariaDB.java
+    │   │   ├── infra/db/
+    │   │   │   ├── ConfiguracaoBanco.java   # URL, usuário, senha e timeout
+    │   │   │   ├── FabricaConexao.java      # Conexões JDBC e transações
+    │   │   │   └── InicializadorBanco.java  # Cria as tabelas na inicialização
     │   │   ├── controller/
     │   │   │   ├── CarteiraController.java
     │   │   │   ├── MovimentacaoController.java
@@ -93,9 +104,12 @@ FT_Coin/
     │   │   │   ├── MenuRelatorios.java
     │   │   │   └── MenuAjuda.java
     │   │   └── exception/
-    │   │       └── AppException.java
+    │   │       ├── AppException.java
+    │   │       └── PersistenciaException.java
     │   └── resources/
-    │       ├── ftcoin.properties            # Configuração (parâmetros do oráculo simulado)
+    │       ├── ftcoin.properties            # Configuração (persistência, banco e oráculo)
+    │       ├── db/
+    │       │   └── schema.sql               # Tabelas do MariaDB
     │       └── textos/
     │           ├── ajuda.txt                # Texto longo da tela de ajuda
     │           └── creditos.txt             # Tela de créditos
@@ -105,6 +119,8 @@ FT_Coin/
             │   ├── ApuracaoCarteiraTest.java
             │   └── ApuracaoCarteiraPlanilhaTest.java   # Reproduz a planilha de apuração de referência
             ├── controller/                              # Controllers com DAOs em memória
+            ├── dao/                                     # Contrato dos DAOs (memória e MariaDB em contêiner)
+            ├── infra/db/                                # Configuração e conexão com o banco
             ├── oraculo/                                 # Oráculo simulado e histórico de cotações
             ├── view/                                    # Menu e Console
             └── testutil/                                # Cotações fixas e relógio parado para testes
@@ -117,7 +133,8 @@ FT_Coin/
 | -------------- | --------------------------- | --------------------------------------------------- |
 | **Model**      | `model`                     | Entidades de domínio, validações e apuração         |
 | **DTO**        | `dto`                       | Transporte entre view, controller e DAO             |
-| **DAO**        | `dao`, `dao.memoria`        | Contrato e implementação de persistência em memória |
+| **DAO**        | `dao`, `dao.memoria`, `dao.mariadb` | Contratos e persistência em memória e MariaDB |
+| **Infra**      | `infra.db`                  | Conexão JDBC, transações e criação das tabelas      |
 | **Controller** | `controller`                | Regras de negócio e orquestração                    |
 | **View**       | `view`                      | Menus CLI, entrada/saída e formatação               |
 | **Oráculo**    | `oraculo`                   | Fontes de cotação (simulada) e histórico            |
@@ -130,9 +147,11 @@ FT_Coin/
 
 | Tabela           | Campos principais                                                               |
 | ---------------- | ------------------------------------------------------------------------------- |
-| **Carteira**     | `id` (PK), `nome_titular`, `corretora`                                          |
-| **Movimentação** | `id_carteira` (FK), `id_movimento` (PK), `data`, `tipo` (`C`/`V`), `quantidade` |
-| **Oráculo**      | `data` (PK), `cotacao`                                                          |
+| **carteira**     | `id` (PK), `nome_titular`, `corretora`                                          |
+| **movimentacao** | `id` (PK), `id_carteira` (FK), `data`, `tipo` (`C`/`V`), `quantidade`           |
+| **cotacao**      | `data` (PK), `valor`                                                            |
+
+O script completo está em [schema.sql](src/main/resources/db/schema.sql).
 
 
 ---
@@ -144,7 +163,7 @@ FT_Coin/
 - **Movimentação:** compra e venda de moeda virtual.
 - **Oráculo:** consultar cotações diárias, usadas nas movimentações e nos cálculos. Até a API existir, as cotações são simuladas pela fórmula da planilha de referência.
 - **Relatórios:** listagens ordenadas, saldo, histórico e ganho/perda por carteira, valorizados a custo médio e a mercado.
-- **Persistência:** implementação DAO **em memória**.
+- **Persistência:** padrão DAO com implementações **em memória** e **MariaDB**.
 - **Boas práticas:** POO, encapsulamento, polimorfismo, validações, exceções, compilação sem erros.
 
 ---
@@ -169,6 +188,34 @@ Outros comandos úteis:
 | `mvn clean`              | Apaga a pasta `target/`                    |
 
 > **IDE:** Eclipse (*Import → Existing Maven Projects*), IntelliJ e VS Code abrem o `pom.xml` diretamente.
+
+> **Testes com MariaDB:** os testes dos DAOs do banco sobem um MariaDB em contêiner (Testcontainers) e
+> precisam do Docker em execução. Sem Docker, esses testes são ignorados e o restante roda normalmente.
+
+### Usando o MariaDB
+
+Por padrão a aplicação guarda os dados em memória. Para usar o MariaDB:
+
+1. Tenha um MariaDB com um banco e um usuário para a aplicação. Com Docker, por exemplo:
+
+   ```bash
+   docker run -d --name ftcoin-db -p 3306:3306 \
+     -e MARIADB_DATABASE=ftcoin -e MARIADB_USER=ftcoin \
+     -e MARIADB_PASSWORD=<senha> -e MARIADB_RANDOM_ROOT_PASSWORD=1 \
+     mariadb:11.4
+   ```
+
+2. Informe a persistência e a senha, sem colocá-la no `ftcoin.properties` versionado. Qualquer uma das formas serve:
+
+   | Forma                          | Exemplo                                                    |
+   | ------------------------------ | ---------------------------------------------------------- |
+   | Variáveis de ambiente          | `FTCOIN_PERSISTENCIA=mariadb` e `FTCOIN_DB_SENHA=<senha>`  |
+   | Propriedades na execução       | `java -Dpersistencia=mariadb -Ddb.senha=<senha> -jar ...`  |
+   | Arquivo `ftcoin.local.properties` no diretório de execução (já ignorado pelo Git) | `persistencia=mariadb` e `db.senha=<senha>`, uma por linha |
+
+   URL e usuário padrão: `jdbc:mariadb://localhost:3306/ftcoin` e `ftcoin` (chaves `db.url` e `db.usuario`).
+
+3. Rode normalmente. Na inicialização a aplicação testa a conexão e cria as tabelas que faltarem.
 
 ---
 
