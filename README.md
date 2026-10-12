@@ -1,6 +1,6 @@
 # FT_Coin
 
-Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvolvido em **Java (9+)** com arquitetura **MVC**, interface **CLI** e persistência via padrão **DAO** (em memória).
+Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvolvido em **Java (17+)** com build **Maven** com arquitetura **MVC**, interface **CLI** e persistência via padrão **DAO** (em memória).
 
 ---
 
@@ -36,55 +36,67 @@ A aplicação **compila e executa** todos os fluxos ponta a ponta.
 
 ```
 FT_Coin/
+├── pom.xml                                  # Build Maven (Java 17+, JUnit 5, driver MariaDB)
 ├── docs/
 │   ├── README.md
 │   ├── fluxo-carteira.md
 │   ├── fluxo-movimentacao.md
 │   ├── fluxo-oraculo.md
 │   └── fluxo-relatorios.md
-├── out/                                     # Classes compiladas (ignorado pelo Git)
 └── src/
-    ├── app/
-    │   └── Main.java                      # Bootstrap, seed oráculo, leitura CLI
-    ├── textos/
-    │   ├── ajuda.txt                      # Texto longo da tela de ajuda
-    │   └── creditos.txt                   # Tela de créditos
-    ├── model/
-    │   ├── Carteira.java
-    │   ├── Movimentacao.java
-    │   ├── TipoMovimentacao.java
-    │   ├── Oraculo.java
-    │   ├── ApuracaoCarteira.java          # Custo médio e resultados da carteira
-    │   └── ProvedorCotacao.java           # Contrato de cotação por data
-    ├── DTO/
-    │   ├── CarteiraDTO.java
-    │   ├── MovimentacaoDTO.java
-    │   ├── OraculoDTO.java
-    │   ├── ApuracaoDTO.java
-    │   └── LinhaApuracaoDTO.java
-    ├── DAO/
-    │   ├── CarteiraDAO.java
-    │   ├── MovimentacaoDAO.java
-    │   ├── OraculoDAO.java
-    │   └── memoria/
-    │       ├── CarteiraDAOMemoria.java
-    │       ├── MovimentacaoDAOMemoria.java
-    │       └── OraculoDAOMemoria.java
-    ├── controller/
-    │   ├── CarteiraController.java
-    │   ├── MovimentacaoController.java
-    │   ├── OraculoController.java
-    │   └── RelatorioController.java
-    ├── view/
-    │   ├── MenuPrincipal.java
-    │   ├── MenuCarteira.java
-    │   ├── MenuMovimentacao.java
-    │   ├── MenuOraculo.java
-    │   ├── MenuRelatorios.java
-    │   ├── MenuAjuda.java
-    │   └── opcoes_menus/
-    └── exception/
-        └── AppException.java
+    ├── main/
+    │   ├── java/
+    │   │   ├── app/
+    │   │   │   └── Main.java                # Bootstrap, seed oráculo, leitura CLI
+    │   │   ├── model/
+    │   │   │   ├── Carteira.java
+    │   │   │   ├── Movimentacao.java
+    │   │   │   ├── TipoMovimentacao.java
+    │   │   │   ├── Oraculo.java
+    │   │   │   ├── ApuracaoCarteira.java    # Custo médio e resultados da carteira
+    │   │   │   └── ProvedorCotacao.java     # Contrato de cotação por data
+    │   │   ├── dto/
+    │   │   │   ├── CarteiraDTO.java
+    │   │   │   ├── MovimentacaoDTO.java
+    │   │   │   ├── OraculoDTO.java
+    │   │   │   ├── ApuracaoDTO.java
+    │   │   │   └── LinhaApuracaoDTO.java
+    │   │   ├── dao/
+    │   │   │   ├── CarteiraDAO.java
+    │   │   │   ├── MovimentacaoDAO.java
+    │   │   │   ├── OraculoDAO.java
+    │   │   │   └── memoria/
+    │   │   │       ├── CarteiraDAOMemoria.java
+    │   │   │       ├── MovimentacaoDAOMemoria.java
+    │   │   │       └── OraculoDAOMemoria.java
+    │   │   ├── controller/
+    │   │   │   ├── CarteiraController.java
+    │   │   │   ├── MovimentacaoController.java
+    │   │   │   ├── OraculoController.java
+    │   │   │   └── RelatorioController.java
+    │   │   ├── view/
+    │   │   │   ├── MenuPrincipal.java
+    │   │   │   ├── MenuCarteira.java
+    │   │   │   ├── MenuMovimentacao.java
+    │   │   │   ├── MenuOraculo.java
+    │   │   │   ├── MenuRelatorios.java
+    │   │   │   ├── MenuAjuda.java
+    │   │   │   └── opcoes_menus/
+    │   │   └── exception/
+    │   │       └── AppException.java
+    │   └── resources/
+    │       └── textos/
+    │           ├── ajuda.txt                # Texto longo da tela de ajuda
+    │           └── creditos.txt             # Tela de créditos
+    └── test/
+        └── java/
+            ├── model/
+            │   ├── ApuracaoCarteiraTest.java
+            │   └── ApuracaoCarteiraPlanilhaTest.java   # Reproduz a planilha de apuração de referência
+            └── controller/
+                ├── CarteiraControllerTest.java
+                ├── MovimentacaoControllerTest.java
+                └── RelatorioControllerTest.java
 ```
 
 ### Responsabilidade por camada
@@ -93,8 +105,8 @@ FT_Coin/
 | Camada         | Pacote                      | Papel                                               |
 | -------------- | --------------------------- | --------------------------------------------------- |
 | **Model**      | `model`                     | Entidades de domínio e validações                   |
-| **DTO**        | `DTO`                       | Transporte entre view, controller e DAO             |
-| **DAO**        | `DAO`, `DAO.memoria`        | Contrato e implementação de persistência em memória |
+| **DTO**        | `dto`                       | Transporte entre view, controller e DAO             |
+| **DAO**        | `dao`, `dao.memoria`        | Contrato e implementação de persistência em memória |
 | **Controller** | `controller`                | Regras de negócio e orquestração                    |
 | **View**       | `view`, `view.opcoes_menus` | Menus CLI e enums de opções                         |
 | **Exception**  | `exception`                 | Erros de aplicação centralizados                    |
@@ -126,23 +138,24 @@ FT_Coin/
 
 ## Compilação e execução
 
-**Pré-requisito:** JDK 8 ou superior.
+**Pré-requisitos:** JDK 17 ou superior e [Maven](https://maven.apache.org/download.cgi) 3.9+ no PATH (ou a IDE, que já traz o Maven embutido).
 
 Na raiz do repositório:
 
 ```bash
-javac -encoding UTF-8 -sourcepath src -d out src/app/Main.java
-java -cp out app.Main
+mvn package                                 # compila, roda os testes e gera o jar
+java -jar target/ft-coin-1.0.0-SNAPSHOT.jar
 ```
 
-**PowerShell (Windows):**
+Outros comandos úteis:
 
-```powershell
-javac -encoding UTF-8 -sourcepath src -d out src/app/Main.java
-java -cp out app.Main
-```
+| Comando                  | O que faz                                  |
+| ------------------------ | ------------------------------------------ |
+| `mvn test`               | Roda só os testes                          |
+| `mvn javadoc:javadoc`    | Gera o Javadoc em `target/reports/apidocs` |
+| `mvn clean`              | Apaga a pasta `target/`                    |
 
-> Com `-sourcepath src`, todas as classes referenciadas a partir de `Main` são compiladas automaticamente.
+> **IDE:** Eclipse (*Import → Existing Maven Projects*), IntelliJ e VS Code abrem o `pom.xml` diretamente.
 
 ---
 
