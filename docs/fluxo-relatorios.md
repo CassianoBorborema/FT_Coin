@@ -43,14 +43,14 @@ flowchart TB
 
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|------------------|
-| **MenuRelatorios** | [src/view/MenuRelatorios.java](../src/view/MenuRelatorios.java) | Submenu de relatórios; lê IDs, formata e exibe resultados |
-| **RelatorioController** | [src/controller/RelatorioController.java](../src/controller/RelatorioController.java) | Listagens ordenadas e `apurar(id)`, que monta a apuração da carteira |
-| **ApuracaoCarteira** | [src/model/ApuracaoCarteira.java](../src/model/ApuracaoCarteira.java) | Regra de negócio: custo médio, saldo, resultado operacional e resultados a custo médio e a mercado |
-| **ProvedorCotacao** | [src/model/ProvedorCotacao.java](../src/model/ProvedorCotacao.java) | Contrato que informa a cotação de uma data; isola o cálculo da origem das cotações |
-| **ApuracaoDTO** / **LinhaApuracaoDTO** | [src/DTO/](../src/DTO/) | Transportam o resultado da apuração e cada linha do histórico até a view |
-| **CarteiraDAO** | [src/DAO/CarteiraDAO.java](../src/DAO/CarteiraDAO.java) | `listarTodas()`, `existe()` |
-| **MovimentacaoDAO** | [src/DAO/MovimentacaoDAO.java](../src/DAO/MovimentacaoDAO.java) | `listarPorCarteira()` |
-| **OraculoDAO** | [src/DAO/OraculoDAO.java](../src/DAO/OraculoDAO.java) | `consultarPorData()`, `existe()` |
+| **MenuRelatorios** | [src/main/java/view/MenuRelatorios.java](../src/main/java/view/MenuRelatorios.java) | Submenu de relatórios; lê IDs, formata e exibe resultados |
+| **RelatorioController** | [src/main/java/controller/RelatorioController.java](../src/main/java/controller/RelatorioController.java) | Listagens ordenadas e `apurar(id)`, que monta a apuração da carteira |
+| **ApuracaoCarteira** | [src/main/java/model/ApuracaoCarteira.java](../src/main/java/model/ApuracaoCarteira.java) | Regra de negócio: custo médio, saldo, resultado operacional e resultados a custo médio e a mercado |
+| **ProvedorCotacao** | [src/main/java/model/ProvedorCotacao.java](../src/main/java/model/ProvedorCotacao.java) | Contrato que informa a cotação de uma data; isola o cálculo da origem das cotações |
+| **ApuracaoDTO** / **LinhaApuracaoDTO** | [src/main/java/dto/](../src/main/java/dto/) | Transportam o resultado da apuração e cada linha do histórico até a view |
+| **CarteiraDAO** | [src/main/java/dao/CarteiraDAO.java](../src/main/java/dao/CarteiraDAO.java) | `listarTodas()`, `existe()` |
+| **MovimentacaoDAO** | [src/main/java/dao/MovimentacaoDAO.java](../src/main/java/dao/MovimentacaoDAO.java) | `listarPorCarteira()` |
+| **OraculoDAO** | [src/main/java/dao/OraculoDAO.java](../src/main/java/dao/OraculoDAO.java) | `consultarPorData()`, `existe()` |
 
 ---
 

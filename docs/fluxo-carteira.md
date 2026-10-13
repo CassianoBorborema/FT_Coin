@@ -28,7 +28,7 @@ flowchart TB
 
     subgraph persistenceLayer [Persistência]
         CarteiraDAO["DAO.CarteiraDAO"]
-        CarteiraDAOMemoria["DAO.memoria.CarteiraDAOMemoria"]
+        CarteiraDAOMemoria["dao.memoria.CarteiraDAOMemoria"]
     end
 
     Main -->|"instancia"| CarteiraDAOMemoria
@@ -52,15 +52,15 @@ flowchart TB
 
 | Componente             | Arquivo                                                                               | Responsabilidade no fluxo                                                                                                                                               |
 | ---------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Main**               | [src/app/Main.java](../src/app/Main.java)                                             | Bootstrap: cria DAOs em memória, `CarteiraController`, `MovimentacaoController` e `MenuPrincipal`; helpers `lerOpcao`, `lerLinha`, `lerInteiro`, `lerData`, `lerDouble` |
-| **MenuPrincipal**      | [src/view/MenuPrincipal.java](../src/view/MenuPrincipal.java)                         | Menu raiz; opção **1 (Carteira)** abre `MenuCarteira`; opção **2 (Movimentação)** abre `MenuMovimentacao` (ver [fluxo-movimentacao.md](fluxo-movimentacao.md))          |
-| **MenuCarteira**       | [src/view/MenuCarteira.java](../src/view/MenuCarteira.java)                           | Submenu CRUD; lê dados do usuário, chama o controller e exibe resultado ou erro                                                                                         |
-| **CarteiraController** | [src/controller/CarteiraController.java](../src/controller/CarteiraController.java)   | Orquestra regras: valida identificador, monta DTO, converte para `Carteira`, valida campos e delega ao DAO                                                              |
-| **Carteira (model)**   | [src/model/Carteira.java](../src/model/Carteira.java)                                 | Entidade de domínio; valida `nomeTitular` e `corretora`; converte `fromDTO()` / `toDTO()`                                                                               |
-| **CarteiraDTO**        | [src/DTO/CarteiraDTO.java](../src/DTO/CarteiraDTO.java)                               | Objeto de transferência entre view, controller e DAO (3 campos: `identificador`, `nomeTitular`, `corretora`)                                                            |
-| **CarteiraDAO**        | [src/DAO/CarteiraDAO.java](../src/DAO/CarteiraDAO.java)                               | Contrato de persistência (interface)                                                                                                                                    |
-| **CarteiraDAOMemoria** | [src/DAO/memoria/CarteiraDAOMemoria.java](../src/DAO/memoria/CarteiraDAOMemoria.java) | Implementação com `HashMap<Integer, CarteiraDTO>`; gera IDs automaticamente                                                                                             |
-| **AppException**       | [src/exception/AppException.java](../src/exception/AppException.java)                 | Exceção checked para erros de negócio e validação                                                                                                                       |
+| **Main**               | [src/main/java/app/Main.java](../src/main/java/app/Main.java)                                             | Bootstrap: cria DAOs em memória, `CarteiraController`, `MovimentacaoController` e `MenuPrincipal`; helpers `lerOpcao`, `lerLinha`, `lerInteiro`, `lerData`, `lerDouble` |
+| **MenuPrincipal**      | [src/main/java/view/MenuPrincipal.java](../src/main/java/view/MenuPrincipal.java)                         | Menu raiz; opção **1 (Carteira)** abre `MenuCarteira`; opção **2 (Movimentação)** abre `MenuMovimentacao` (ver [fluxo-movimentacao.md](fluxo-movimentacao.md))          |
+| **MenuCarteira**       | [src/main/java/view/MenuCarteira.java](../src/main/java/view/MenuCarteira.java)                           | Submenu CRUD; lê dados do usuário, chama o controller e exibe resultado ou erro                                                                                         |
+| **CarteiraController** | [src/main/java/controller/CarteiraController.java](../src/main/java/controller/CarteiraController.java)   | Orquestra regras: valida identificador, monta DTO, converte para `Carteira`, valida campos e delega ao DAO                                                              |
+| **Carteira (model)**   | [src/main/java/model/Carteira.java](../src/main/java/model/Carteira.java)                                 | Entidade de domínio; valida `nomeTitular` e `corretora`; converte `fromDTO()` / `toDTO()`                                                                               |
+| **CarteiraDTO**        | [src/main/java/dto/CarteiraDTO.java](../src/main/java/dto/CarteiraDTO.java)                               | Objeto de transferência entre view, controller e DAO (3 campos: `identificador`, `nomeTitular`, `corretora`)                                                            |
+| **CarteiraDAO**        | [src/main/java/dao/CarteiraDAO.java](../src/main/java/dao/CarteiraDAO.java)                               | Contrato de persistência (interface)                                                                                                                                    |
+| **CarteiraDAOMemoria** | [src/main/java/dao/memoria/CarteiraDAOMemoria.java](../src/main/java/dao/memoria/CarteiraDAOMemoria.java) | Implementação com `HashMap<Integer, CarteiraDTO>`; gera IDs automaticamente                                                                                             |
+| **AppException**       | [src/main/java/exception/AppException.java](../src/main/java/exception/AppException.java)                 | Exceção checked para erros de negócio e validação                                                                                                                       |
 
 
 ---
@@ -76,7 +76,7 @@ sequenceDiagram
     participant MP as MenuPrincipal
     participant MC as MenuCarteira
 
-    User->>Main: java -cp out app.Main
+    User->>Main: java -jar ft-coin.jar
     Main->>DAO: new CarteiraDAOMemoria()
     Main->>Ctrl: new CarteiraController(carteiraDAO, movimentacaoDAO)
     Main->>MP: new MenuPrincipal(scanner, ctrl, movimentacaoCtrl)
@@ -89,7 +89,7 @@ sequenceDiagram
 
 
 
-**Injeção de dependências:** o `CarteiraController` recebe a interface `CarteiraDAO`, não a implementação concreta. [Main.java](../src/app/Main.java) usa `CarteiraDAOMemoria`; outra implementação da mesma interface poderia ser injetada sem alterar controller ou view.
+**Injeção de dependências:** o `CarteiraController` recebe a interface `CarteiraDAO`, não a implementação concreta. [Main.java](../src/main/java/app/Main.java) usa `CarteiraDAOMemoria`; outra implementação da mesma interface poderia ser injetada sem alterar controller ou view.
 
 ---
 
@@ -355,8 +355,8 @@ src/
 ## 9. Execução manual (referência)
 
 ```powershell
-javac -encoding UTF-8 -sourcepath src -d out src/app/Main.java
-java -cp out app.Main
+mvn package
+java -jar target/ft-coin-1.0.0-SNAPSHOT.jar
 ```
 
 **Caminho típico de teste:** Menu Principal → 1 (Carteira) → 1 (Incluir) → informar titular e corretora → 2 (Consultar) → informar ID gerado → 0 (Voltar) → 0 (Sair).

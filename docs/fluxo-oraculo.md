@@ -27,7 +27,7 @@ flowchart TB
 
     subgraph persistenceLayer [Persistência]
         OraculoDAO["DAO.OraculoDAO"]
-        OraculoDAOMemoria["DAO.memoria.OraculoDAOMemoria"]
+        OraculoDAOMemoria["dao.memoria.OraculoDAOMemoria"]
     end
 
     MenuPrincipal -->|"opção 3"| MenuOraculo
@@ -42,12 +42,12 @@ flowchart TB
 
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|------------------|
-| **MenuOraculo** | [src/view/MenuOraculo.java](../src/view/MenuOraculo.java) | Submenu cadastrar/consultar/listar; lê data e cotação |
-| **OraculoController** | [src/controller/OraculoController.java](../src/controller/OraculoController.java) | Valida e orquestra cadastro, consulta e listagem |
-| **Oraculo (model)** | [src/model/Oraculo.java](../src/model/Oraculo.java) | Valida data e cotação (> 0); `fromDTO()` / `toDTO()` |
-| **OraculoDTO** | [src/DTO/OraculoDTO.java](../src/DTO/OraculoDTO.java) | Transporte: `data`, `cotacao` |
-| **OraculoDAO** | [src/DAO/OraculoDAO.java](../src/DAO/OraculoDAO.java) | Contrato: incluir, consultar por data, listar todas, existe |
-| **OraculoDAOMemoria** | [src/DAO/memoria/OraculoDAOMemoria.java](../src/DAO/memoria/OraculoDAOMemoria.java) | `Map<LocalDate, OraculoDTO>`; listagem ordenada por data |
+| **MenuOraculo** | [src/main/java/view/MenuOraculo.java](../src/main/java/view/MenuOraculo.java) | Submenu cadastrar/consultar/listar; lê data e cotação |
+| **OraculoController** | [src/main/java/controller/OraculoController.java](../src/main/java/controller/OraculoController.java) | Valida e orquestra cadastro, consulta e listagem |
+| **Oraculo (model)** | [src/main/java/model/Oraculo.java](../src/main/java/model/Oraculo.java) | Valida data e cotação (> 0); `fromDTO()` / `toDTO()` |
+| **OraculoDTO** | [src/main/java/dto/OraculoDTO.java](../src/main/java/dto/OraculoDTO.java) | Transporte: `data`, `cotacao` |
+| **OraculoDAO** | [src/main/java/dao/OraculoDAO.java](../src/main/java/dao/OraculoDAO.java) | Contrato: incluir, consultar por data, listar todas, existe |
+| **OraculoDAOMemoria** | [src/main/java/dao/memoria/OraculoDAOMemoria.java](../src/main/java/dao/memoria/OraculoDAOMemoria.java) | `Map<LocalDate, OraculoDTO>`; listagem ordenada por data |
 
 ---
 

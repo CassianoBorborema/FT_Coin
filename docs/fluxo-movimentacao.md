@@ -32,10 +32,10 @@ flowchart TB
 
     subgraph persistenceLayer [Persistência]
         MovimentacaoDAO["DAO.MovimentacaoDAO"]
-        MovimentacaoDAOMemoria["DAO.memoria.MovimentacaoDAOMemoria"]
+        MovimentacaoDAOMemoria["dao.memoria.MovimentacaoDAOMemoria"]
         CarteiraDAO["DAO.CarteiraDAO"]
         OraculoDAO["DAO.OraculoDAO"]
-        OraculoDAOMemoria["DAO.memoria.OraculoDAOMemoria"]
+        OraculoDAOMemoria["dao.memoria.OraculoDAOMemoria"]
     end
 
     Main -->|"instancia DAOs e controllers"| MovimentacaoController
@@ -58,17 +58,17 @@ flowchart TB
 
 | Componente                 | Arquivo                                                                                                    | Responsabilidade no fluxo                                                                                    |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Main**                   | [src/app/Main.java](../src/app/Main.java)                                                                  | Bootstrap: cria DAOs em memória, controllers, seed de cotações; helpers `lerData`, `lerDouble`, `lerInteiro` |
-| **MenuPrincipal**          | [src/view/MenuPrincipal.java](../src/view/MenuPrincipal.java)                                              | Menu raiz; opção **2 (Movimentação)** abre `MenuMovimentacao`                                                |
-| **MenuMovimentacao**       | [src/view/MenuMovimentacao.java](../src/view/MenuMovimentacao.java)                                        | Submenu compra/venda; lê ID da carteira, data e quantidade                                                   |
-| **MovimentacaoController** | [src/controller/MovimentacaoController.java](../src/controller/MovimentacaoController.java)                | Valida carteira, cotação na data, saldo (venda); orquestra inclusão                                          |
-| **Movimentacao (model)**   | [src/model/Movimentacao.java](../src/model/Movimentacao.java)                                              | Valida campos; `fromDTO()` / `toDTO()`                                                                       |
-| **TipoMovimentacao**       | [src/model/TipoMovimentacao.java](../src/model/TipoMovimentacao.java)                                      | Enum `COMPRA (C)` e `VENDA (V)`                                                                              |
-| **MovimentacaoDTO**        | [src/DTO/MovimentacaoDTO.java](../src/DTO/MovimentacaoDTO.java)                                            | Transporte: `idMovimento`, `idCarteira`, `data`, `tipo`, `quantidade`                                        |
-| **Oraculo / OraculoDTO**   | [src/model/Oraculo.java](../src/model/Oraculo.java), [src/DTO/OraculoDTO.java](../src/DTO/OraculoDTO.java) | Cotação diária usada para validar a data da movimentação                                                     |
-| **MovimentacaoDAO**        | [src/DAO/MovimentacaoDAO.java](../src/DAO/MovimentacaoDAO.java)                                            | Contrato: incluir, consultar, listar por carteira, saldo, vínculos                                           |
-| **MovimentacaoDAOMemoria** | [src/DAO/memoria/MovimentacaoDAOMemoria.java](../src/DAO/memoria/MovimentacaoDAOMemoria.java)              | `HashMap` + `proximoId` global                                                                               |
-| **OraculoDAOMemoria**      | [src/DAO/memoria/OraculoDAOMemoria.java](../src/DAO/memoria/OraculoDAOMemoria.java)                        | `Map<LocalDate, OraculoDTO>`                                                                                 |
+| **Main**                   | [src/main/java/app/Main.java](../src/main/java/app/Main.java)                                                                  | Bootstrap: cria DAOs em memória, controllers, seed de cotações; helpers `lerData`, `lerDouble`, `lerInteiro` |
+| **MenuPrincipal**          | [src/main/java/view/MenuPrincipal.java](../src/main/java/view/MenuPrincipal.java)                                              | Menu raiz; opção **2 (Movimentação)** abre `MenuMovimentacao`                                                |
+| **MenuMovimentacao**       | [src/main/java/view/MenuMovimentacao.java](../src/main/java/view/MenuMovimentacao.java)                                        | Submenu compra/venda; lê ID da carteira, data e quantidade                                                   |
+| **MovimentacaoController** | [src/main/java/controller/MovimentacaoController.java](../src/main/java/controller/MovimentacaoController.java)                | Valida carteira, cotação na data, saldo (venda); orquestra inclusão                                          |
+| **Movimentacao (model)**   | [src/main/java/model/Movimentacao.java](../src/main/java/model/Movimentacao.java)                                              | Valida campos; `fromDTO()` / `toDTO()`                                                                       |
+| **TipoMovimentacao**       | [src/main/java/model/TipoMovimentacao.java](../src/main/java/model/TipoMovimentacao.java)                                      | Enum `COMPRA (C)` e `VENDA (V)`                                                                              |
+| **MovimentacaoDTO**        | [src/main/java/dto/MovimentacaoDTO.java](../src/main/java/dto/MovimentacaoDTO.java)                                            | Transporte: `idMovimento`, `idCarteira`, `data`, `tipo`, `quantidade`                                        |
+| **Oraculo / OraculoDTO**   | [src/main/java/model/Oraculo.java](../src/main/java/model/Oraculo.java), [src/main/java/dto/OraculoDTO.java](../src/main/java/dto/OraculoDTO.java) | Cotação diária usada para validar a data da movimentação                                                     |
+| **MovimentacaoDAO**        | [src/main/java/dao/MovimentacaoDAO.java](../src/main/java/dao/MovimentacaoDAO.java)                                            | Contrato: incluir, consultar, listar por carteira, saldo, vínculos                                           |
+| **MovimentacaoDAOMemoria** | [src/main/java/dao/memoria/MovimentacaoDAOMemoria.java](../src/main/java/dao/memoria/MovimentacaoDAOMemoria.java)              | `HashMap` + `proximoId` global                                                                               |
+| **OraculoDAOMemoria**      | [src/main/java/dao/memoria/OraculoDAOMemoria.java](../src/main/java/dao/memoria/OraculoDAOMemoria.java)                        | `Map<LocalDate, OraculoDTO>`                                                                                 |
 
 
 ---
@@ -98,7 +98,7 @@ sequenceDiagram
 
 
 
-**Seed do Oráculo:** na inicialização, [Main.java](../src/app/Main.java) cadastra cotações para **hoje** e **ontem** (150,0 e 145,0), permitindo testar compra/venda sem menu de cotação.
+**Seed do Oráculo:** na inicialização, [Main.java](../src/main/java/app/Main.java) cadastra cotações para **hoje** e **ontem** (150,0 e 145,0), permitindo testar compra/venda sem menu de cotação.
 
 **Injeção de dependências:** controllers recebem interfaces `*DAO`, não implementações concretas.
 
@@ -294,8 +294,8 @@ src/
 ## 9. Execução manual (referência)
 
 ```powershell
-javac -encoding UTF-8 -sourcepath src -d out src/app/Main.java
-java -cp out app.Main
+mvn package
+java -jar target/ft-coin-1.0.0-SNAPSHOT.jar
 ```
 
 **Caminho típico de teste:**
