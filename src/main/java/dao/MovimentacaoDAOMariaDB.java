@@ -1,5 +1,6 @@
 package dao;
 
+import config.Mensagens;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 import java.sql.PreparedStatement;
@@ -11,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import model.TipoMovimentacao;
 
+/**
+ * Movimentações na tabela {@code movimentacao} do MariaDB.
+ */
 final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
     private static final String COLUNAS = "id, id_carteira, data, tipo, quantidade";
@@ -26,9 +30,9 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     public void incluir(MovimentacaoDTO movimentacao) throws AppException {
         int informado = movimentacao.getIdMovimento();
         if (informado != 0 && existeId(informado)) {
-            throw new AppException("Já existe uma movimentação com o identificador " + informado + ".");
+            throw new AppException("erro.movimentacao.duplicada", informado);
         }
-        int id = conexoes.executar("incluir a movimentação", conexao -> {
+        int id = conexoes.executar("banco.incluirMovimentacao", conexao -> {
             String sql = informado == 0
                     ? "INSERT INTO movimentacao (id_carteira, data, tipo, quantidade) VALUES (?, ?, ?, ?)"
                     : "INSERT INTO movimentacao (id_carteira, data, tipo, quantidade, id) VALUES (?, ?, ?, ?, ?)";
@@ -49,7 +53,7 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
     @Override
     public MovimentacaoDTO consultarPorId(int idMovimento) throws AppException {
-        MovimentacaoDTO movimentacao = conexoes.executar("consultar a movimentação", conexao -> {
+        MovimentacaoDTO movimentacao = conexoes.executar("banco.consultarMovimentacao", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
                     "SELECT " + COLUNAS + " FROM movimentacao WHERE id = ?")) {
                 ps.setInt(1, idMovimento);
@@ -59,14 +63,14 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
             }
         });
         if (movimentacao == null) {
-            throw new AppException("Movimentação com identificador " + idMovimento + " não encontrada.");
+            throw new AppException("erro.movimentacao.naoEncontrada", idMovimento);
         }
         return movimentacao;
     }
 
     @Override
     public List<MovimentacaoDTO> listarPorCarteira(int idCarteira) throws AppException {
-        return conexoes.executar("listar as movimentações", conexao -> {
+        return conexoes.executar("banco.listarMovimentacoes", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
                     "SELECT " + COLUNAS + " FROM movimentacao WHERE id_carteira = ? ORDER BY data, id")) {
                 ps.setInt(1, idCarteira);
@@ -83,7 +87,7 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
     @Override
     public boolean possuiMovimentacoes(int idCarteira) throws AppException {
-        return conexoes.executar("verificar as movimentações", conexao -> {
+        return conexoes.executar("banco.verificarMovimentacoes", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
                     "SELECT 1 FROM movimentacao WHERE id_carteira = ? LIMIT 1")) {
                 ps.setInt(1, idCarteira);
@@ -95,7 +99,7 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     }
 
     private boolean existeId(int idMovimento) throws AppException {
-        return conexoes.executar("verificar a movimentação", conexao -> {
+        return conexoes.executar("banco.verificarMovimentacao", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement("SELECT 1 FROM movimentacao WHERE id = ?")) {
                 ps.setInt(1, idMovimento);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -125,7 +129,7 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     private static int chaveGerada(PreparedStatement ps) throws SQLException {
         try (ResultSet chaves = ps.getGeneratedKeys()) {
             if (!chaves.next()) {
-                throw new SQLException("o banco não informou o identificador gerado");
+                throw new SQLException(Mensagens.get("banco.semChaveGerada"));
             }
             return chaves.getInt(1);
         }

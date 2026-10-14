@@ -3,6 +3,10 @@ package dto;
 import model.TipoMovimentacao;
 import java.time.LocalDate;
 
+/**
+ * Dados de uma movimentação trocados entre as camadas. Em compras e vendas a quantidade é
+ * de FTCoins; em créditos e saques, é o valor em reais.
+ */
 public class MovimentacaoDTO {
 
     private int idMovimento;

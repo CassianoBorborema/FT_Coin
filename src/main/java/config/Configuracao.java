@@ -43,11 +43,11 @@ public class Configuracao {
         Properties propriedades = new Properties();
         try (InputStream in = Configuracao.class.getResourceAsStream(ARQUIVO_PADRAO)) {
             if (in == null) {
-                throw new AppException("Arquivo de configuração não encontrado: " + ARQUIVO_PADRAO + ".");
+                throw new AppException("erro.config.naoEncontrada", ARQUIVO_PADRAO);
             }
             propriedades.load(new InputStreamReader(in, StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new AppException("Erro ao ler a configuração " + ARQUIVO_PADRAO + ": " + e.getMessage());
+            throw new AppException(e, "erro.config.leitura", ARQUIVO_PADRAO, e.getMessage());
         }
         carregarArquivoLocal(propriedades, Path.of(ARQUIVO_LOCAL));
         return new Configuracao(propriedades, System::getenv);
@@ -60,7 +60,7 @@ public class Configuracao {
         try (Reader leitor = Files.newBufferedReader(arquivo, StandardCharsets.UTF_8)) {
             propriedades.load(leitor);
         } catch (IOException e) {
-            throw new AppException("Erro ao ler a configuração " + arquivo.toAbsolutePath() + ": " + e.getMessage());
+            throw new AppException(e, "erro.config.leitura", arquivo.toAbsolutePath().toString(), e.getMessage());
         }
     }
 
@@ -80,7 +80,7 @@ public class Configuracao {
     public String getTexto(String chave) throws AppException {
         String valor = buscar(chave);
         if (valor == null || valor.isBlank()) {
-            throw new AppException("Configuração obrigatória ausente: " + chave + ".");
+            throw new AppException("erro.config.ausente", chave);
         }
         return valor.trim();
     }
@@ -111,7 +111,7 @@ public class Configuracao {
         try {
             return Double.parseDouble(valor);
         } catch (NumberFormatException _) {
-            throw new AppException("Configuração " + chave + " deve ser um número: " + valor + ".");
+            throw new AppException("erro.config.decimal", chave, valor);
         }
     }
 
@@ -120,7 +120,7 @@ public class Configuracao {
         try {
             return Long.parseLong(valor);
         } catch (NumberFormatException _) {
-            throw new AppException("Configuração " + chave + " deve ser um número inteiro: " + valor + ".");
+            throw new AppException("erro.config.inteiro", chave, valor);
         }
     }
 
@@ -129,7 +129,7 @@ public class Configuracao {
         try {
             return LocalDate.parse(valor);
         } catch (DateTimeParseException _) {
-            throw new AppException("Configuração " + chave + " deve ser uma data no formato yyyy-MM-dd: " + valor + ".");
+            throw new AppException("erro.config.data", chave, valor);
         }
     }
 }

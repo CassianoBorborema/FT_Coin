@@ -1,5 +1,6 @@
 package view;
 
+import config.Mensagens;
 import exception.AppException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,7 @@ public abstract class Menu {
     }
 
     protected Menu(Console console, String titulo) {
-        this(console, titulo, "Voltar");
+        this(console, titulo, Mensagens.get("menu.voltar"));
     }
 
     protected final void adicionarOpcao(String rotulo, Acao acao) {
@@ -47,7 +48,7 @@ public abstract class Menu {
                 return;
             }
             if (escolha < 1 || escolha > opcoes.size()) {
-                console.exibir("Opção inválida. Tente novamente.");
+                console.exibir(Mensagens.get("menu.opcaoInvalida"));
                 continue;
             }
             executar(opcoes.get(escolha - 1));
@@ -60,7 +61,7 @@ public abstract class Menu {
             console.exibir((i + 1) + ". " + opcoes.get(i).rotulo());
         }
         console.exibir(OPCAO_SAIR + ". " + rotuloSaida);
-        console.exibir("Qual opção deseja?");
+        console.exibir(Mensagens.get("menu.pergunta"));
     }
 
     /** Nenhum erro de uma opção encerra a aplicação: o usuário vê a mensagem e volta ao menu. */
@@ -70,7 +71,7 @@ public abstract class Menu {
         } catch (AppException e) {
             console.exibirErro(e.getMessage());
         } catch (RuntimeException e) {
-            console.exibirErro("Erro inesperado (" + e.getClass().getSimpleName() + "): " + e.getMessage());
+            console.exibirErro(Mensagens.get("menu.erroInesperado", e.getClass().getSimpleName(), e.getMessage()));
         }
     }
 }

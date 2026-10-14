@@ -1,5 +1,6 @@
 package dao;
 
+import config.Mensagens;
 import dto.CarteiraDTO;
 import exception.AppException;
 import java.sql.PreparedStatement;
@@ -9,6 +10,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Carteiras na tabela {@code carteira} do MariaDB.
+ */
 final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     private static final String COLUNAS = "id, nome_titular, corretora";
@@ -24,9 +28,9 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
     public void incluir(CarteiraDTO carteira) throws AppException {
         int informado = carteira.getIdentificador();
         if (informado != 0 && existe(informado)) {
-            throw new AppException("Já existe uma carteira com o identificador " + informado + ".");
+            throw new AppException("erro.carteira.duplicada", informado);
         }
-        int id = conexoes.executar("incluir a carteira", conexao -> {
+        int id = conexoes.executar("banco.incluirCarteira", conexao -> {
             String sql = informado == 0
                     ? "INSERT INTO carteira (nome_titular, corretora) VALUES (?, ?)"
                     : "INSERT INTO carteira (nome_titular, corretora, id) VALUES (?, ?, ?)";
@@ -45,7 +49,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     @Override
     public CarteiraDTO consultarPorId(int identificador) throws AppException {
-        CarteiraDTO carteira = conexoes.executar("consultar a carteira", conexao -> {
+        CarteiraDTO carteira = conexoes.executar("banco.consultarCarteira", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
                     "SELECT " + COLUNAS + " FROM carteira WHERE id = ?")) {
                 ps.setInt(1, identificador);
@@ -62,7 +66,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     @Override
     public List<CarteiraDTO> listarTodas() throws AppException {
-        return conexoes.executar("listar as carteiras", conexao -> {
+        return conexoes.executar("banco.listarCarteiras", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
                     "SELECT " + COLUNAS + " FROM carteira ORDER BY id");
                  ResultSet rs = ps.executeQuery()) {
@@ -77,7 +81,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     @Override
     public void atualizar(CarteiraDTO carteira) throws AppException {
-        int alteradas = conexoes.executar("atualizar a carteira", conexao -> {
+        int alteradas = conexoes.executar("banco.atualizarCarteira", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
                     "UPDATE carteira SET nome_titular = ?, corretora = ? WHERE id = ?")) {
                 ps.setString(1, carteira.getNomeTitular());
@@ -93,7 +97,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     @Override
     public void excluir(int identificador) throws AppException {
-        int excluidas = conexoes.executar("excluir a carteira", conexao -> {
+        int excluidas = conexoes.executar("banco.excluirCarteira", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement("DELETE FROM carteira WHERE id = ?")) {
                 ps.setInt(1, identificador);
                 return ps.executeUpdate();
@@ -106,7 +110,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     @Override
     public boolean existe(int identificador) throws AppException {
-        return conexoes.executar("verificar a carteira", conexao -> {
+        return conexoes.executar("banco.verificarCarteira", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement("SELECT 1 FROM carteira WHERE id = ?")) {
                 ps.setInt(1, identificador);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -123,13 +127,13 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
     private static int chaveGerada(PreparedStatement ps) throws SQLException {
         try (ResultSet chaves = ps.getGeneratedKeys()) {
             if (!chaves.next()) {
-                throw new SQLException("o banco não informou o identificador gerado");
+                throw new SQLException(Mensagens.get("banco.semChaveGerada"));
             }
             return chaves.getInt(1);
         }
     }
 
     private static AppException naoEncontrada(int identificador) {
-        return new AppException("Carteira com identificador " + identificador + " não encontrada.");
+        return new AppException("erro.carteira.naoEncontrada", identificador);
     }
 }

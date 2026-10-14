@@ -1,5 +1,6 @@
 package view;
 
+import config.Mensagens;
 import controller.RelatorioController;
 import dto.ApuracaoDTO;
 import dto.CarteiraDTO;
@@ -13,67 +14,66 @@ import java.util.List;
  */
 public class MenuRelatorios extends Menu {
 
-    private static final String FORMATO_HISTORICO = "%-10s %-7s %12s %10s %12s %12s %12s %14s %14s%n";
+    private static final String FORMATO_HISTORICO = "%-10s %-10s %12s %10s %12s %12s %12s %14s %14s%n";
     private static final String FORMATO_EVOLUCAO = "%-10s %9s %9s %9s %11s %11s %14s %13s %14s %14s%n";
 
     private final RelatorioController controller;
 
     public MenuRelatorios(Console console, RelatorioController controller) {
-        super(console, "Relatórios");
+        super(console, Mensagens.get("relatorios.titulo"));
         this.controller = controller;
-        adicionarOpcao("Listar carteiras por identificador",
-                () -> exibirCarteiras(controller.listarPorIdentificador(), "identificador"));
-        adicionarOpcao("Listar carteiras por titular",
-                () -> exibirCarteiras(controller.listarPorTitular(), "titular"));
-        adicionarOpcao("Saldo atual", this::exibirSaldo);
-        adicionarOpcao("Histórico de movimentação", this::exibirHistorico);
-        adicionarOpcao("Evolução diária", this::exibirEvolucaoDiaria);
-        adicionarOpcao("Ganhos e perdas", this::exibirGanhoPerda);
+        adicionarOpcao(Mensagens.get("relatorios.listarPorId"),
+                () -> exibirCarteiras(controller.listarPorIdentificador(), "relatorios.ordenadasPorId"));
+        adicionarOpcao(Mensagens.get("relatorios.listarPorTitular"),
+                () -> exibirCarteiras(controller.listarPorTitular(), "relatorios.ordenadasPorTitular"));
+        adicionarOpcao(Mensagens.get("relatorios.saldo"), this::exibirSaldo);
+        adicionarOpcao(Mensagens.get("relatorios.historico"), this::exibirHistorico);
+        adicionarOpcao(Mensagens.get("relatorios.evolucao"), this::exibirEvolucaoDiaria);
+        adicionarOpcao(Mensagens.get("relatorios.ganhoPerda"), this::exibirGanhoPerda);
     }
 
-    private void exibirCarteiras(List<CarteiraDTO> carteiras, String criterio) {
+    private void exibirCarteiras(List<CarteiraDTO> carteiras, String chaveTitulo) {
         if (carteiras.isEmpty()) {
-            console.exibir("Nenhuma carteira cadastrada.");
+            console.exibir(Mensagens.get("relatorios.semCarteiras"));
             return;
         }
-        console.exibir("Carteiras ordenadas por " + criterio + ":");
+        console.exibir(Mensagens.get(chaveTitulo));
         for (CarteiraDTO carteira : carteiras) {
             console.exibir("  " + Formatador.carteira(carteira));
         }
     }
 
     private void exibirSaldo() throws AppException {
-        int identificador = console.lerInteiro("Digite o identificador da carteira:");
+        int identificador = console.lerInteiro(Mensagens.get("pedir.carteira"));
         ApuracaoDTO apuracao = controller.apurar(identificador);
 
         List<String> linhas = new ArrayList<>();
-        linhas.add("Saldo atual da carteira " + identificador + " em "
-                + Formatador.data(apuracao.dataCotacaoAtual()) + ":");
-        linhas.add(campo("Quantidade (FTCoins)", Formatador.quantidade(apuracao.saldoQuantidade())));
-        linhas.add(campo("Custo médio", Formatador.moeda(apuracao.custoMedio())));
-        linhas.add(campo("Valor a custo médio", Formatador.moeda(apuracao.saldoCustoMedio())));
-        linhas.add(campo("Cotação atual", Formatador.moeda(apuracao.cotacaoAtual())));
-        linhas.add(campo("Valor a mercado", Formatador.moeda(apuracao.saldoMercado())));
-        linhas.add(campo("Saldo em reais", Formatador.moeda(apuracao.saldoReais())));
+        linhas.add(Mensagens.get("saldo.cabecalho", identificador, apuracao.dataCotacaoAtual()));
+        linhas.add(campo("saldo.quantidade", Formatador.quantidade(apuracao.saldoQuantidade())));
+        linhas.add(campo("saldo.custoMedio", Formatador.moeda(apuracao.custoMedio())));
+        linhas.add(campo("saldo.valorCustoMedio", Formatador.moeda(apuracao.saldoCustoMedio())));
+        linhas.add(campo("saldo.cotacaoAtual", Formatador.moeda(apuracao.cotacaoAtual())));
+        linhas.add(campo("saldo.valorMercado", Formatador.moeda(apuracao.saldoMercado())));
+        linhas.add(campo("saldo.reais", Formatador.moeda(apuracao.saldoReais())));
         linhas.forEach(console::exibir);
 
-        if (console.confirmar("Deseja imprimir este saldo em arquivo?")) {
+        if (console.confirmar(Mensagens.get("saldo.imprimir"))) {
             Path arquivo = console.salvarArquivo(
-                    "saldo-carteira-" + identificador + "-" + apuracao.dataCotacaoAtual() + ".txt", linhas);
-            console.exibir("Saldo impresso em " + arquivo);
+                    Mensagens.get("saldo.arquivo", identificador, apuracao.dataCotacaoAtual().toString()), linhas);
+            console.exibir(Mensagens.get("saldo.impresso", arquivo.toString()));
         }
     }
 
     private void exibirHistorico() throws AppException {
-        int identificador = console.lerInteiro("Digite o identificador da carteira:");
+        int identificador = console.lerInteiro(Mensagens.get("pedir.carteira"));
         List<ApuracaoDTO.Linha> linhas = controller.apurar(identificador).linhas();
         if (linhas.isEmpty()) {
-            console.exibir("Nenhuma movimentação registrada para a carteira " + identificador + ".");
+            console.exibir(Mensagens.get("relatorios.semMovimentacoes", identificador));
             return;
         }
-        console.exibir("Histórico da carteira " + identificador + " (valores em R$):");
-        console.exibirFormatado(FORMATO_HISTORICO, "Data", "Tipo", "Qtd.", "Cotação", "Valor", "Saldo (qtd)",
-                "Custo médio", "Res. operação", "Saldo (R$)");
+        console.exibir(Mensagens.get("historico.titulo", identificador));
+        console.exibirFormatado(FORMATO_HISTORICO, colunas("data", "tipo", "quantidade", "cotacao", "valor",
+                "saldoQuantidade", "custoMedio", "resultadoOperacao", "saldoReais"));
         for (ApuracaoDTO.Linha linha : linhas) {
             boolean ftcoins = linha.tipo().movimentaFTCoins();
             console.exibirFormatado(FORMATO_HISTORICO,
@@ -90,15 +90,15 @@ public class MenuRelatorios extends Menu {
     }
 
     private void exibirEvolucaoDiaria() throws AppException {
-        int identificador = console.lerInteiro("Digite o identificador da carteira:");
+        int identificador = console.lerInteiro(Mensagens.get("pedir.carteira"));
         List<ApuracaoDTO.Dia> dias = controller.evolucaoDiaria(identificador);
         if (dias.isEmpty()) {
-            console.exibir("Nenhuma movimentação registrada para a carteira " + identificador + ".");
+            console.exibir(Mensagens.get("relatorios.semMovimentacoes", identificador));
             return;
         }
-        console.exibir("Evolução diária da carteira " + identificador + " (valores em R$):");
-        console.exibirFormatado(FORMATO_EVOLUCAO, "Data", "Cotação", "Compra", "Venda", "Saldo (qtd)",
-                "Custo médio", "Sd. financeiro", "Res. operação", "Res. acumulado", "Sd. mercado");
+        console.exibir(Mensagens.get("evolucao.titulo", identificador));
+        console.exibirFormatado(FORMATO_EVOLUCAO, colunas("data", "cotacao", "compra", "venda", "saldoQuantidade",
+                "custoMedio", "saldoFinanceiro", "resultadoOperacao", "resultadoAcumulado", "saldoMercado"));
         double quantidadeComprada = 0;
         double quantidadeVendida = 0;
         double valorComprado = 0;
@@ -120,15 +120,15 @@ public class MenuRelatorios extends Menu {
             valorComprado += dia.valorComprado();
             valorVendido += dia.valorVendido();
         }
-        console.exibir("Totais: compras de " + Formatador.quantidade(quantidadeComprada) + " FTCoins ("
-                + Formatador.moeda(valorComprado) + "), vendas de " + Formatador.quantidade(quantidadeVendida)
-                + " FTCoins (" + Formatador.moeda(valorVendido) + ").");
+        console.exibir(Mensagens.get("evolucao.totais", Formatador.quantidade(quantidadeComprada),
+                Formatador.moeda(valorComprado), Formatador.quantidade(quantidadeVendida),
+                Formatador.moeda(valorVendido)));
     }
 
     private void exibirGanhoPerda() throws AppException {
         List<CarteiraDTO> carteiras = controller.listarPorIdentificador();
         if (carteiras.isEmpty()) {
-            console.exibir("Nenhuma carteira cadastrada.");
+            console.exibir(Mensagens.get("relatorios.semCarteiras"));
             return;
         }
         for (CarteiraDTO carteira : carteiras) {
@@ -144,24 +144,35 @@ public class MenuRelatorios extends Menu {
 
     private void exibirResumo(ApuracaoDTO apuracao) {
         if (apuracao.linhas().isEmpty()) {
-            console.exibir("  Nenhuma movimentação registrada.");
+            console.exibir("  " + Mensagens.get("resumo.semMovimentacoes"));
             return;
         }
-        console.exibir("  Você vendeu suas moedas por " + Formatador.moeda(apuracao.totalVendido())
-                + " e as havia comprado por " + Formatador.moeda(apuracao.totalComprado()) + ".");
-        console.exibir("  Teve " + (apuracao.resultadoOperacional() >= 0 ? "lucro" : "prejuízo")
-                + " operacional de " + Formatador.moeda(apuracao.resultadoOperacional()) + ".");
-        console.exibir("  Você tem, a custo médio, moedas no valor de "
-                + Formatador.moeda(apuracao.saldoCustoMedio()) + ".");
-        console.exibir("  Portanto, seu resultado geral é de "
-                + Formatador.resultado(apuracao.resultadoCustoMedio(), apuracao.percentualCustoMedio()) + ".");
-        console.exibir("  Se vender todas as moedas na última cotação (" + Formatador.moeda(apuracao.cotacaoAtual())
-                + " em " + Formatador.data(apuracao.dataCotacaoAtual()) + "), seu resultado passaria a ser "
-                + Formatador.resultado(apuracao.resultadoMercado(), apuracao.percentualMercado()) + ".");
-        console.exibir("  Saldo em reais disponível na carteira: " + Formatador.moeda(apuracao.saldoReais()) + ".");
+        exibirLinhaResumo("resumo.vendidoComprado", Formatador.moeda(apuracao.totalVendido()),
+                Formatador.moeda(apuracao.totalComprado()));
+        exibirLinhaResumo(apuracao.resultadoOperacional() >= 0 ? "resumo.lucro" : "resumo.prejuizo",
+                Formatador.moeda(apuracao.resultadoOperacional()));
+        exibirLinhaResumo("resumo.custoMedio", Formatador.moeda(apuracao.saldoCustoMedio()));
+        exibirLinhaResumo("resumo.resultadoGeral",
+                Formatador.resultado(apuracao.resultadoCustoMedio(), apuracao.percentualCustoMedio()));
+        exibirLinhaResumo("resumo.resultadoMercado", Formatador.moeda(apuracao.cotacaoAtual()),
+                Formatador.data(apuracao.dataCotacaoAtual()),
+                Formatador.resultado(apuracao.resultadoMercado(), apuracao.percentualMercado()));
+        exibirLinhaResumo("resumo.saldoReais", Formatador.moeda(apuracao.saldoReais()));
     }
 
-    private static String campo(String rotulo, String valor) {
-        return String.format("  %-24s: %s", rotulo, valor);
+    private void exibirLinhaResumo(String chave, Object... argumentos) {
+        console.exibir("  " + Mensagens.get(chave, argumentos));
+    }
+
+    private static Object[] colunas(String... nomes) {
+        Object[] titulos = new Object[nomes.length];
+        for (int i = 0; i < nomes.length; i++) {
+            titulos[i] = Mensagens.get("coluna." + nomes[i]);
+        }
+        return titulos;
+    }
+
+    private static String campo(String chave, String valor) {
+        return String.format("  %-24s: %s", Mensagens.get(chave), valor);
     }
 }

@@ -1,0 +1,36 @@
+=== FLUJO DE MOVIMIENTOS ===
+Compras y ventas de FTCoins y el dinero (R$) de la cartera.
+Acceda desde el menú principal: 2. Movimientos.
+
+Toda operación se registra con la fecha de hoy, a la
+cotización del día informada por el Oráculo (menú 3).
+
+1. Compra de moneda virtual
+   Ingrese el identificador de la cartera. El sistema muestra
+   la cotización de hoy y el saldo en reales, y pide la
+   cantidad de FTCoins. El valor de la compra (cantidad x
+   cotización) se descuenta del saldo en reales; sin saldo
+   suficiente, la compra se rechaza.
+2. Venta de moneda virtual
+   Mismo flujo de la compra. La venta solo se acepta si la
+   cartera tiene FTCoins suficientes, y el valor de la venta
+   entra en el saldo en reales.
+3. Depósito en reales
+   Ingresa dinero en la cartera para las próximas compras.
+4. Retiro en reales
+   Retira dinero de la cartera, hasta el saldo en reales
+   disponible.
+
+Cantidades y valores aceptan decimales, con coma o punto
+(ej.: 10,5).
+
+Cómo la operación afecta la cartera:
+- En la compra, el costo medio se recalcula: promedio
+  ponderado entre el costo de las monedas que ya tenía y el
+  valor de la nueva compra.
+- En la venta, el costo medio no cambia. El resultado de la
+  venta es la cantidad vendida por la diferencia entre la
+  cotización y el costo medio: positivo es ganancia,
+  negativo es pérdida.
+- Las compras hechas antes de que existiera el depósito en
+  reales no cambian el saldo en reales.

@@ -1,14 +1,17 @@
 package view;
 
+import config.Mensagens;
 import exception.AppException;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
@@ -19,14 +22,13 @@ import java.util.Scanner;
  */
 public class Console {
 
-    private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     public static final int OPCAO_INVALIDA = -1;
 
     private final Scanner entrada;
     private final PrintStream saida;
     private final Path diretorioArquivos;
 
+    /** Lê a entrada como UTF-8. */
     public Console(InputStream entrada, PrintStream saida) {
         this(entrada, saida, Path.of(""));
     }
@@ -35,9 +37,32 @@ public class Console {
      * @param diretorioArquivos onde {@link #salvarArquivo} grava os arquivos
      */
     public Console(InputStream entrada, PrintStream saida, Path diretorioArquivos) {
-        this.entrada = new Scanner(entrada);
+        this(new Scanner(entrada, StandardCharsets.UTF_8), saida, diretorioArquivos);
+    }
+
+    private Console(Scanner entrada, PrintStream saida, Path diretorioArquivos) {
+        this.entrada = entrada;
         this.saida = saida;
         this.diretorioArquivos = diretorioArquivos;
+    }
+
+    /**
+     * Console da entrada e saída padrão. Num terminal de verdade usa a codificação dele (no Windows,
+     * a página de código do console); redirecionado ou no Git Bash, que esperam UTF-8, usa UTF-8.
+     * Sem isso, os acentos saem trocados em um dos dois casos.
+     */
+    public static Console doTerminal() {
+        java.io.Console terminal = System.console();
+        boolean ehTerminal = terminal != null && terminal.isTerminal();
+        Charset entrada = ehTerminal ? codificacao("stdin.encoding") : StandardCharsets.UTF_8;
+        Charset saida = ehTerminal ? codificacao("stdout.encoding") : StandardCharsets.UTF_8;
+        return new Console(new Scanner(System.in, entrada),
+                new PrintStream(new FileOutputStream(FileDescriptor.out), true, saida), Path.of(""));
+    }
+
+    private static Charset codificacao(String propriedade) {
+        Charset padrao = Charset.defaultCharset();
+        return Charset.forName(System.getProperty(propriedade, padrao.name()), padrao);
     }
 
     public void exibir(String mensagem) {
@@ -45,11 +70,11 @@ public class Console {
     }
 
     public void exibirFormatado(String formato, Object... argumentos) {
-        saida.printf(formato, argumentos);
+        saida.printf(Mensagens.locale(), formato, argumentos);
     }
 
     public void exibirErro(String mensagem) {
-        saida.println("Erro: " + mensagem);
+        saida.println(Mensagens.get("console.erro", mensagem));
     }
 
     /**
@@ -75,7 +100,7 @@ public class Console {
         try {
             return Integer.parseInt(texto);
         } catch (NumberFormatException _) {
-            throw new AppException("Valor numérico inválido: " + texto + ".");
+            throw new AppException("erro.numeroInvalido", texto);
         }
     }
 
@@ -85,16 +110,17 @@ public class Console {
         try {
             return Double.parseDouble(texto.replace(',', '.'));
         } catch (NumberFormatException _) {
-            throw new AppException("Valor decimal inválido: " + texto + ".");
+            throw new AppException("erro.decimalInvalido", texto);
         }
     }
 
+    /** Lê uma data no padrão do idioma ({@link Mensagens#padraoData()}). */
     public LocalDate lerData(String mensagem) throws AppException {
-        String texto = lerLinha(mensagem + " (dd/MM/yyyy):");
+        String texto = lerLinha(mensagem + " (" + Mensagens.padraoData() + "):");
         try {
-            return LocalDate.parse(texto, FORMATO_DATA);
+            return Mensagens.lerData(texto);
         } catch (DateTimeParseException _) {
-            throw new AppException("Data inválida: " + texto + ". Use o formato dd/MM/yyyy.");
+            throw new AppException("erro.dataInvalida", texto, Mensagens.padraoData());
         }
     }
 
@@ -108,11 +134,14 @@ public class Console {
             Files.write(arquivo, linhas, StandardCharsets.UTF_8);
             return arquivo;
         } catch (IOException e) {
-            throw new AppException("Não foi possível salvar " + arquivo + ": " + e.getMessage(), e);
+            throw new AppException(e, "erro.salvarArquivo", arquivo.toString(), e.getMessage());
         }
     }
 
+    /** Pergunta de sim ou não, com as letras do idioma (ex.: S/N). */
     public boolean confirmar(String pergunta) {
-        return lerLinha(pergunta + " (S/N):").equalsIgnoreCase("S");
+        String sim = Mensagens.get("console.sim");
+        String resposta = lerLinha(pergunta + " (" + sim + "/" + Mensagens.get("console.nao") + "):");
+        return resposta.equalsIgnoreCase(sim);
     }
 }

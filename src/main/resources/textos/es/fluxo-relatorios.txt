@@ -1,0 +1,35 @@
+=== FLUJO DE INFORMES ===
+Acceda desde el menú principal: 4. Informes. Valores en R$.
+
+1 y 2. Listar carteras
+   Todas las carteras, ordenadas por identificador o por el
+   nombre del titular.
+3. Saldo actual
+   Cantidad de FTCoins, costo medio, valor de las monedas a
+   costo medio y a mercado (por la última cotización) y el
+   saldo en reales. Al final, puede imprimir el saldo en un
+   archivo .txt.
+4. Historial de movimientos
+   Una línea por operación (compra, venta, depósito o retiro),
+   con la cotización del día, el saldo de FTCoins, el costo
+   medio y el saldo en reales justo después de la operación,
+   y el resultado de cada venta.
+5. Evolución diaria
+   Una línea por día, desde la primera operación hasta hoy,
+   como en la planilla de cálculo. Columnas:
+   - Compra / Venta: cantidades movidas en el día
+   - Saldo (cant): FTCoins en cartera al final del día
+   - Sd. financiero: saldo valorado a costo medio
+   - Res. operac.: resultado de las ventas del día
+   - Res. acumulado: suma de los resultados de las ventas
+     hasta el día
+   - Sd. mercado: saldo valorado a la cotización del día
+6. Ganancias y pérdidas
+   Resumen de cada cartera:
+   - cuánto compró y vendió, y la ganancia o pérdida
+     operativa (vendido - comprado);
+   - el valor de las monedas que quedan, a costo medio;
+   - el resultado general (operativo + monedas a costo medio);
+   - el resultado si vendiera todo a la última cotización;
+   - el saldo en reales disponible.
+   Los porcentajes se calculan sobre el total comprado.

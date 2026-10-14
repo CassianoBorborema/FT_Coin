@@ -1,6 +1,7 @@
 package oraculo;
 
 import config.Configuracao;
+import config.Mensagens;
 import exception.AppException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -39,17 +40,16 @@ public class OraculoSimulado implements ProvedorCotacao {
          */
         public Parametros {
             if (dataInicial == null) {
-                throw new IllegalArgumentException("A data inicial do oráculo é obrigatória.");
+                throw new IllegalArgumentException(Mensagens.get("oraculo.erro.semData"));
             }
             if (amplitude < 0) {
-                throw new IllegalArgumentException("A amplitude da flutuação não pode ser negativa.");
+                throw new IllegalArgumentException(Mensagens.get("oraculo.erro.amplitude"));
             }
             if (fatorValorizacao < 0) {
-                throw new IllegalArgumentException("O fator de valorização não pode ser negativo.");
+                throw new IllegalArgumentException(Mensagens.get("oraculo.erro.fator"));
             }
             if (base + valorizacaoInicial - amplitude <= 0) {
-                throw new IllegalArgumentException(
-                        "Os parâmetros do oráculo permitem cotação menor ou igual a zero (base + valorização inicial - amplitude).");
+                throw new IllegalArgumentException(Mensagens.get("oraculo.erro.cotacaoNaoPositiva"));
             }
         }
 
@@ -63,7 +63,7 @@ public class OraculoSimulado implements ProvedorCotacao {
                         configuracao.getDecimal("oraculo.valorizacao.fator"),
                         configuracao.getInteiro("oraculo.semente"));
             } catch (IllegalArgumentException e) {
-                throw new AppException(e.getMessage());
+                throw new AppException(e, "erro.config.oraculo", e.getMessage());
             }
         }
     }
@@ -79,13 +79,13 @@ public class OraculoSimulado implements ProvedorCotacao {
     @Override
     public double cotacaoEm(LocalDate data) throws AppException {
         if (data == null) {
-            throw new AppException("Data da cotação é obrigatória.");
+            throw new AppException("erro.cotacao.semData");
         }
         if (data.isBefore(parametros.dataInicial())) {
-            throw new AppException("O Oráculo só tem cotações a partir de " + parametros.dataInicial() + ".");
+            throw new AppException("erro.cotacao.antesDoInicio", parametros.dataInicial());
         }
         if (data.isAfter(LocalDate.now(relogio))) {
-            throw new AppException("Não há cotação para a data futura " + data + ".");
+            throw new AppException("erro.cotacao.futura", data);
         }
         double cotacao = parametros.base() + flutuacao(data) + valorizacao(data);
         return BigDecimal.valueOf(cotacao).setScale(CASAS_DECIMAIS, RoundingMode.HALF_UP).doubleValue();

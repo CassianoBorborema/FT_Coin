@@ -1,5 +1,6 @@
 package model;
 
+import config.Mensagens;
 import exception.AppException;
 import java.time.LocalDate;
 
@@ -9,7 +10,7 @@ import java.time.LocalDate;
  */
 public enum TipoMovimentacao {
 
-    COMPRA('C', 1, "Compra") {
+    COMPRA('C', 1) {
         @Override
         public double aplicar(Posicao posicao, LocalDate data, double quantidade, double cotacao)
                 throws AppException {
@@ -18,7 +19,7 @@ public enum TipoMovimentacao {
         }
     },
 
-    VENDA('V', -1, "Venda") {
+    VENDA('V', -1) {
         @Override
         public double aplicar(Posicao posicao, LocalDate data, double quantidade, double cotacao)
                 throws AppException {
@@ -26,7 +27,7 @@ public enum TipoMovimentacao {
         }
     },
 
-    CREDITO('D', 0, "Crédito") {
+    CREDITO('D', 0) {
         @Override
         public double aplicar(Posicao posicao, LocalDate data, double valor, double cotacao) {
             posicao.creditar(valor);
@@ -39,7 +40,7 @@ public enum TipoMovimentacao {
         }
     },
 
-    SAQUE('S', 0, "Saque") {
+    SAQUE('S', 0) {
         @Override
         public double aplicar(Posicao posicao, LocalDate data, double valor, double cotacao)
                 throws AppException {
@@ -55,16 +56,15 @@ public enum TipoMovimentacao {
 
     private final char codigo;
     private final int sinal;
-    private final String descricao;
 
-    TipoMovimentacao(char codigo, int sinal, String descricao) {
+    TipoMovimentacao(char codigo, int sinal) {
         this.codigo = codigo;
         this.sinal = sinal;
-        this.descricao = descricao;
     }
 
+    /** Nome do tipo no idioma escolhido. */
     public String getDescricao() {
-        return descricao;
+        return Mensagens.get("tipo." + name());
     }
 
     public char getCodigo() {
@@ -98,6 +98,6 @@ public enum TipoMovimentacao {
                 return tipo;
             }
         }
-        throw new AppException("Tipo de movimentação inválido: " + codigo + ".");
+        throw new AppException("erro.movimentacao.tipoInvalido", String.valueOf(codigo));
     }
 }

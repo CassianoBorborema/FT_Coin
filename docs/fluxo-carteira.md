@@ -1,372 +1,127 @@
 # Fluxo de Carteira (FT_Coin)
 
-Este documento descreve **como o fluxo de carteira funciona hoje** no código em `src/`.
+Como o cadastro de carteiras funciona no código em `src/main/java`.
 
 ---
 
-## 1. Visão geral da arquitetura
+## 1. Arquitetura
 
-O fluxo segue **MVC + DTO + DAO**, com persistência em memória para demonstração.
+O fluxo segue **MVC + DTO + DAO**. A view só conversa com o controller; o controller valida pelo
+modelo e grava pelo DAO, sem saber se a persistência é em memória ou no MariaDB.
 
 ```mermaid
 flowchart TB
-    subgraph viewLayer [View]
-        Main["app.Main"]
+    subgraph view [View]
         MenuPrincipal["view.MenuPrincipal"]
         MenuCarteira["view.MenuCarteira"]
+        Console["view.Console"]
     end
-
-    subgraph controllerLayer [Controller]
+    subgraph controller [Controller]
         CarteiraController["controller.CarteiraController"]
     end
-
-    subgraph domainLayer [Domínio]
-        CarteiraModel["model.Carteira"]
-        CarteiraDTO["DTO.CarteiraDTO"]
-        AppException["exception.AppException"]
+    subgraph dominio [Modelo e DTO]
+        Carteira["model.Carteira"]
+        CarteiraDTO["dto.CarteiraDTO"]
+    end
+    subgraph persistencia [Persistência]
+        CarteiraDAO["dao.CarteiraDAO (sealed)"]
+        Memoria["CarteiraDAOMemoria"]
+        MariaDB["CarteiraDAOMariaDB"]
+        MovimentacaoDAO["dao.MovimentacaoDAO"]
     end
 
-    subgraph persistenceLayer [Persistência]
-        CarteiraDAO["DAO.CarteiraDAO"]
-        CarteiraDAOMemoria["dao.memoria.CarteiraDAOMemoria"]
-    end
-
-    Main -->|"instancia"| CarteiraDAOMemoria
-    Main -->|"instancia"| CarteiraController
-    Main -->|"instancia"| MenuPrincipal
     MenuPrincipal -->|"opção 1"| MenuCarteira
-    MenuCarteira -->|"CRUD"| CarteiraController
-    CarteiraController -->|"valida via"| CarteiraModel
-    CarteiraController -->|"converte DTO ↔ Model"| CarteiraDTO
-    CarteiraController -->|"delega persistência"| CarteiraDAO
-    CarteiraDAO -.->|"implementa"| CarteiraDAOMemoria
-    CarteiraModel -->|"lança"| AppException
-    CarteiraController -->|"propaga"| AppException
-    MenuCarteira -->|"captura e exibe"| AppException
+    MenuCarteira -->|"lê e exibe"| Console
+    MenuCarteira --> CarteiraController
+    CarteiraController -->|"valida"| Carteira
+    CarteiraController -->|"grava e consulta"| CarteiraDAO
+    CarteiraController -->|"bloqueia exclusão"| MovimentacaoDAO
+    CarteiraDAO -.-> Memoria
+    CarteiraDAO -.-> MariaDB
 ```
 
-
-
-### Papel de cada componente
-
-
-| Componente             | Arquivo                                                                               | Responsabilidade no fluxo                                                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Main**               | [src/main/java/app/Main.java](../src/main/java/app/Main.java)                                             | Bootstrap: cria DAOs em memória, `CarteiraController`, `MovimentacaoController` e `MenuPrincipal`; helpers `lerOpcao`, `lerLinha`, `lerInteiro`, `lerData`, `lerDouble` |
-| **MenuPrincipal**      | [src/main/java/view/MenuPrincipal.java](../src/main/java/view/MenuPrincipal.java)                         | Menu raiz; opção **1 (Carteira)** abre `MenuCarteira`; opção **2 (Movimentação)** abre `MenuMovimentacao` (ver [fluxo-movimentacao.md](fluxo-movimentacao.md))          |
-| **MenuCarteira**       | [src/main/java/view/MenuCarteira.java](../src/main/java/view/MenuCarteira.java)                           | Submenu CRUD; lê dados do usuário, chama o controller e exibe resultado ou erro                                                                                         |
-| **CarteiraController** | [src/main/java/controller/CarteiraController.java](../src/main/java/controller/CarteiraController.java)   | Orquestra regras: valida identificador, monta DTO, converte para `Carteira`, valida campos e delega ao DAO                                                              |
-| **Carteira (model)**   | [src/main/java/model/Carteira.java](../src/main/java/model/Carteira.java)                                 | Entidade de domínio; valida `nomeTitular` e `corretora`; converte `fromDTO()` / `toDTO()`                                                                               |
-| **CarteiraDTO**        | [src/main/java/dto/CarteiraDTO.java](../src/main/java/dto/CarteiraDTO.java)                               | Objeto de transferência entre view, controller e DAO (3 campos: `identificador`, `nomeTitular`, `corretora`)                                                            |
-| **CarteiraDAO**        | [src/main/java/dao/CarteiraDAO.java](../src/main/java/dao/CarteiraDAO.java)                               | Contrato de persistência (interface)                                                                                                                                    |
-| **CarteiraDAOMemoria** | [src/main/java/dao/memoria/CarteiraDAOMemoria.java](../src/main/java/dao/memoria/CarteiraDAOMemoria.java) | Implementação com `HashMap<Integer, CarteiraDTO>`; gera IDs automaticamente                                                                                             |
-| **AppException**       | [src/main/java/exception/AppException.java](../src/main/java/exception/AppException.java)                 | Exceção checked para erros de negócio e validação                                                                                                                       |
-
+| Componente | Responsabilidade |
+| ---------- | ---------------- |
+| [MenuCarteira](../src/main/java/view/MenuCarteira.java) | Opções de incluir, consultar, editar e excluir; lê os dados e exibe o resultado |
+| [Menu](../src/main/java/view/Menu.java) | Base de todos os menus: numera as opções, repete até o 0 e mostra os erros sem encerrar a aplicação |
+| [CarteiraController](../src/main/java/controller/CarteiraController.java) | Valida o identificador, monta o DTO, valida pelo modelo e chama o DAO |
+| [Carteira](../src/main/java/model/Carteira.java) | Regras da entidade: titular e corretora obrigatórios |
+| [CarteiraDAO](../src/main/java/dao/CarteiraDAO.java) | Interface selada; só `CarteiraDAOMemoria` e `CarteiraDAOMariaDB` a implementam |
+| [Persistencia](../src/main/java/dao/Persistencia.java) | Cria o conjunto de DAOs de memória ou do MariaDB |
 
 ---
 
-## 2. Bootstrap — como a aplicação inicia o fluxo
+## 2. Inicialização
 
 ```mermaid
 sequenceDiagram
-    participant User as Usuário
+    participant U as Usuário
     participant Main as app.Main
-    participant DAO as CarteiraDAOMemoria
-    participant Ctrl as CarteiraController
+    participant P as dao.Persistencia
     participant MP as MenuPrincipal
-    participant MC as MenuCarteira
 
-    User->>Main: java -jar ft-coin.jar
-    Main->>DAO: new CarteiraDAOMemoria()
-    Main->>Ctrl: new CarteiraController(carteiraDAO, movimentacaoDAO)
-    Main->>MP: new MenuPrincipal(scanner, ctrl, movimentacaoCtrl)
-    Main->>User: exibe boas-vindas
-    Main->>MP: exibirMenuPrincipal()
-    User->>MP: digita 1 (Carteira)
-    MP->>MC: new MenuCarteira(scanner, ctrl)
-    MP->>MC: exibirMenuCarteira()
+    U->>Main: java -jar ft-coin.jar
+    Main->>U: pergunta o idioma (se idioma não estiver configurado)
+    Main->>P: mariaDB(configuração)
+    alt banco acessível
+        P-->>Main: DAOs do MariaDB (tabelas criadas se faltarem)
+    else banco inacessível
+        Main->>U: aviso com o motivo
+        Main->>P: emMemoria()
+    end
+    Main->>MP: monta controllers e menus com os DAOs escolhidos
+    MP->>U: menu principal
 ```
 
-
-
-**Injeção de dependências:** o `CarteiraController` recebe a interface `CarteiraDAO`, não a implementação concreta. [Main.java](../src/main/java/app/Main.java) usa `CarteiraDAOMemoria`; outra implementação da mesma interface poderia ser injetada sem alterar controller ou view.
+Os controllers recebem as interfaces dos DAOs no construtor, então trocar a persistência não altera
+controller nem view.
 
 ---
 
-## 3. Navegação nos menus
+## 3. Operações
 
-```mermaid
-stateDiagram-v2
-    [*] --> MenuPrincipal
-    MenuPrincipal --> MenuCarteira: opcao 1
-    MenuCarteira --> Incluir: opcao 1
-    MenuCarteira --> Consultar: opcao 2
-    MenuCarteira --> Editar: opcao 3
-    MenuCarteira --> Excluir: opcao 4
-    MenuCarteira --> MenuPrincipal: opcao 0 Voltar
-    Incluir --> MenuCarteira: conclui ou erro
-    Consultar --> MenuCarteira: conclui ou erro
-    Editar --> MenuCarteira: conclui ou erro
-    Excluir --> MenuCarteira: conclui ou erro
-    MenuPrincipal --> [*]: opcao 0 Sair
-```
-
-
-
-**Comportamento do loop:**
-
-- `MenuPrincipal` e `MenuCarteira` usam `while (true)` — após cada operação, o submenu permanece aberto até o usuário escolher **0 (Voltar/Sair)**.
-- Opções inválidas no submenu de carteira exibem mensagem e **não encerram** o programa (diferente do menu principal, que lança `RuntimeException`).
-
----
-
-## 4. Operações CRUD — passo a passo
-
-### 4.1 Incluir carteira
+| Opção | O que acontece | Erros possíveis |
+| ----- | -------------- | --------------- |
+| **1. Incluir** | Lê titular e corretora, valida e grava. O DAO gera o identificador (na memória, o menor livre; no MariaDB, `AUTO_INCREMENT`) | Titular ou corretora vazios |
+| **2. Consultar** | Lê o identificador e mostra `#id - titular (corretora: X)` | Identificador ≤ 0 ou inexistente |
+| **3. Editar** | Mostra os dados atuais, lê os novos e grava | Os mesmos do incluir e do consultar |
+| **4. Excluir** | Mostra a carteira, pede confirmação (S/N) e exclui | Carteira com movimentações (o histórico não pode ser perdido) |
 
 ```mermaid
 sequenceDiagram
-    participant User as Usuário
+    participant U as Usuário
     participant MC as MenuCarteira
-    participant Main as app.Main
-    participant Ctrl as CarteiraController
-    participant Model as model.Carteira
-    participant DAO as CarteiraDAOMemoria
+    participant C as CarteiraController
+    participant M as model.Carteira
+    participant D as CarteiraDAO
 
-    User->>MC: opcao 1
-    MC->>Main: lerLinha(nomeTitular)
-    MC->>Main: lerLinha(corretora)
-    MC->>Ctrl: incluir(nomeTitular, corretora)
-    Ctrl->>Ctrl: new CarteiraDTO(0, nome, corretora)
-    Ctrl->>Model: fromDTO(dto)
-    Ctrl->>Model: validar()
-    Note over Model: rejeita titular/corretora vazios
-    Ctrl->>Model: toDTO()
-    Ctrl->>DAO: incluir(dtoParaSalvar)
-    Note over DAO: id=0 atribui o menor identificador livre
-    DAO->>DAO: grava copia no HashMap
-    Ctrl->>DAO: consultarPorId(idGerado)
-    DAO-->>Ctrl: CarteiraDTO
-    Ctrl-->>MC: CarteiraDTO
-    MC->>User: exibe sucesso + toString()
-```
-
-
-
-**Regras aplicadas:**
-
-- ID inicia em `0`; o DAO atribui o menor identificador positivo livre (1, 2, 3…), reaproveitando os liberados por exclusões.
-- Validação de campos ocorre no **model**, não na view.
-- O DAO armazena uma **cópia** do DTO para evitar mutação externa.
-
----
-
-### 4.2 Consultar carteira
-
-```mermaid
-sequenceDiagram
-    participant User as Usuário
-    participant MC as MenuCarteira
-    participant Main as app.Main
-    participant Ctrl as CarteiraController
-    participant DAO as CarteiraDAOMemoria
-
-    User->>MC: opcao 2
-    MC->>Main: lerInteiro(identificador)
-    MC->>Ctrl: consultar(id)
-    Ctrl->>Ctrl: validarIdentificador(id > 0)
-    Ctrl->>DAO: consultarPorId(id)
-    alt carteira existe
-        DAO-->>Ctrl: copia do CarteiraDTO
-        Ctrl-->>MC: CarteiraDTO
-        MC->>User: exibe dados
-    else nao encontrada
-        DAO-->>Ctrl: AppException
-        Ctrl-->>MC: AppException
-        MC->>User: Erro: mensagem
-    end
-```
-
-
-
----
-
-### 4.3 Editar carteira
-
-```mermaid
-sequenceDiagram
-    participant User as Usuário
-    participant MC as MenuCarteira
-    participant Ctrl as CarteiraController
-    participant Model as model.Carteira
-    participant DAO as CarteiraDAOMemoria
-
-    User->>MC: opcao 3
-    MC->>Ctrl: consultar(id)
-    Ctrl->>DAO: consultarPorId(id)
-    DAO-->>MC: CarteiraDTO atual
-    MC->>User: exibe carteira atual
-    MC->>User: pede novo titular e corretora
-    MC->>Ctrl: editar(id, nome, corretora)
-    Ctrl->>Ctrl: validarIdentificador + montar DTO
-    Ctrl->>Model: fromDTO + validar()
-    Ctrl->>DAO: atualizar(dto)
-    Ctrl->>DAO: consultarPorId(id)
-    DAO-->>MC: CarteiraDTO atualizada
-    MC->>User: exibe sucesso
-```
-
-
-
-**Observação:** a edição exige que a carteira exista (consulta prévia) e revalida titular/corretora antes de persistir.
-
----
-
-### 4.4 Excluir carteira
-
-```mermaid
-sequenceDiagram
-    participant User as Usuário
-    participant MC as MenuCarteira
-    participant Ctrl as CarteiraController
-    participant DAO as CarteiraDAOMemoria
-
-    User->>MC: opcao 4
-    MC->>Ctrl: consultar(id)
-    Ctrl->>DAO: consultarPorId(id)
-    DAO-->>MC: CarteiraDTO
-    MC->>User: exibe carteira + pede confirmacao S/N
-    alt confirmacao S
-        MC->>Ctrl: excluir(id)
-        alt possui movimentacoes
-            Ctrl-->>MC: AppException
-            MC->>User: Erro mensagem
-        else sem movimentacoes
-            Ctrl->>DAO: excluir(id)
-            DAO->>DAO: remove do HashMap
-            MC->>User: Carteira excluida
-        end
-    else confirmacao N ou outro
-        MC->>User: Exclusao cancelada
-    end
-```
-
-
-
-**Observação:** antes de excluir, `CarteiraController` consulta `MovimentacaoDAO.possuiMovimentacoes(id)`. Carteiras com compras ou vendas **não podem** ser removidas.
-
----
-
-## 5. Fluxo de dados (DTO vs Model)
-
-```mermaid
-flowchart LR
-    subgraph view [View]
-        Input["Entrada do usuário<br/>String / int"]
-    end
-
-    subgraph controller [Controller]
-        DTO1["CarteiraDTO"]
-        Model["Carteira"]
-        DTO2["CarteiraDTO"]
-    end
-
-    subgraph dao [DAO]
-        Storage["HashMap de CarteiraDTO"]
-    end
-
-    Input -->|"primitivos"| controller
-    DTO1 -->|"fromDTO()"| Model
-    Model -->|"validar()"| Model
-    Model -->|"toDTO()"| DTO2
-    DTO2 -->|"incluir/atualizar"| Storage
-    Storage -->|"consultarPorId/listar"| DTO2
-    DTO2 -->|"retorno"| view
-```
-
-
-
-**Por que duas representações?**
-
-- **CarteiraDTO:** transporta dados entre camadas sem expor lógica de domínio à view/DAO.
-- **Carteira (model):** concentra validações de negócio (`validar()`).
-- O controller é o **único ponto** que converte entre DTO e Model.
-
----
-
-## 6. Tratamento de erros
-
-
-| Origem                           | Exemplo                      | Quem lança                                  | Quem captura                   |
-| -------------------------------- | ---------------------------- | ------------------------------------------- | ------------------------------ |
-| Entrada numérica inválida        | usuário digita "abc" como ID | `Main.lerInteiro()` → `AppException`        | `MenuCarteira` (catch)         |
-| Titular/corretora vazios         | campos em branco             | `Carteira.validar()` → `AppException`       | `MenuCarteira` (catch)         |
-| ID inválido                      | id <= 0                      | `CarteiraController.validarIdentificador()` | `MenuCarteira` (catch)         |
-| Carteira inexistente             | id 99 não cadastrado         | `CarteiraDAOMemoria.consultarPorId()`       | `MenuCarteira` (catch)         |
-| Carteira com movimentações       | excluir após compra/venda    | `CarteiraController.excluir()`              | `MenuCarteira` (catch)         |
-| Opção inválida no menu principal | digita 9                     | `RuntimeException`                          | `Main.main()` (catch genérico) |
-
-
-Todas as operações do submenu exibem `Erro: {mensagem}` e **retornam ao loop do menu**, sem encerrar a aplicação.
-
----
-
-## 7. Estado persistido em memória
-
-```mermaid
-flowchart TB
-    subgraph CarteiraDAOMemoria
-        menorLivre["menorIdentificadorLivre()<br/>reaproveita ids excluidos"]
-        map["carteiras: Map int CarteiraDTO"]
-    end
-
-    incluirOp["incluir()"] -->|"id=0"| menorLivre
-    incluirOp -->|"grava copia"| map
-    consultarOp["consultarPorId()"] -->|"retorna copia"| map
-    atualizarOp["atualizar()"] -->|"substitui entrada"| map
-    excluirOp["excluir()"] -->|"remove chave"| map
-```
-
-
-
-**Importante:** os dados existem apenas enquanto a JVM está ativa. Ao sair (`System.exit(0)`), todo o conteúdo do `HashMap` é perdido.
-
----
-
-## 8. Mapa de arquivos envolvidos no fluxo
-
-```
-src/
-├── app/Main.java                      ← bootstrap + leitura CLI
-├── view/
-│   ├── MenuPrincipal.java             ← roteia para MenuCarteira
-│   └── MenuCarteira.java              ← 4 operações CRUD
-├── controller/CarteiraController.java ← orquestração (+ bloqueio exclusão)
-├── model/Carteira.java                ← validação + conversão
-├── DTO/CarteiraDTO.java               ← transporte de dados
-├── DAO/
-│   ├── CarteiraDAO.java               ← contrato
-│   └── memoria/CarteiraDAOMemoria.java← persistência atual
-└── exception/AppException.java        ← erros de negócio
+    U->>MC: 1 (Incluir), titular, corretora
+    MC->>C: incluir(titular, corretora)
+    C->>M: fromDTO(dto).validar()
+    C->>D: incluir(dto)
+    Note over D: identificador gerado é gravado de volta no DTO
+    C->>D: consultarPorId(id)
+    D-->>MC: CarteiraDTO
+    MC->>U: Carteira incluída com sucesso: #1 - Ana (corretora: XP)
 ```
 
 ---
 
-## 9. Execução manual (referência)
+## 4. Erros
 
-```powershell
-mvn package
-java -jar target/ft-coin-1.0.0-SNAPSHOT.jar
-```
-
-**Caminho típico de teste:** Menu Principal → 1 (Carteira) → 1 (Incluir) → informar titular e corretora → 2 (Consultar) → informar ID gerado → 0 (Voltar) → 0 (Sair).
+Toda regra violada lança `AppException` com a **chave** da mensagem e os argumentos. O `Menu` captura a
+exceção e exibe `Erro: <mensagem>` no idioma escolhido, e o usuário volta ao submenu. Falhas do banco
+chegam como `PersistenciaException` (subclasse de `AppException`) com o erro original como causa.
 
 ---
 
-## 10. Integrações e limitações
+## 5. Arquivos
 
-- `CarteiraController.listarTodas()` é reutilizado pelos Relatórios (ver [fluxo-relatorios.md](fluxo-relatorios.md)).
-- A persistência é exclusivamente em memória (`CarteiraDAOMemoria`), atrás da interface `CarteiraDAO`.
-- Exclusão bloqueia carteiras com movimentações vinculadas (ver [fluxo-movimentacao.md](fluxo-movimentacao.md)).
-- O menu principal integra todas as áreas: Carteira (1), Movimentação (2), Oráculo (3), Relatórios (4) e Ajuda (5).
-
+| Camada | Arquivos |
+| ------ | -------- |
+| View | `view/MenuCarteira.java`, `view/Menu.java`, `view/Console.java`, `view/Formatador.java` |
+| Controller | `controller/CarteiraController.java` |
+| Modelo e DTO | `model/Carteira.java`, `dto/CarteiraDTO.java` |
+| DAO | `dao/CarteiraDAO.java`, `dao/CarteiraDAOMemoria.java`, `dao/CarteiraDAOMariaDB.java` |
+| Textos | `i18n/mensagens_*.properties` (chaves `carteira.*` e `erro.carteira.*`) |
+| Testes | `CarteiraControllerTest`, `PersistenciaContrato` (memória e MariaDB) |

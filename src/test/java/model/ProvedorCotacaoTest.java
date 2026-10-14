@@ -48,7 +48,7 @@ class ProvedorCotacaoTest {
     void falhaDoBancoInterrompeABusca() throws AppException {
         ProvedorCotacao bancoFora = mock(ProvedorCotacao.class, withSettings().defaultAnswer(Answers.CALLS_REAL_METHODS));
         when(bancoFora.cotacaoEm(any())).thenThrow(
-                new PersistenciaException("banco fora do ar", new SQLException("conexão recusada")));
+                new PersistenciaException(new SQLException("conexão recusada"), "banco fora do ar"));
 
         assertThrows(PersistenciaException.class, () -> bancoFora.ultimaCotacaoAte(HOJE));
     }

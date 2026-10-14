@@ -2,6 +2,9 @@ package dto;
 
 import java.time.LocalDate;
 
+/**
+ * Cotação da moeda virtual em uma data.
+ */
 public class OraculoDTO {
 
     private LocalDate data;

@@ -1,6 +1,7 @@
 package app;
 
 import config.Configuracao;
+import config.Mensagens;
 import controller.CarteiraController;
 import controller.MovimentacaoController;
 import controller.OraculoController;
@@ -22,7 +23,7 @@ import view.MenuPrincipal;
 import view.MenuRelatorios;
 
 /**
- * Ponto de entrada: monta as dependências e abre o menu principal.
+ * Ponto de entrada: escolhe o idioma, monta as dependências e abre o menu principal.
  */
 public final class Main {
 
@@ -30,26 +31,47 @@ public final class Main {
     }
 
     public static void main(String[] args) {
-        Console console = new Console(System.in, System.out);
+        Console console = Console.doTerminal();
         try {
-            MenuPrincipal menu = montarAplicacao(console);
-            exibirBoasVindas(console);
+            Configuracao configuracao = Configuracao.carregar();
+            escolherIdioma(configuracao, console);
+            MenuPrincipal menu = montarAplicacao(configuracao, console);
+            console.exibir(Mensagens.get("app.boasVindas"));
             menu.exibir();
-            console.exibir("Saindo da aplicação...");
+            console.exibir(Mensagens.get("app.saindo"));
         } catch (AppException e) {
-            console.exibirErro("Não foi possível iniciar o FT_Coin. " + e.getMessage());
+            console.exibirErro(Mensagens.get("app.falhaInicio", e));
         } catch (NoSuchElementException _) {
-            console.exibir("\nEntrada encerrada. Saindo da aplicação...");
+            console.exibir(Mensagens.get("app.entradaEncerrada"));
         }
     }
 
-    private static MenuPrincipal montarAplicacao(Console console) throws AppException {
-        Configuracao configuracao = Configuracao.carregar();
+    /** Usa a chave {@code idioma} da configuração ou, sem ela, pergunta até receber uma opção válida. */
+    private static void escolherIdioma(Configuracao configuracao, Console console) throws AppException {
+        String configurado = configuracao.getTexto("idioma", "");
+        if (!configurado.isBlank()) {
+            Mensagens.definirIdioma(configurado);
+            return;
+        }
+        while (true) {
+            console.exibir("Idioma / Language / Idioma:");
+            console.exibir("1. Português");
+            console.exibir("2. English");
+            console.exibir("3. Español");
+            int opcao = console.lerOpcao();
+            if (opcao >= 1 && opcao <= Mensagens.IDIOMAS.size()) {
+                Mensagens.definirIdioma(Mensagens.IDIOMAS.get(opcao - 1));
+                return;
+            }
+        }
+    }
+
+    private static MenuPrincipal montarAplicacao(Configuracao configuracao, Console console) throws AppException {
         Clock relogio = Clock.systemDefaultZone();
 
         LocalDate vigenciaCredito = configuracao.getData("credito.vigencia");
         Persistencia persistencia = escolherPersistencia(configuracao, console);
-        console.exibir("Persistência: " + persistencia.descricao() + ".");
+        console.exibir(Mensagens.get("app.persistencia", persistencia.descricao()));
 
         ProvedorCotacao cotacoes = new CotacaoComHistorico(
                 new OraculoSimulado(OraculoSimulado.Parametros.carregar(configuracao), relogio),
@@ -83,18 +105,12 @@ public final class Main {
                 try {
                     yield Persistencia.mariaDB(configuracao);
                 } catch (AppException e) {
-                    console.exibir("Aviso: MariaDB indisponível. " + e.getMessage());
+                    console.exibir(Mensagens.get("app.mariaDBIndisponivel", e));
                     yield Persistencia.emMemoria();
                 }
             }
             case "memoria" -> Persistencia.emMemoria();
-            default -> throw new AppException("Persistência desconhecida: " + persistencia + ". Use auto ou memoria.");
+            default -> throw new AppException("erro.persistencia", persistencia);
         };
-    }
-
-    private static void exibirBoasVindas(Console console) {
-        console.exibir("****************************");
-        console.exibir("====Bem vindo ao FT_Coin====");
-        console.exibir("****************************");
     }
 }

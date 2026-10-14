@@ -1,7 +1,6 @@
 package model;
 
 import exception.AppException;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -45,7 +44,7 @@ public class Posicao {
     public void comprar(LocalDate data, double quantidade, double cotacao) throws AppException {
         double valor = quantidade * cotacao;
         if (!data.isBefore(vigenciaCredito)) {
-            exigirSaldoReais(valor, "a compra");
+            exigirSaldoReais(valor, "erro.saldoReais.compra");
             saldoReais -= valor;
         }
         custoMedio = (custoMedio * this.quantidade + valor) / (this.quantidade + quantidade);
@@ -60,8 +59,7 @@ public class Posicao {
      */
     public double vender(double quantidade, double cotacao) throws AppException {
         if (quantidade > this.quantidade + TOLERANCIA) {
-            throw new AppException("A venda de " + texto(quantidade) + " FTCoins excede o saldo de "
-                    + texto(this.quantidade) + " FTCoins.");
+            throw new AppException("erro.venda.excedeSaldo", quantidade, this.quantidade);
         }
         double valor = quantidade * cotacao;
         double resultado = quantidade * (cotacao - custoMedio);
@@ -82,19 +80,14 @@ public class Posicao {
 
     /** @throws AppException se o saldo em reais não cobrir o saque */
     public void sacar(double valor) throws AppException {
-        exigirSaldoReais(valor, "o saque");
+        exigirSaldoReais(valor, "erro.saldoReais.saque");
         saldoReais -= valor;
     }
 
-    private void exigirSaldoReais(double valor, String operacao) throws AppException {
+    private void exigirSaldoReais(double valor, String chave) throws AppException {
         if (valor > saldoReais + TOLERANCIA) {
-            throw new AppException(String.format("Saldo em reais insuficiente para %s: disponível R$ %,.2f, "
-                    + "necessário R$ %,.2f.", operacao, saldoReais, valor));
+            throw new AppException(chave, saldoReais, valor);
         }
-    }
-
-    private static String texto(double quantidade) {
-        return BigDecimal.valueOf(quantidade).stripTrailingZeros().toPlainString();
     }
 
     public double getQuantidade() {

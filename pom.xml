@@ -178,6 +178,8 @@
                     <docencoding>UTF-8</docencoding>
                     <charset>UTF-8</charset>
                     <show>private</show>
+                    <doclint>all,-missing</doclint>
+                    <failOnWarnings>true</failOnWarnings>
                 </configuration>
             </plugin>
         </plugins>

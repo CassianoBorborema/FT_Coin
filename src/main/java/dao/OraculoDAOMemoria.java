@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Cotações em memória; os dados se perdem ao fechar a aplicação.
+ */
 final class OraculoDAOMemoria implements OraculoDAO {
 
     private final Map<LocalDate, OraculoDTO> cotacoes = new HashMap<>();
@@ -20,7 +23,7 @@ final class OraculoDAOMemoria implements OraculoDAO {
         entidade.validar();
         OraculoDTO copia = entidade.toDTO();
         if (cotacoes.containsKey(copia.getData())) {
-            throw new AppException("Já existe cotação cadastrada para a data " + copia.getData() + ".");
+            throw new AppException("erro.cotacao.duplicada", copia.getData());
         }
         cotacoes.put(copia.getData(), copia);
     }
@@ -29,7 +32,7 @@ final class OraculoDAOMemoria implements OraculoDAO {
     public OraculoDTO consultarPorData(LocalDate data) throws AppException {
         OraculoDTO oraculo = cotacoes.get(data);
         if (oraculo == null) {
-            throw new AppException("Não há cotação cadastrada para a data " + data + ".");
+            throw new AppException("erro.cotacao.naoEncontrada", data);
         }
         return new OraculoDTO(oraculo.getData(), oraculo.getCotacao());
     }

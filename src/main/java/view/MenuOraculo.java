@@ -1,5 +1,6 @@
 package view;
 
+import config.Mensagens;
 import controller.OraculoController;
 import dto.OraculoDTO;
 import exception.AppException;
@@ -14,11 +15,11 @@ public class MenuOraculo extends Menu {
     private final OraculoController controller;
 
     public MenuOraculo(Console console, OraculoController controller) {
-        super(console, "Oráculo");
+        super(console, Mensagens.get("oraculo.titulo"));
         this.controller = controller;
-        adicionarOpcao("Cotação de hoje", this::exibirCotacaoDeHoje);
-        adicionarOpcao("Consultar cotação por data", this::consultarCotacao);
-        adicionarOpcao("Listar cotações por período", this::listarCotacoes);
+        adicionarOpcao(Mensagens.get("oraculo.hoje"), this::exibirCotacaoDeHoje);
+        adicionarOpcao(Mensagens.get("oraculo.porData"), this::consultarCotacao);
+        adicionarOpcao(Mensagens.get("oraculo.porPeriodo"), this::listarCotacoes);
     }
 
     private void exibirCotacaoDeHoje() throws AppException {
@@ -26,15 +27,15 @@ public class MenuOraculo extends Menu {
     }
 
     private void consultarCotacao() throws AppException {
-        LocalDate data = console.lerData("Digite a data da cotação");
+        LocalDate data = console.lerData(Mensagens.get("oraculo.pedirData"));
         exibirCotacao(controller.consultar(data));
     }
 
     private void listarCotacoes() throws AppException {
-        LocalDate inicio = console.lerData("Digite a data inicial");
-        LocalDate fim = console.lerData("Digite a data final");
+        LocalDate inicio = console.lerData(Mensagens.get("oraculo.pedirInicio"));
+        LocalDate fim = console.lerData(Mensagens.get("oraculo.pedirFim"));
         List<OraculoDTO> cotacoes = controller.listarPeriodo(inicio, fim);
-        console.exibir("Cotações de " + Formatador.data(inicio) + " a " + Formatador.data(fim) + ":");
+        console.exibir(Mensagens.get("oraculo.periodo", inicio, fim));
         for (OraculoDTO cotacao : cotacoes) {
             exibirCotacao(cotacao);
         }

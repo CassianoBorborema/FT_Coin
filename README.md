@@ -17,6 +17,8 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 | **Relatórios**           | Implementado | Listagens, saldo (com impressão), histórico, evolução diária e resumo de ganho/perda |
 | **Ajuda**                | Implementado | Como funciona, fluxos de carteira, movimentação e relatórios, e créditos          |
 | **Persistência**         | Implementado | MariaDB; se o banco não estiver acessível, segue em memória                        |
+| **Idiomas**              | Implementado | Português, inglês e espanhol, escolhidos ao iniciar                                |
+| **Javadoc**              | Implementado | Todas as classes documentadas; o build do Javadoc falha em comentário mal escrito  |
 
 
 A aplicação **compila e executa** todos os fluxos ponta a ponta.
@@ -24,10 +26,10 @@ A aplicação **compila e executa** todos os fluxos ponta a ponta.
 
 | Documento                                                | Conteúdo                                              |
 | -------------------------------------------------------- | ----------------------------------------------------- |
-| [docs/fluxo-carteira.md](docs/fluxo-carteira.md)         | Arquitetura, menus, CRUD e interação da carteira      |
-| [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra/venda, Oráculo, saldo e diagramas de sequência |
-| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Consulta e listagem de cotações                       |
-| [docs/fluxo-relatorios.md](docs/fluxo-relatorios.md)     | Listagens, saldo, histórico e cálculo de ganho/perda  |
+| [docs/fluxo-carteira.md](docs/fluxo-carteira.md)         | Arquitetura, inicialização e cadastro de carteiras    |
+| [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra, venda, crédito e saque e regras de saldo      |
+| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Cotação simulada, histórico e consultas               |
+| [docs/fluxo-relatorios.md](docs/fluxo-relatorios.md)     | Listagens, saldo, evolução diária e ganho/perda       |
 
 
 ---
@@ -49,13 +51,14 @@ FT_Coin/
     │   │   ├── app/
     │   │   │   └── Main.java                # Monta as dependências e abre o menu principal
     │   │   ├── config/
-    │   │   │   └── Configuracao.java        # Leitura do ftcoin.properties
+    │   │   │   ├── Configuracao.java        # Leitura do ftcoin.properties
+    │   │   │   └── Mensagens.java           # Textos no idioma escolhido (i18n)
     │   │   ├── model/
     │   │   │   ├── Carteira.java
     │   │   │   ├── Movimentacao.java
-    │   │   │   ├── TipoMovimentacao.java    # Compra/venda aplicadas à posição (polimorfismo)
+    │   │   │   ├── TipoMovimentacao.java    # Compra, venda, crédito e saque aplicados à posição (polimorfismo)
     │   │   │   ├── Oraculo.java
-    │   │   │   ├── Posicao.java             # Quantidade, custo médio e totais da carteira
+    │   │   │   ├── Posicao.java             # Quantidade, custo médio, totais e saldo em reais
     │   │   │   ├── ApuracaoCarteira.java    # Histórico e resultados da carteira
     │   │   │   └── ProvedorCotacao.java     # Contrato de cotação por data
     │   │   ├── oraculo/
@@ -65,7 +68,7 @@ FT_Coin/
     │   │   │   ├── CarteiraDTO.java
     │   │   │   ├── MovimentacaoDTO.java
     │   │   │   ├── OraculoDTO.java
-    │   │   │   └── ApuracaoDTO.java         # Record com a linha do histórico aninhada
+    │   │   │   └── ApuracaoDTO.java         # Record com as linhas do histórico e os dias aninhados
     │   │   ├── dao/
     │   │   │   ├── CarteiraDAO.java         # Interfaces seladas (sealed)
     │   │   │   ├── MovimentacaoDAO.java
@@ -90,15 +93,18 @@ FT_Coin/
     │   │   │   ├── MenuRelatorios.java
     │   │   │   └── MenuAjuda.java
     │   │   └── exception/
-    │   │       ├── AppException.java
+    │   │       ├── AppException.java        # Chave da mensagem + argumentos, traduzida ao ser lida
     │   │       └── PersistenciaException.java
     │   └── resources/
-    │       ├── ftcoin.properties            # Configuração (persistência, banco e oráculo)
+    │       ├── ftcoin.properties            # Configuração (idioma, persistência, banco, crédito e oráculo)
     │       ├── db/
     │       │   └── schema.sql               # Tabelas do MariaDB
-    │       └── textos/                      # Ajuda, fluxos (carteira, movimentação, relatórios) e créditos
+    │       ├── i18n/
+    │       │   └── mensagens_{pt,en,es}.properties  # Menus e mensagens em cada idioma
+    │       └── textos/{pt,en,es}/           # Ajuda, fluxos (carteira, movimentação, relatórios) e créditos
     └── test/
         └── java/
+            ├── config/                                  # Configuração e traduções (mesmas chaves nos 3 idiomas)
             ├── model/
             │   ├── ApuracaoCarteiraTest.java
             │   └── ApuracaoCarteiraPlanilhaTest.java   # Reproduz a planilha de apuração de referência
@@ -120,7 +126,7 @@ FT_Coin/
 | **Controller** | `controller`                | Regras de negócio e orquestração                    |
 | **View**       | `view`                      | Menus CLI, entrada/saída e formatação               |
 | **Oráculo**    | `oraculo`                   | Fontes de cotação (simulada) e histórico            |
-| **Config**     | `config`                    | Configuração da aplicação (`ftcoin.properties`)     |
+| **Config**     | `config`                    | Configuração (`ftcoin.properties`) e idioma (`Mensagens`) |
 | **Exception**  | `exception`                 | Erros de aplicação centralizados                    |
 
 
@@ -130,7 +136,7 @@ FT_Coin/
 | Tabela           | Campos principais                                                               |
 | ---------------- | ------------------------------------------------------------------------------- |
 | **carteira**     | `id` (PK), `nome_titular`, `corretora`                                          |
-| **movimentacao** | `id` (PK), `id_carteira` (FK), `data`, `tipo` (`C`/`V`), `quantidade`           |
+| **movimentacao** | `id` (PK), `id_carteira` (FK), `data`, `tipo` (`C`/`V`/`D`/`S`), `quantidade`   |
 | **cotacao**      | `data` (PK), `valor`                                                            |
 
 O script completo está em [schema.sql](src/main/resources/db/schema.sql).
@@ -142,10 +148,12 @@ O script completo está em [schema.sql](src/main/resources/db/schema.sql).
 
 - **Interface:** CLI com menu principal (Carteira, Movimentação, Oráculo, Relatórios, Ajuda, Sair) e submenus.
 - **Carteira:** incluir, consultar, editar e excluir.
-- **Movimentação:** compra e venda de moeda virtual.
+- **Movimentação:** compra e venda de moeda virtual, crédito e saque em reais.
 - **Oráculo:** consultar cotações diárias, usadas nas movimentações e nos cálculos. Até a API existir, as cotações são simuladas pela fórmula da planilha de referência.
 - **Relatórios:** listagens ordenadas, saldo, histórico e ganho/perda por carteira, valorizados a custo médio e a mercado.
-- **Persistência:** padrão DAO com implementações **em memória** e **MariaDB**.
+- **Persistência:** padrão DAO com implementações **em memória** e **MariaDB**; tudo funciona nas duas.
+- **Idiomas:** português, inglês e espanhol, escolhidos ao iniciar.
+- **Documentação:** Javadoc em todas as classes.
 - **Boas práticas:** POO, encapsulamento, polimorfismo, validações, exceções, compilação sem erros.
 
 ---
@@ -167,7 +175,7 @@ Outros comandos úteis:
 | ------------------------ | ------------------------------------------ |
 | `mvn test`               | Roda só os testes                          |
 | `mvn verify`             | Testes + relatório de cobertura do JaCoCo em `target/site/jacoco/index.html` |
-| `mvn javadoc:javadoc`    | Gera o Javadoc em `target/reports/apidocs` |
+| `mvn javadoc:javadoc`    | Gera o Javadoc em `target/reports/apidocs`; falha se algum comentário estiver mal escrito |
 | `mvn clean`              | Apaga a pasta `target/`                    |
 
 > **IDE:** Eclipse (*Import → Existing Maven Projects*), IntelliJ e VS Code abrem o `pom.xml` diretamente. Configure a IDE com um JDK 25+; se ela acusar erros como "`_` is a keyword", recarregue o projeto Maven.
@@ -203,6 +211,15 @@ Para que a conexão funcione:
    URL e usuário padrão: `jdbc:mariadb://localhost:3306/ftcoin` e `ftcoin` (chaves `db.url` e `db.usuario`).
 
 3. Rode normalmente. A primeira linha mostra qual persistência está em uso.
+
+### Idioma
+
+Ao iniciar, a aplicação pergunta o idioma (1. Português, 2. English, 3. Español). Para pular a pergunta,
+defina `idioma` como `pt`, `en` ou `es` por qualquer uma das formas acima (por exemplo `-Didioma=en`).
+O idioma também define o formato das datas (`dd/MM/yyyy` em português e espanhol, `MM/dd/yyyy` em
+inglês) e dos números. Os valores são sempre em reais.
+
+### Somente memória
 
 Para usar a memória direto, sem tentar o banco (por exemplo, em uma máquina sem MariaDB, evitando
 esperar o tempo de conexão), use `persistencia=memoria` por qualquer uma das formas acima
@@ -255,8 +272,6 @@ Não há cotação antes da data inicial (`01/01/2026`) nem para datas futuras. 
 `src/main/resources/ftcoin.properties` e podem ser sobrescritos na execução, por exemplo
 `java -Doraculo.base=20 -jar target/ft-coin-1.0.0-SNAPSHOT.jar`.
 
-> No terminal do Windows, use `java -Dstdout.encoding=UTF-8 -jar ...` para os acentos aparecerem corretamente.
-
 ---
 
 ## Documentação
@@ -264,11 +279,12 @@ Não há cotação antes da data inicial (`01/01/2026`) nem para datas futuras. 
 
 | Documento                                                | Descrição                                        |
 | -------------------------------------------------------- | ------------------------------------------------ |
-| [docs/fluxo-carteira.md](docs/fluxo-carteira.md)         | Arquitetura, menus, CRUD e interação da carteira |
-| [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra/venda, Oráculo, saldo e diagramas         |
-| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Consulta e listagem de cotações                  |
-| [docs/fluxo-relatorios.md](docs/fluxo-relatorios.md)     | Listagens, saldo, histórico e ganho/perda        |
+| [docs/fluxo-carteira.md](docs/fluxo-carteira.md)         | Arquitetura, inicialização e cadastro            |
+| [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra, venda, crédito, saque e regras de saldo  |
+| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Cotação simulada, histórico e consultas          |
+| [docs/fluxo-relatorios.md](docs/fluxo-relatorios.md)     | Listagens, saldo, evolução diária e ganho/perda  |
 | [docs/README.md](docs/README.md)                         | Índice da pasta de documentação                  |
+| Javadoc (`mvn javadoc:javadoc`)                          | Referência das classes                           |
 
 
 ---

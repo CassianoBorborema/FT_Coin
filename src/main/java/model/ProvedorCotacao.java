@@ -44,6 +44,6 @@ public interface ProvedorCotacao {
                 // sem cotação neste dia: tenta o anterior
             }
         }
-        throw new AppException("Não há cotação nos " + DIAS_BUSCA_ULTIMA_COTACAO + " dias até " + data + ".");
+        throw new AppException("erro.cotacao.semRecente", DIAS_BUSCA_ULTIMA_COTACAO, data);
     }
 }

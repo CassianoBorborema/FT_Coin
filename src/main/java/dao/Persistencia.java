@@ -1,20 +1,21 @@
 package dao;
 
 import config.Configuracao;
+import config.Mensagens;
 import exception.AppException;
 
 /**
  * DAOs de uma forma de persistência. Controllers e views dependem só das interfaces, então trocar
  * a persistência não altera o resto da aplicação.
  *
- * @param descricao texto exibido ao usuário, por exemplo "memória"
+ * @param descricao texto exibido ao usuário, no idioma escolhido
  */
 public record Persistencia(CarteiraDAO carteiras, MovimentacaoDAO movimentacoes, OraculoDAO cotacoes,
                            String descricao) {
 
     public static Persistencia emMemoria() {
         return new Persistencia(new CarteiraDAOMemoria(), new MovimentacaoDAOMemoria(), new OraculoDAOMemoria(),
-                "memória (os dados são perdidos ao sair)");
+                Mensagens.get("persistencia.memoria"));
     }
 
     /**
@@ -29,6 +30,6 @@ public record Persistencia(CarteiraDAO carteiras, MovimentacaoDAO movimentacoes,
     static Persistencia mariaDB(FabricaConexao conexoes) throws AppException {
         conexoes.criarTabelas();
         return new Persistencia(new CarteiraDAOMariaDB(conexoes), new MovimentacaoDAOMariaDB(conexoes),
-                new OraculoDAOMariaDB(conexoes), "MariaDB (" + conexoes.configuracao().url() + ")");
+                new OraculoDAOMariaDB(conexoes), Mensagens.get("persistencia.mariadb", conexoes.configuracao().url()));
     }
 }

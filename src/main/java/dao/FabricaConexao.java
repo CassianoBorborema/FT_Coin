@@ -1,6 +1,7 @@
 package dao;
 
 import config.Configuracao;
+import config.Mensagens;
 import exception.AppException;
 import exception.PersistenciaException;
 import java.io.IOException;
@@ -43,7 +44,7 @@ final class FabricaConexao {
                         configuracao.getTexto("db.senha", ""),
                         Integer.parseInt(timeout));
             } catch (NumberFormatException _) {
-                throw new AppException("Configuração db.timeout deve ser um número inteiro: " + timeout + ".");
+                throw new AppException("erro.config.inteiro", "db.timeout", timeout);
             }
         }
 
@@ -78,34 +79,35 @@ final class FabricaConexao {
         try {
             return DriverManager.getConnection(configuracao.url(), propriedades);
         } catch (SQLException e) {
-            throw new PersistenciaException("Não foi possível conectar ao banco " + configuracao.url()
-                    + " com o usuário " + configuracao.usuario() + ": " + e.getMessage(), e);
+            throw new PersistenciaException(e, "banco.semConexao", configuracao.url(), configuracao.usuario(),
+                    e.getMessage());
         }
     }
 
     void testarConexao() throws PersistenciaException {
-        executar("testar a conexão", conexao -> {
+        executar("banco.testarConexao", conexao -> {
             if (!conexao.isValid(configuracao.timeoutSegundos())) {
-                throw new SQLException("o banco não respondeu em " + configuracao.timeoutSegundos() + "s");
+                throw new SQLException(Mensagens.get("banco.semResposta", configuracao.timeoutSegundos()));
             }
             return null;
         });
     }
 
     /**
-     * @param descricao usada na mensagem de erro, por exemplo "incluir a carteira"
+     * @param chaveErro mensagem usada se o banco falhar, com o erro do banco como argumento
+     *                  (ex.: {@code banco.incluirCarteira})
      */
-    <T> T executar(String descricao, OperacaoComConexao<T> operacao) throws PersistenciaException {
+    <T> T executar(String chaveErro, OperacaoComConexao<T> operacao) throws PersistenciaException {
         try (Connection conexao = abrir()) {
             return operacao.executar(conexao);
         } catch (SQLException e) {
-            throw new PersistenciaException("Erro ao " + descricao + ": " + e.getMessage(), e);
+            throw new PersistenciaException(e, chaveErro, e.getMessage());
         }
     }
 
     /** Confirma tudo ao final ou desfaz tudo se algum comando falhar. */
-    <T> T executarEmTransacao(String descricao, OperacaoComConexao<T> operacao) throws PersistenciaException {
-        return executar(descricao, conexao -> {
+    <T> T executarEmTransacao(String chaveErro, OperacaoComConexao<T> operacao) throws PersistenciaException {
+        return executar(chaveErro, conexao -> {
             conexao.setAutoCommit(false);
             try {
                 T resultado = operacao.executar(conexao);
@@ -122,7 +124,7 @@ final class FabricaConexao {
     void criarTabelas() throws AppException {
         testarConexao();
         List<String> comandos = comandos(lerScript());
-        executarEmTransacao("criar as tabelas do banco", conexao -> {
+        executarEmTransacao("banco.criarTabelas", conexao -> {
             try (Statement statement = conexao.createStatement()) {
                 for (String comando : comandos) {
                     statement.execute(comando);
@@ -135,11 +137,11 @@ final class FabricaConexao {
     private static String lerScript() throws AppException {
         try (InputStream in = FabricaConexao.class.getResourceAsStream(SCRIPT_SCHEMA)) {
             if (in == null) {
-                throw new AppException("Script do banco não encontrado: " + SCRIPT_SCHEMA + ".");
+                throw new AppException("erro.script.naoEncontrado", SCRIPT_SCHEMA);
             }
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new AppException("Erro ao ler o script do banco " + SCRIPT_SCHEMA + ": " + e.getMessage(), e);
+            throw new AppException(e, "erro.script.leitura", SCRIPT_SCHEMA, e.getMessage());
         }
     }
 

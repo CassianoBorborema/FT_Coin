@@ -139,13 +139,12 @@ public class ApuracaoCarteira {
             throws AppException {
         double quantidade = movimentacao.getQuantidade();
         if (movimentacao.getTipo() == null || quantidade <= 0) {
-            throw new AppException("Movimentação " + movimentacao.getIdMovimento()
-                    + " possui tipo ou quantidade inválidos.");
+            throw new AppException("erro.movimentacao.invalida", movimentacao.getIdMovimento());
         }
         try {
             return movimentacao.getTipo().aplicar(posicao, movimentacao.getData(), quantidade, cotacao);
         } catch (AppException e) {
-            throw new AppException("Histórico inconsistente em " + movimentacao.getData() + ": " + e.getMessage());
+            throw new AppException(e, "erro.historico.inconsistente", movimentacao.getData(), e);
         }
     }
 

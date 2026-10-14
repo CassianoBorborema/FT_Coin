@@ -1,5 +1,8 @@
 package dto;
 
+/**
+ * Dados de uma carteira trocados entre as camadas.
+ */
 public class CarteiraDTO {
 
     private int identificador;

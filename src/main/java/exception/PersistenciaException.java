@@ -7,7 +7,7 @@ public class PersistenciaException extends AppException {
 
     private static final long serialVersionUID = 1L;
 
-    public PersistenciaException(String message, Throwable cause) {
-        super(message, cause);
+    public PersistenciaException(Throwable causa, String chave, Object... argumentos) {
+        super(causa, chave, argumentos);
     }
 }

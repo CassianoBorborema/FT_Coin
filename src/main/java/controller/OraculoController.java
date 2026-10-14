@@ -30,7 +30,7 @@ public class OraculoController {
 
     public OraculoDTO consultar(LocalDate data) throws AppException {
         if (data == null) {
-            throw new AppException("Data da cotação é obrigatória.");
+            throw new AppException("erro.cotacao.semData");
         }
         return new OraculoDTO(data, cotacoes.cotacaoEm(data));
     }
@@ -38,13 +38,13 @@ public class OraculoController {
     /** Cotações de cada dia entre {@code inicio} e {@code fim}, inclusive. */
     public List<OraculoDTO> listarPeriodo(LocalDate inicio, LocalDate fim) throws AppException {
         if (inicio == null || fim == null) {
-            throw new AppException("As datas de início e fim do período são obrigatórias.");
+            throw new AppException("erro.periodo.semDatas");
         }
         if (fim.isBefore(inicio)) {
-            throw new AppException("A data final não pode ser anterior à data inicial.");
+            throw new AppException("erro.periodo.invertido");
         }
         if (ChronoUnit.DAYS.between(inicio, fim) >= MAXIMO_DIAS_PERIODO) {
-            throw new AppException("O período deve ter no máximo " + MAXIMO_DIAS_PERIODO + " dias.");
+            throw new AppException("erro.periodo.longo", MAXIMO_DIAS_PERIODO);
         }
         List<OraculoDTO> lista = new ArrayList<>();
         for (LocalDate data = inicio; !data.isAfter(fim); data = data.plusDays(1)) {

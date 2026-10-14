@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Movimentações em memória; os dados se perdem ao fechar a aplicação.
+ */
 final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
 
     private final Map<Integer, MovimentacaoDTO> movimentacoes = new HashMap<>();
@@ -19,7 +22,7 @@ final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
         if (id == 0) {
             id = proximoId++;
         } else if (movimentacoes.containsKey(id)) {
-            throw new AppException("Já existe uma movimentação com o identificador " + id + ".");
+            throw new AppException("erro.movimentacao.duplicada", id);
         } else if (id >= proximoId) {
             proximoId = id + 1;
         }
@@ -34,7 +37,7 @@ final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
     public MovimentacaoDTO consultarPorId(int idMovimento) throws AppException {
         MovimentacaoDTO movimentacao = movimentacoes.get(idMovimento);
         if (movimentacao == null) {
-            throw new AppException("Movimentação com identificador " + idMovimento + " não encontrada.");
+            throw new AppException("erro.movimentacao.naoEncontrada", idMovimento);
         }
         return copiar(movimentacao);
     }

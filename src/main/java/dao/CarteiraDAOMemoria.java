@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Carteiras em memória; os dados se perdem ao fechar a aplicação.
+ */
 final class CarteiraDAOMemoria implements CarteiraDAO {
 
     private final Map<Integer, CarteiraDTO> carteiras = new HashMap<>();
@@ -18,7 +21,7 @@ final class CarteiraDAOMemoria implements CarteiraDAO {
         if (id == 0) {
             id = menorIdentificadorLivre();
         } else if (carteiras.containsKey(id)) {
-            throw new AppException("Já existe uma carteira com o identificador " + id + ".");
+            throw new AppException("erro.carteira.duplicada", id);
         }
 
         CarteiraDTO copia = new CarteiraDTO(id, carteira.getNomeTitular(), carteira.getCorretora());
@@ -30,7 +33,7 @@ final class CarteiraDAOMemoria implements CarteiraDAO {
     public CarteiraDTO consultarPorId(int identificador) throws AppException {
         CarteiraDTO carteira = carteiras.get(identificador);
         if (carteira == null) {
-            throw new AppException("Carteira com identificador " + identificador + " não encontrada.");
+            throw new AppException("erro.carteira.naoEncontrada", identificador);
         }
         return copiar(carteira);
     }
@@ -47,7 +50,7 @@ final class CarteiraDAOMemoria implements CarteiraDAO {
     @Override
     public void atualizar(CarteiraDTO carteira) throws AppException {
         if (!carteiras.containsKey(carteira.getIdentificador())) {
-            throw new AppException("Carteira com identificador " + carteira.getIdentificador() + " não encontrada.");
+            throw new AppException("erro.carteira.naoEncontrada", carteira.getIdentificador());
         }
         carteiras.put(
                 carteira.getIdentificador(),
@@ -58,7 +61,7 @@ final class CarteiraDAOMemoria implements CarteiraDAO {
     @Override
     public void excluir(int identificador) throws AppException {
         if (carteiras.remove(identificador) == null) {
-            throw new AppException("Carteira com identificador " + identificador + " não encontrada.");
+            throw new AppException("erro.carteira.naoEncontrada", identificador);
         }
     }
 

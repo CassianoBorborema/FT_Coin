@@ -118,7 +118,7 @@ class MovimentacaoControllerTest {
     void falhaAoObterCotacaoNaoRegistraMovimentacao() throws AppException {
         ProvedorCotacao cotacoes = mock(ProvedorCotacao.class);
         when(cotacoes.cotacaoEm(any())).thenThrow(
-                new PersistenciaException("banco fora do ar", new SQLException("conexão recusada")));
+                new PersistenciaException(new SQLException("conexão recusada"), "banco fora do ar"));
         MovimentacaoController comFalha = criarController(cotacoes, HOJE);
 
         assertThrows(PersistenciaException.class, () -> comFalha.creditar(1, 10));
