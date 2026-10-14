@@ -34,7 +34,6 @@ class ApuracaoCarteiraPlanilhaTest {
     private static final double COMPRA = 1_000;
     private static final double VENDA = 500;
 
-    /** Cotação do último dia (30/01/2026), usada para valorar o saldo a mercado. */
     private static final double COTACAO_FINAL = 14_655.06 / 1_000;
 
     /**

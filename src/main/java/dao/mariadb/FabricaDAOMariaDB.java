@@ -7,7 +7,7 @@ import dao.OraculoDAO;
 import infra.db.FabricaConexao;
 
 /**
- * DAOs que gravam no MariaDB. As tabelas são criadas pelo {@link infra.db.InicializadorBanco}.
+ * DAOs que gravam no MariaDB.
  */
 public class FabricaDAOMariaDB implements FabricaDAO {
 

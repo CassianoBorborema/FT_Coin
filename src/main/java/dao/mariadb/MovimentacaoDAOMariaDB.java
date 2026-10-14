@@ -23,10 +23,7 @@ public class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
         this.conexoes = conexoes;
     }
 
-    /**
-     * Inclui a movimentação. Com identificador zero, o banco gera o próximo identificador,
-     * que é gravado de volta no DTO.
-     */
+    /** Com identificador zero, o banco gera o identificador e ele é gravado de volta no DTO. */
     @Override
     public void incluir(MovimentacaoDTO movimentacao) throws AppException {
         int informado = movimentacao.getIdMovimento();

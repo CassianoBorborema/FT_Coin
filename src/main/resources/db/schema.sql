@@ -1,6 +1,3 @@
--- Estrutura do banco do FT_Coin (MariaDB).
--- Executado na inicialização: cria apenas as tabelas que ainda não existem.
-
 CREATE TABLE IF NOT EXISTS carteira (
     id           INT          NOT NULL AUTO_INCREMENT,
     nome_titular VARCHAR(100) NOT NULL,

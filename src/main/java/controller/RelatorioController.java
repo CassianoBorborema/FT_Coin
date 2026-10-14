@@ -20,12 +20,6 @@ public class RelatorioController {
     private final ProvedorCotacao cotacoes;
     private final Clock relogio;
 
-    /**
-     * @param carteiraDAO     persistência das carteiras
-     * @param movimentacaoDAO persistência das movimentações
-     * @param cotacoes        fonte das cotações (Oráculo)
-     * @param relogio         relógio que define a cotação atual (a de hoje)
-     */
     public RelatorioController(CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO,
                                ProvedorCotacao cotacoes, Clock relogio) {
         this.carteiraDAO = carteiraDAO;

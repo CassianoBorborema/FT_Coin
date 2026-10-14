@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Base dos menus da aplicação. Exibe as opções numeradas na ordem em que foram adicionadas,
- * lê a escolha, executa a ação correspondente e mostra os erros de negócio, repetindo até o
- * usuário escolher a opção 0.
+ * Base dos menus: numera as opções na ordem em que foram adicionadas, executa a escolhida e
+ * exibe os erros de negócio, até o usuário escolher 0.
  */
 public abstract class Menu {
 
@@ -18,38 +17,20 @@ public abstract class Menu {
     private final String rotuloSaida;
     private final List<OpcaoMenu> opcoes = new ArrayList<>();
 
-    /**
-     * @param console     entrada e saída da aplicação
-     * @param titulo      título exibido acima das opções
-     * @param rotuloSaida texto da opção 0
-     */
     protected Menu(Console console, String titulo, String rotuloSaida) {
         this.console = console;
         this.titulo = titulo;
         this.rotuloSaida = rotuloSaida;
     }
 
-    /**
-     * Cria um menu cuja opção 0 é "Voltar".
-     *
-     * @param console entrada e saída da aplicação
-     * @param titulo  título exibido acima das opções
-     */
     protected Menu(Console console, String titulo) {
         this(console, titulo, "Voltar");
     }
 
-    /**
-     * Adiciona uma opção, que recebe o próximo número disponível (1, 2, 3...).
-     *
-     * @param rotulo texto da opção
-     * @param acao   ação executada ao escolher a opção
-     */
     protected final void adicionarOpcao(String rotulo, OpcaoMenu.Acao acao) {
         opcoes.add(new OpcaoMenu(rotulo, acao));
     }
 
-    /** Exibe o menu até o usuário escolher a opção 0. */
     public void exibir() {
         while (true) {
             exibirOpcoes();

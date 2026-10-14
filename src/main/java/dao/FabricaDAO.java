@@ -1,8 +1,7 @@
 package dao;
 
 /**
- * Cria os DAOs de uma forma de persistência (padrão Abstract Factory). Trocar a fábrica troca
- * a persistência de toda a aplicação sem alterar controllers e views.
+ * Cria os DAOs de uma forma de persistência (Abstract Factory).
  */
 public interface FabricaDAO {
 

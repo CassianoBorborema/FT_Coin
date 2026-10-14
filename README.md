@@ -16,7 +16,7 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 | **Oráculo**              | Simulado     | Cotação de hoje, por data e por período, gerada pela fórmula da planilha           |
 | **Relatórios**           | Implementado | Listagens (id/titular), saldo, histórico e ganho/perda (custo médio e mercado)  |
 | **Ajuda**                | Implementado | Texto "Como funciona" (guia de uso)                                                |
-| **Persistência**         | Implementado | Memória (padrão) ou MariaDB, escolhida pela chave `persistencia`                   |
+| **Persistência**         | Implementado | MariaDB; se o banco não estiver acessível, segue em memória                        |
 
 
 A aplicação **compila e executa** todos os fluxos ponta a ponta.
@@ -194,7 +194,11 @@ Outros comandos úteis:
 
 ### Usando o MariaDB
 
-Por padrão a aplicação guarda os dados em memória. Para usar o MariaDB:
+Ao iniciar, a aplicação tenta conectar ao MariaDB. Se conseguir, cria as tabelas que faltarem e grava
+tudo no banco. Se não conseguir (banco fora do ar, senha errada ou ausente), mostra o motivo e segue
+com a **persistência em memória**, em que os dados são perdidos ao sair.
+
+Para que a conexão funcione:
 
 1. Tenha um MariaDB com um banco e um usuário para a aplicação. Com Docker, por exemplo:
 
@@ -205,17 +209,21 @@ Por padrão a aplicação guarda os dados em memória. Para usar o MariaDB:
      mariadb:11.4
    ```
 
-2. Informe a persistência e a senha, sem colocá-la no `ftcoin.properties` versionado. Qualquer uma das formas serve:
+2. Informe a senha, sem colocá-la no `ftcoin.properties` versionado. Qualquer uma das formas serve:
 
-   | Forma                          | Exemplo                                                    |
-   | ------------------------------ | ---------------------------------------------------------- |
-   | Variáveis de ambiente          | `FTCOIN_PERSISTENCIA=mariadb` e `FTCOIN_DB_SENHA=<senha>`  |
-   | Propriedades na execução       | `java -Dpersistencia=mariadb -Ddb.senha=<senha> -jar ...`  |
-   | Arquivo `ftcoin.local.properties` no diretório de execução (já ignorado pelo Git) | `persistencia=mariadb` e `db.senha=<senha>`, uma por linha |
+   | Forma                          | Exemplo                                     |
+   | ------------------------------ | ------------------------------------------- |
+   | Variável de ambiente           | `FTCOIN_DB_SENHA=<senha>`                   |
+   | Propriedade na execução        | `java -Ddb.senha=<senha> -jar ...`          |
+   | Arquivo `ftcoin.local.properties` no diretório de execução (já ignorado pelo Git) | `db.senha=<senha>` |
 
    URL e usuário padrão: `jdbc:mariadb://localhost:3306/ftcoin` e `ftcoin` (chaves `db.url` e `db.usuario`).
 
-3. Rode normalmente. Na inicialização a aplicação testa a conexão e cria as tabelas que faltarem.
+3. Rode normalmente. A primeira linha mostra qual persistência está em uso.
+
+Para usar a memória direto, sem tentar o banco (por exemplo, em uma máquina sem MariaDB, evitando
+esperar o tempo de conexão), use `persistencia=memoria` por qualquer uma das formas acima
+(`FTCOIN_PERSISTENCIA=memoria`, `-Dpersistencia=memoria` ou no `ftcoin.local.properties`).
 
 ---
 

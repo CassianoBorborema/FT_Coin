@@ -9,23 +9,18 @@ import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 /**
- * Entrada e saída de texto da aplicação. Toda leitura é feita linha a linha,
- * o que evita sobras no buffer entre uma leitura numérica e a próxima.
+ * Entrada e saída de texto. Toda leitura é por linha, para não sobrar texto no buffer entre uma
+ * leitura numérica e a próxima.
  */
 public class Console {
 
     private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    /** Valor devolvido por {@link #lerOpcao()} quando o texto digitado não é um número. */
     public static final int OPCAO_INVALIDA = -1;
 
     private final Scanner entrada;
     private final PrintStream saida;
 
-    /**
-     * @param entrada origem do texto digitado
-     * @param saida   destino das mensagens
-     */
     public Console(InputStream entrada, PrintStream saida) {
         this.entrada = new Scanner(entrada);
         this.saida = saida;
@@ -44,9 +39,7 @@ public class Console {
     }
 
     /**
-     * Lê o número de uma opção de menu.
-     *
-     * @return o número digitado, ou {@link #OPCAO_INVALIDA} se o texto não for um número
+     * @return o número digitado, ou {@link #OPCAO_INVALIDA} se não for um número
      * @throws java.util.NoSuchElementException se a entrada tiver terminado
      */
     public int lerOpcao() {
@@ -57,11 +50,7 @@ public class Console {
         }
     }
 
-    /**
-     * @param mensagem texto exibido antes da leitura
-     * @return a linha digitada, sem espaços nas pontas
-     * @throws java.util.NoSuchElementException se a entrada tiver terminado
-     */
+    /** @throws java.util.NoSuchElementException se a entrada tiver terminado */
     public String lerLinha(String mensagem) {
         saida.println(mensagem);
         return entrada.nextLine().trim();
@@ -76,13 +65,7 @@ public class Console {
         }
     }
 
-    /**
-     * Lê um número decimal. Aceita vírgula ou ponto como separador decimal.
-     *
-     * @param mensagem texto exibido antes da leitura
-     * @return o número digitado
-     * @throws AppException se o texto não for um número
-     */
+    /** Aceita vírgula ou ponto como separador decimal. */
     public double lerDecimal(String mensagem) throws AppException {
         String texto = lerLinha(mensagem);
         try {
@@ -101,10 +84,6 @@ public class Console {
         }
     }
 
-    /**
-     * @param pergunta pergunta de sim ou não
-     * @return {@code true} se o usuário responder S
-     */
     public boolean confirmar(String pergunta) {
         return lerLinha(pergunta + " (S/N):").equalsIgnoreCase("S");
     }

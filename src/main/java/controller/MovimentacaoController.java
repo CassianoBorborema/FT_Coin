@@ -21,12 +21,6 @@ public class MovimentacaoController {
     private final ProvedorCotacao cotacoes;
     private final Clock relogio;
 
-    /**
-     * @param movimentacaoDAO persistência das movimentações
-     * @param carteiraDAO     persistência das carteiras, usada para validar a carteira
-     * @param cotacoes        fonte das cotações (Oráculo)
-     * @param relogio         relógio que define a data das movimentações
-     */
     public MovimentacaoController(MovimentacaoDAO movimentacaoDAO, CarteiraDAO carteiraDAO,
                                   ProvedorCotacao cotacoes, Clock relogio) {
         this.movimentacaoDAO = movimentacaoDAO;
@@ -43,10 +37,6 @@ public class MovimentacaoController {
         return registrar(idCarteira, quantidade, TipoMovimentacao.VENDA);
     }
 
-    /**
-     * @return a cotação de hoje, usada nas movimentações registradas agora
-     * @throws AppException se o Oráculo não tiver a cotação de hoje
-     */
     public double cotacaoDeHoje() throws AppException {
         return cotacoes.cotacaoEm(LocalDate.now(relogio));
     }

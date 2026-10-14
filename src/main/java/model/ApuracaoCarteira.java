@@ -10,11 +10,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Apuração dos resultados de uma carteira a partir do seu histórico de movimentações.
- * <p>
- * As movimentações são aplicadas a uma {@link Posicao} em ordem cronológica (empates pela ordem
- * de registro), e cada uma gera uma linha do histórico com a posição logo após a operação.
- * </p>
+ * Apuração de uma carteira: aplica as movimentações a uma {@link Posicao} em ordem cronológica
+ * (empates pela ordem de registro) e gera uma linha de histórico por operação.
  */
 public class ApuracaoCarteira {
 

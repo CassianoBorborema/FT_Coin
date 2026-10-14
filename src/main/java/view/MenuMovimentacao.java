@@ -18,7 +18,6 @@ public class MenuMovimentacao extends Menu {
         adicionarOpcao("Venda de moeda virtual", () -> registrar("Venda", controller::registrarVenda));
     }
 
-    /** Operação de registro do controller (compra ou venda). */
     @FunctionalInterface
     private interface Registro {
         MovimentacaoDTO registrar(int idCarteira, double quantidade) throws AppException;

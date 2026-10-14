@@ -29,10 +29,6 @@ public class OraculoSimulado implements ProvedorCotacao {
     private final ParametrosOraculoSimulado parametros;
     private final Clock relogio;
 
-    /**
-     * @param parametros parâmetros da fórmula
-     * @param relogio    relógio que define o dia de hoje
-     */
     public OraculoSimulado(ParametrosOraculoSimulado parametros, Clock relogio) {
         this.parametros = parametros;
         this.relogio = relogio;
@@ -53,19 +49,11 @@ public class OraculoSimulado implements ProvedorCotacao {
         return BigDecimal.valueOf(cotacao).setScale(CASAS_DECIMAIS, RoundingMode.HALF_UP).doubleValue();
     }
 
-    /**
-     * @param data data a partir da data inicial
-     * @return a parcela de valorização da cotação na data
-     */
     double valorizacao(LocalDate data) {
         long dia = ChronoUnit.DAYS.between(parametros.dataInicial(), data) + 1;
         return parametros.valorizacaoInicial() + parametros.fatorValorizacao() * Math.log(dia);
     }
 
-    /**
-     * @param data data da cotação
-     * @return a parcela de flutuação da cotação na data, sempre a mesma para a mesma data
-     */
     double flutuacao(LocalDate data) {
         double amplitude = parametros.amplitude();
         if (amplitude == 0) {

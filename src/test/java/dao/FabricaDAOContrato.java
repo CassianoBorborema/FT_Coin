@@ -31,7 +31,6 @@ public abstract class FabricaDAOContrato {
     private MovimentacaoDAO movimentacoes;
     private OraculoDAO cotacoes;
 
-    /** @return uma fábrica cujos DAOs começam sem nenhum dado */
     protected abstract FabricaDAO criarFabricaVazia() throws Exception;
 
     @BeforeEach
@@ -41,8 +40,6 @@ public abstract class FabricaDAOContrato {
         movimentacoes = fabrica.movimentacaoDAO();
         cotacoes = fabrica.oraculoDAO();
     }
-
-    // ---------------------------------------------------------------- carteira
 
     @Test
     void incluirCarteiraGeraIdentificador() throws AppException {
@@ -119,8 +116,6 @@ public abstract class FabricaDAOContrato {
         assertEquals("Corretora Ômega", lida.getCorretora());
     }
 
-    // ------------------------------------------------------------ movimentação
-
     @Test
     void incluirEConsultarMovimentacao() throws AppException {
         int carteira = novaCarteira();
@@ -184,8 +179,6 @@ public abstract class FabricaDAOContrato {
         assertTrue(movimentacoes.possuiMovimentacoes(comMovimento));
         assertFalse(movimentacoes.possuiMovimentacoes(semMovimento));
     }
-
-    // ----------------------------------------------------------------- cotação
 
     @Test
     void incluirEConsultarCotacao() throws AppException {

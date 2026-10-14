@@ -21,10 +21,7 @@ public class CarteiraDAOMariaDB implements CarteiraDAO {
         this.conexoes = conexoes;
     }
 
-    /**
-     * Inclui a carteira. Com identificador zero, o banco gera o próximo identificador,
-     * que é gravado de volta no DTO.
-     */
+    /** Com identificador zero, o banco gera o identificador e ele é gravado de volta no DTO. */
     @Override
     public void incluir(CarteiraDTO carteira) throws AppException {
         int informado = carteira.getIdentificador();

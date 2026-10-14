@@ -3,7 +3,7 @@ package model;
 import exception.AppException;
 
 /**
- * Tipo de uma movimentação. Cada tipo sabe como afeta o saldo e a posição da carteira.
+ * Tipo de movimentação. Cada tipo sabe como afeta o saldo e a {@link Posicao} da carteira.
  */
 public enum TipoMovimentacao {
 
@@ -34,17 +34,12 @@ public enum TipoMovimentacao {
         return codigo;
     }
 
-    /** @return +1 se o tipo aumenta o saldo de FTCoins, -1 se reduz */
+    /** +1 se aumenta o saldo de FTCoins, -1 se reduz. */
     public int getSinal() {
         return sinal;
     }
 
     /**
-     * Aplica a movimentação a uma posição.
-     *
-     * @param posicao    posição da carteira, alterada pela operação
-     * @param quantidade quantidade movimentada
-     * @param cotacao    cotação na data da movimentação
      * @return o resultado da operação (zero para compras)
      * @throws AppException se a operação for inválida para a posição
      */

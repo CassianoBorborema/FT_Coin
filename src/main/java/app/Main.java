@@ -29,7 +29,7 @@ import view.MenuPrincipal;
 import view.MenuRelatorios;
 
 /**
- * Ponto de entrada do FT_Coin: monta as dependências da aplicação e abre o menu principal.
+ * Ponto de entrada: monta as dependências e abre o menu principal.
  */
 public final class Main {
 
@@ -78,24 +78,33 @@ public final class Main {
     }
 
     /**
-     * Cria os DAOs da persistência configurada na chave {@code persistencia}. No MariaDB, testa a
-     * conexão e cria as tabelas que faltarem antes de abrir os menus.
+     * Com {@code persistencia=auto}, tenta o MariaDB e, se não conseguir conectar, avisa o motivo
+     * e segue em memória. Com {@code memoria}, nem tenta o banco.
      */
     private static FabricaDAO criarFabricaDAO(Configuracao configuracao, Console console) throws AppException {
-        String persistencia = configuracao.getTexto("persistencia");
+        String persistencia = configuracao.getTexto("persistencia", "auto");
         switch (persistencia) {
+            case "auto":
+                try {
+                    ConfiguracaoBanco banco = ConfiguracaoBanco.carregar(configuracao);
+                    FabricaConexao conexoes = new FabricaConexao(banco);
+                    new InicializadorBanco(conexoes).inicializar();
+                    console.exibir("Persistência: MariaDB (" + banco.url() + ").");
+                    return new FabricaDAOMariaDB(conexoes);
+                } catch (AppException e) {
+                    console.exibir("Aviso: MariaDB indisponível. " + e.getMessage());
+                    return emMemoria(console);
+                }
             case "memoria":
-                console.exibir("Persistência: memória (os dados são perdidos ao sair).");
-                return new FabricaDAOMemoria();
-            case "mariadb":
-                ConfiguracaoBanco banco = ConfiguracaoBanco.carregar(configuracao);
-                FabricaConexao conexoes = new FabricaConexao(banco);
-                new InicializadorBanco(conexoes).inicializar();
-                console.exibir("Persistência: MariaDB (" + banco.url() + ").");
-                return new FabricaDAOMariaDB(conexoes);
+                return emMemoria(console);
             default:
-                throw new AppException("Persistência desconhecida: " + persistencia + ". Use memoria ou mariadb.");
+                throw new AppException("Persistência desconhecida: " + persistencia + ". Use auto ou memoria.");
         }
+    }
+
+    private static FabricaDAO emMemoria(Console console) {
+        console.exibir("Persistência: memória (os dados são perdidos ao sair).");
+        return new FabricaDAOMemoria();
     }
 
     private static void exibirBoasVindas(Console console) {
