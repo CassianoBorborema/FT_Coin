@@ -3,6 +3,9 @@ package model;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 
+/**
+ * Compra, venda, crédito ou saque registrado em uma carteira.
+ */
 public class Movimentacao {
 
     private int idMovimento;
@@ -64,16 +67,16 @@ public class Movimentacao {
 
     public void validar() throws AppException {
         if (idCarteira <= 0) {
-            throw new AppException("Identificador da carteira deve ser maior que zero.");
+            throw new AppException("erro.carteira.identificador");
         }
         if (data == null) {
-            throw new AppException("Data da movimentação é obrigatória.");
+            throw new AppException("erro.movimentacao.semData");
         }
         if (tipo == null) {
-            throw new AppException("Tipo da movimentação é obrigatório.");
+            throw new AppException("erro.movimentacao.semTipo");
         }
         if (quantidade <= 0) {
-            throw new AppException("Quantidade deve ser maior que zero.");
+            throw new AppException("erro.movimentacao.quantidade");
         }
     }
 

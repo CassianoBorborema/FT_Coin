@@ -1,24 +1,16 @@
-# Build
 target/
 bin/
 out/
 *.class
 
-# Eclipse (regerado ao importar o projeto Maven)
 .classpath
 .project
 .settings/
-
-# IntelliJ
 .idea/
 *.iml
-
-# VS Code
 .vscode/
 
-# Sistema operacional
 .DS_Store
 Thumbs.db
 
-# Configuração local (senhas e ajustes da máquina)
 ftcoin.local.properties

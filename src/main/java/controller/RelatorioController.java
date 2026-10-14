@@ -7,32 +7,37 @@ import dto.CarteiraDTO;
 import exception.AppException;
 import java.time.Clock;
 import java.time.LocalDate;
+import dto.MovimentacaoDTO;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import model.ApuracaoCarteira;
 import model.ProvedorCotacao;
-import java.util.Comparator;
-import java.util.List;
 
+/**
+ * Relatórios das carteiras. A apuração de cada carteira fica em cache até entrar uma movimentação
+ * nova; a valoração a mercado usa sempre a última cotação, consultada a cada relatório.
+ */
 public class RelatorioController {
 
     private final CarteiraDAO carteiraDAO;
     private final MovimentacaoDAO movimentacaoDAO;
-    private final ValidadorCarteira validadorCarteira;
     private final ProvedorCotacao cotacoes;
     private final Clock relogio;
+    private final LocalDate vigenciaCredito;
+    private final Map<Integer, ApuracaoCarteira> apuracoes = new HashMap<>();
 
     /**
-     * @param carteiraDAO     persistência das carteiras
-     * @param movimentacaoDAO persistência das movimentações
-     * @param cotacoes        fonte das cotações (Oráculo)
-     * @param relogio         relógio que define a cotação atual (a de hoje)
+     * @param vigenciaCredito a partir desta data as compras debitam o saldo em reais da carteira
      */
     public RelatorioController(CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO,
-                               ProvedorCotacao cotacoes, Clock relogio) {
+                               ProvedorCotacao cotacoes, Clock relogio, LocalDate vigenciaCredito) {
         this.carteiraDAO = carteiraDAO;
         this.movimentacaoDAO = movimentacaoDAO;
-        this.validadorCarteira = new ValidadorCarteira(carteiraDAO);
         this.cotacoes = cotacoes;
         this.relogio = relogio;
+        this.vigenciaCredito = vigenciaCredito;
     }
 
     public List<CarteiraDTO> listarPorIdentificador() throws AppException {
@@ -51,7 +56,7 @@ public class RelatorioController {
 
     /**
      * Apura a carteira: saldo em FTCoins, custo médio, valoração a custo médio e a mercado
-     * (pela cotação de hoje) e o histórico de movimentações com a posição após cada operação.
+     * (pela última cotação disponível) e o histórico com a posição após cada operação.
      * Alimenta os relatórios de saldo atual, histórico e ganho/perda.
      *
      * @param idCarteira identificador da carteira
@@ -60,10 +65,25 @@ public class RelatorioController {
      *                      ou se o histórico da carteira for inconsistente
      */
     public ApuracaoDTO apurar(int idCarteira) throws AppException {
-        validadorCarteira.validarExistente(idCarteira);
-        ApuracaoCarteira apuracao = ApuracaoCarteira.calcular(
-                movimentacaoDAO.listarPorCarteira(idCarteira), cotacoes
-        );
-        return apuracao.toDTO(idCarteira, cotacoes.cotacaoEm(LocalDate.now(relogio)));
+        carteiraDAO.validarExistente(idCarteira);
+        return apuracaoEmCache(idCarteira).toDTO(idCarteira, cotacoes.ultimaCotacaoAte(LocalDate.now(relogio)));
+    }
+
+    private ApuracaoCarteira apuracaoEmCache(int idCarteira) throws AppException {
+        List<MovimentacaoDTO> movimentacoes = movimentacaoDAO.listarPorCarteira(idCarteira);
+        ApuracaoCarteira emCache = apuracoes.get(idCarteira);
+        if (emCache != null && emCache.correspondeA(movimentacoes)) {
+            return emCache;
+        }
+        ApuracaoCarteira apuracao = ApuracaoCarteira.calcular(movimentacoes, cotacoes, vigenciaCredito);
+        apuracoes.put(idCarteira, apuracao);
+        return apuracao;
+    }
+
+    /** Uma linha por dia, da primeira movimentação até hoje, como na planilha de apuração. */
+    public List<ApuracaoDTO.Dia> evolucaoDiaria(int idCarteira) throws AppException {
+        carteiraDAO.validarExistente(idCarteira);
+        return ApuracaoCarteira.evolucaoDiaria(
+                movimentacaoDAO.listarPorCarteira(idCarteira), cotacoes, LocalDate.now(relogio), vigenciaCredito);
     }
 }

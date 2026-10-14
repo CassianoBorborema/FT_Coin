@@ -1,0 +1,24 @@
+=== CÓMO FUNCIONA FT_COIN ===
+FT_Coin calcula ganancias y pérdidas en una cartera de monedas virtuales.
+Navegue escribiendo el número de la opción deseada y use 0 para volver/salir.
+
+1. Cartera: crear, consultar, editar y eliminar carteras.
+   No se puede eliminar una cartera que tenga movimientos.
+2. Movimientos: comprar y vender moneda virtual, depositar y
+   retirar reales. La operación se registra con la fecha de
+   hoy, a la cotización del día informada por el Oráculo. La
+   compra usa el saldo en reales de la cartera y la venta
+   exige FTCoins suficientes.
+3. Oráculo: consultar la cotización de hoy, de una fecha o de
+   un período. Las cotizaciones las genera el Oráculo y se usan
+   en los movimientos y en los informes.
+4. Informes: listar carteras (por identificador o titular),
+   saldo actual (con opción de impresión), historial de
+   movimientos, evolución diaria y la ganancia/pérdida de cada
+   cartera, valoradas a costo medio y a mercado (última
+   cotización del Oráculo).
+5. Ayuda: esta guía, los flujos de cartera, movimientos e
+   informes, y los créditos.
+
+Las fechas deben ingresarse en el formato dd/MM/yyyy.
+Las cantidades aceptan coma o punto como separador decimal.

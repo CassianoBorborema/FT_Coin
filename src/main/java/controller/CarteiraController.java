@@ -7,6 +7,10 @@ import exception.AppException;
 import model.Carteira;
 import java.util.List;
 
+/**
+ * Cadastro de carteiras. Valida os dados pelo modelo antes de gravar e só exclui
+ * carteiras sem movimentações.
+ */
 public class CarteiraController {
 
     private final CarteiraDAO carteiraDAO;
@@ -27,7 +31,7 @@ public class CarteiraController {
     }
 
     public CarteiraDTO consultar(int identificador) throws AppException {
-        ValidadorCarteira.validarIdentificador(identificador);
+        CarteiraDAO.validarIdentificador(identificador);
         return carteiraDAO.consultarPorId(identificador);
     }
 
@@ -36,7 +40,7 @@ public class CarteiraController {
     }
 
     public CarteiraDTO editar(int identificador, String nomeTitular, String corretora) throws AppException {
-        ValidadorCarteira.validarIdentificador(identificador);
+        CarteiraDAO.validarIdentificador(identificador);
         CarteiraDTO dto = new CarteiraDTO(identificador, nomeTitular, corretora);
         Carteira carteira = Carteira.fromDTO(dto);
         carteira.validar();
@@ -45,11 +49,9 @@ public class CarteiraController {
     }
 
     public void excluir(int identificador) throws AppException {
-        ValidadorCarteira.validarIdentificador(identificador);
+        CarteiraDAO.validarIdentificador(identificador);
         if (movimentacaoDAO.possuiMovimentacoes(identificador)) {
-            throw new AppException(
-                    "Não é possível excluir a carteira " + identificador + " pois existem movimentações vinculadas."
-            );
+            throw new AppException("erro.carteira.comMovimentacoes", identificador);
         }
         carteiraDAO.excluir(identificador);
     }

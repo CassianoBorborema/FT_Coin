@@ -9,7 +9,7 @@ import java.util.Map;
 import model.ProvedorCotacao;
 
 /**
- * Fonte de cotações para testes, com valores definidos pelo próprio teste.
+ * Cotações definidas pelo próprio teste.
  */
 public class CotacoesFixas implements ProvedorCotacao {
 
@@ -31,12 +31,10 @@ public class CotacoesFixas implements ProvedorCotacao {
         return cotacao;
     }
 
-    /** @return quantas vezes a fonte foi consultada */
     public int getConsultas() {
         return consultas;
     }
 
-    /** @return um relógio parado no início do dia informado (UTC) */
     public static Clock relogioEm(LocalDate hoje) {
         return Clock.fixed(hoje.atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
     }

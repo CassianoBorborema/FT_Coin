@@ -10,21 +10,15 @@ import java.util.List;
 import model.ProvedorCotacao;
 
 /**
- * Consulta de cotações do Oráculo. As cotações vêm da fonte configurada e não são cadastradas
- * pelo usuário.
+ * Consulta de cotações do Oráculo. O usuário não cadastra cotações.
  */
 public class OraculoController {
 
-    /** Maior período aceito na listagem de cotações. */
     static final int MAXIMO_DIAS_PERIODO = 366;
 
     private final ProvedorCotacao cotacoes;
     private final Clock relogio;
 
-    /**
-     * @param cotacoes fonte das cotações
-     * @param relogio  relógio que define o dia de hoje
-     */
     public OraculoController(ProvedorCotacao cotacoes, Clock relogio) {
         this.cotacoes = cotacoes;
         this.relogio = relogio;
@@ -36,29 +30,21 @@ public class OraculoController {
 
     public OraculoDTO consultar(LocalDate data) throws AppException {
         if (data == null) {
-            throw new AppException("Data da cotação é obrigatória.");
+            throw new AppException("erro.cotacao.semData");
         }
         return new OraculoDTO(data, cotacoes.cotacaoEm(data));
     }
 
-    /**
-     * Lista as cotações de cada dia do período, inclusive o primeiro e o último.
-     *
-     * @param inicio primeiro dia do período
-     * @param fim    último dia do período
-     * @return as cotações em ordem cronológica
-     * @throws AppException se o período for inválido, maior que {@value #MAXIMO_DIAS_PERIODO} dias
-     *                      ou se faltar cotação em algum dia
-     */
+    /** Cotações de cada dia entre {@code inicio} e {@code fim}, inclusive. */
     public List<OraculoDTO> listarPeriodo(LocalDate inicio, LocalDate fim) throws AppException {
         if (inicio == null || fim == null) {
-            throw new AppException("As datas de início e fim do período são obrigatórias.");
+            throw new AppException("erro.periodo.semDatas");
         }
         if (fim.isBefore(inicio)) {
-            throw new AppException("A data final não pode ser anterior à data inicial.");
+            throw new AppException("erro.periodo.invertido");
         }
         if (ChronoUnit.DAYS.between(inicio, fim) >= MAXIMO_DIAS_PERIODO) {
-            throw new AppException("O período deve ter no máximo " + MAXIMO_DIAS_PERIODO + " dias.");
+            throw new AppException("erro.periodo.longo", MAXIMO_DIAS_PERIODO);
         }
         List<OraculoDTO> lista = new ArrayList<>();
         for (LocalDate data = inicio; !data.isAfter(fim); data = data.plusDays(1)) {

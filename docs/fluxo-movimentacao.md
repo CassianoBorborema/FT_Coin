@@ -1,320 +1,122 @@
 # Fluxo de Movimentação (FT_Coin)
 
-Este documento descreve **como o fluxo de movimentação funciona hoje** no código em `src/`, incluindo a dependência mínima do **Oráculo** (cotação por data).
+Como compras, vendas, créditos e saques funcionam no código em `src/main/java`.
 
 ---
 
-## 1. Visão geral da arquitetura
-
-O fluxo segue **MVC + DTO + DAO**, espelhando o padrão da carteira, com persistência em memória.
+## 1. Arquitetura
 
 ```mermaid
 flowchart TB
-    subgraph viewLayer [View]
-        Main["app.Main"]
-        MenuPrincipal["view.MenuPrincipal"]
+    subgraph view [View]
         MenuMovimentacao["view.MenuMovimentacao"]
     end
-
-    subgraph controllerLayer [Controller]
-        MovimentacaoController["controller.MovimentacaoController"]
-        CarteiraController["controller.CarteiraController"]
-    end
-
-    subgraph domainLayer [Domínio]
-        MovimentacaoModel["model.Movimentacao"]
-        MovimentacaoDTO["DTO.MovimentacaoDTO"]
-        OraculoModel["model.Oraculo"]
-        OraculoDTO["DTO.OraculoDTO"]
-        TipoMov["model.TipoMovimentacao"]
-        AppException["exception.AppException"]
-    end
-
-    subgraph persistenceLayer [Persistência]
-        MovimentacaoDAO["DAO.MovimentacaoDAO"]
-        MovimentacaoDAOMemoria["dao.memoria.MovimentacaoDAOMemoria"]
-        CarteiraDAO["DAO.CarteiraDAO"]
-        OraculoDAO["DAO.OraculoDAO"]
-        OraculoDAOMemoria["dao.memoria.OraculoDAOMemoria"]
-    end
-
-    Main -->|"instancia DAOs e controllers"| MovimentacaoController
-    MenuPrincipal -->|"opção 2"| MenuMovimentacao
-    MenuMovimentacao -->|"compra/venda"| MovimentacaoController
-    MovimentacaoController -->|"valida carteira"| CarteiraDAO
-    MovimentacaoController -->|"valida cotação na data"| OraculoDAO
-    MovimentacaoController -->|"valida via"| MovimentacaoModel
-    MovimentacaoController -->|"saldo na venda"| MovimentacaoDAO
-    MovimentacaoController -->|"persiste"| MovimentacaoDAO
-    MovimentacaoDAO -.->|"implementa"| MovimentacaoDAOMemoria
-    OraculoDAO -.->|"implementa"| OraculoDAOMemoria
-    MenuMovimentacao -->|"captura e exibe"| AppException
-```
-
-
-
-### Papel de cada componente
-
-
-| Componente                 | Arquivo                                                                                                    | Responsabilidade no fluxo                                                                                    |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Main**                   | [src/main/java/app/Main.java](../src/main/java/app/Main.java)                                                                  | Bootstrap: cria DAOs em memória, controllers, seed de cotações; helpers `lerData`, `lerDouble`, `lerInteiro` |
-| **MenuPrincipal**          | [src/main/java/view/MenuPrincipal.java](../src/main/java/view/MenuPrincipal.java)                                              | Menu raiz; opção **2 (Movimentação)** abre `MenuMovimentacao`                                                |
-| **MenuMovimentacao**       | [src/main/java/view/MenuMovimentacao.java](../src/main/java/view/MenuMovimentacao.java)                                        | Submenu compra/venda; lê ID da carteira, data e quantidade                                                   |
-| **MovimentacaoController** | [src/main/java/controller/MovimentacaoController.java](../src/main/java/controller/MovimentacaoController.java)                | Valida carteira, cotação na data, saldo (venda); orquestra inclusão                                          |
-| **Movimentacao (model)**   | [src/main/java/model/Movimentacao.java](../src/main/java/model/Movimentacao.java)                                              | Valida campos; `fromDTO()` / `toDTO()`                                                                       |
-| **TipoMovimentacao**       | [src/main/java/model/TipoMovimentacao.java](../src/main/java/model/TipoMovimentacao.java)                                      | Enum `COMPRA (C)` e `VENDA (V)`                                                                              |
-| **MovimentacaoDTO**        | [src/main/java/dto/MovimentacaoDTO.java](../src/main/java/dto/MovimentacaoDTO.java)                                            | Transporte: `idMovimento`, `idCarteira`, `data`, `tipo`, `quantidade`                                        |
-| **Oraculo / OraculoDTO**   | [src/main/java/model/Oraculo.java](../src/main/java/model/Oraculo.java), [src/main/java/dto/OraculoDTO.java](../src/main/java/dto/OraculoDTO.java) | Cotação diária usada para validar a data da movimentação                                                     |
-| **MovimentacaoDAO**        | [src/main/java/dao/MovimentacaoDAO.java](../src/main/java/dao/MovimentacaoDAO.java)                                            | Contrato: incluir, consultar, listar por carteira, saldo, vínculos                                           |
-| **MovimentacaoDAOMemoria** | [src/main/java/dao/memoria/MovimentacaoDAOMemoria.java](../src/main/java/dao/memoria/MovimentacaoDAOMemoria.java)              | `HashMap` + `proximoId` global                                                                               |
-| **OraculoDAOMemoria**      | [src/main/java/dao/memoria/OraculoDAOMemoria.java](../src/main/java/dao/memoria/OraculoDAOMemoria.java)                        | `Map<LocalDate, OraculoDTO>`                                                                                 |
-
-
----
-
-## 2. Bootstrap — como a aplicação inicia o fluxo
-
-```mermaid
-sequenceDiagram
-    participant Main as app.Main
-    participant CarteiraDAO as CarteiraDAOMemoria
-    participant OraculoDAO as OraculoDAOMemoria
-    participant MovDAO as MovimentacaoDAOMemoria
-    participant CC as CarteiraController
-    participant MC as MovimentacaoController
-    participant MP as MenuPrincipal
-    participant MM as MenuMovimentacao
-
-    Main->>CarteiraDAO: new
-    Main->>OraculoDAO: new + seedOraculo
-    Main->>MovDAO: new
-    Main->>CC: new CarteiraController carteiraDAO movDAO
-    Main->>MC: new MovimentacaoController movDAO carteiraDAO oraculoDAO
-    Main->>MP: new MenuPrincipal scanner CC MC
-    MP->>MM: opcao 2 Movimentacao
-    MM->>MM: exibirMenuMovimentacao
-```
-
-
-
-**Seed do Oráculo:** na inicialização, [Main.java](../src/main/java/app/Main.java) cadastra cotações para **hoje** e **ontem** (150,0 e 145,0), permitindo testar compra/venda sem menu de cotação.
-
-**Injeção de dependências:** controllers recebem interfaces `*DAO`, não implementações concretas.
-
----
-
-## 3. Navegação nos menus
-
-```mermaid
-stateDiagram-v2
-    [*] --> MenuPrincipal
-    MenuPrincipal --> MenuMovimentacao: opcao 2
-    MenuMovimentacao --> Compra: opcao 1
-    MenuMovimentacao --> Venda: opcao 2
-    MenuMovimentacao --> MenuPrincipal: opcao 0 Voltar
-    Compra --> MenuMovimentacao: conclui ou erro
-    Venda --> MenuMovimentacao: conclui ou erro
-    MenuPrincipal --> [*]: opcao 0 Sair
-```
-
-
-
-**Comportamento do loop:**
-
-- Opções inválidas no submenu exibem mensagem e **não encerram** o programa (padrão `MenuCarteira`).
-- O tipo (`C`/`V`) é definido pela opção do menu, não digitado pelo usuário.
-
----
-
-## 4. Operações — passo a passo
-
-### 4.1 Compra de moeda virtual
-
-```mermaid
-sequenceDiagram
-    participant User as Usuário
-    participant MM as MenuMovimentacao
-    participant Main as app.Main
-    participant Ctrl as MovimentacaoController
-    participant CarteiraDAO as CarteiraDAO
-    participant OraculoDAO as OraculoDAO
-    participant Model as Movimentacao
-    participant MovDAO as MovimentacaoDAOMemoria
-
-    User->>MM: opcao 1 Compra
-    MM->>Main: lerInteiro idCarteira
-    MM->>Ctrl: validarCarteiraExiste idCarteira
-    MM->>Main: lerData data
-    MM->>Main: lerDouble quantidade
-    MM->>Ctrl: registrarCompra id data qtd
-    Ctrl->>CarteiraDAO: existe idCarteira
-    Ctrl->>OraculoDAO: consultarPorData data
-    Ctrl->>Model: fromDTO tipo COMPRA + validar
-    Ctrl->>MovDAO: incluir
-    Note over MovDAO: idMovimento=0 gera proximoId
-    Ctrl->>MovDAO: consultarPorId
-    MovDAO-->>Ctrl: MovimentacaoDTO
-    Ctrl-->>MM: MovimentacaoDTO
-    MM->>User: exibe sucesso + toString
-```
-
-
-
----
-
-### 4.2 Venda de moeda virtual
-
-```mermaid
-sequenceDiagram
-    participant User as Usuário
-    participant MM as MenuMovimentacao
-    participant Ctrl as MovimentacaoController
-    participant MovDAO as MovimentacaoDAOMemoria
-
-    User->>MM: opcao 2 Venda
-    MM->>Ctrl: validarCarteiraExiste idCarteira
-    MM->>Ctrl: registrarVenda id data qtd
-    Note over Ctrl: valida carteira, cotação e quantidade antes do saldo
-    Ctrl->>MovDAO: calcularSaldo idCarteira
-    alt quantidade maior que saldo
-        Ctrl-->>MM: AppException saldo insuficiente
-        MM->>User: Erro mensagem
-    else saldo suficiente
-        Ctrl->>Ctrl: registrar tipo VENDA
-        Ctrl-->>MM: MovimentacaoDTO
-        MM->>User: exibe sucesso
-    end
-```
-
-
-
-**Saldo:** `saldo = Σ compras − Σ vendas` por carteira, calculado em `MovimentacaoDAOMemoria.calcularSaldo()`.
-
----
-
-## 5. Fluxo de dados (DTO vs Model)
-
-```mermaid
-flowchart LR
-    subgraph view [View]
-        Input["idCarteira, data, quantidade"]
-    end
-
     subgraph controller [Controller]
-        DTO1["MovimentacaoDTO"]
-        Model["Movimentacao"]
-        DTO2["MovimentacaoDTO"]
+        MovimentacaoController["controller.MovimentacaoController"]
+    end
+    subgraph modelo [Modelo]
+        Movimentacao["model.Movimentacao"]
+        Tipo["model.TipoMovimentacao"]
+        Apuracao["model.ApuracaoCarteira"]
+        Posicao["model.Posicao"]
+        Provedor["model.ProvedorCotacao"]
+    end
+    subgraph persistencia [Persistência]
+        MovimentacaoDAO["dao.MovimentacaoDAO"]
+        CarteiraDAO["dao.CarteiraDAO"]
     end
 
-    subgraph dao [DAO]
-        Storage["HashMap de MovimentacaoDTO"]
-    end
-
-    Input --> controller
-    DTO1 -->|"fromDTO()"| Model
-    Model -->|"validar()"| Model
-    Model -->|"toDTO()"| DTO2
-    DTO2 -->|"incluir"| Storage
-    Storage -->|"consultarPorId"| DTO2
-    DTO2 --> view
+    MenuMovimentacao --> MovimentacaoController
+    MovimentacaoController -->|"carteira existe?"| CarteiraDAO
+    MovimentacaoController -->|"cotação de hoje"| Provedor
+    MovimentacaoController -->|"posição atual"| Apuracao
+    Apuracao --> Posicao
+    MovimentacaoController -->|"valida e aplica"| Tipo
+    Tipo -->|"comprar, vender, creditar, sacar"| Posicao
+    MovimentacaoController -->|"grava"| MovimentacaoDAO
 ```
 
-
-
----
-
-## 6. Tratamento de erros
-
-
-| Origem                              | Exemplo              | Quem lança                     | Quem captura       |
-| ----------------------------------- | -------------------- | ------------------------------ | ------------------ |
-| Entrada numérica inválida           | "abc" como ID        | `Main.lerInteiro()`            | `MenuMovimentacao` |
-| Data inválida                       | formato errado       | `Main.lerData()`               | `MenuMovimentacao` |
-| Quantidade inválida                 | ≤ 0                  | `Movimentacao.validar()`       | `MenuMovimentacao` |
-| Carteira inexistente (avisa logo após o ID) | ID não cadastrado | `MovimentacaoController`   | `MenuMovimentacao` |
-| Sem cotação na data                 | data sem seed        | `OraculoDAOMemoria`            | `MenuMovimentacao` |
-| Saldo insuficiente                  | venda acima do saldo | `MovimentacaoController`       | `MenuMovimentacao` |
-| Exclusão de carteira com movimentos | excluir após compra  | `CarteiraController.excluir()` | `MenuCarteira`     |
-
+| Componente | Responsabilidade |
+| ---------- | ---------------- |
+| [MenuMovimentacao](../src/main/java/view/MenuMovimentacao.java) | Lê a carteira, mostra a cotação de hoje e o saldo em reais, lê a quantidade ou o valor |
+| [MovimentacaoController](../src/main/java/controller/MovimentacaoController.java) | Registra a operação na data do sistema (`Clock`), à cotação do dia |
+| [TipoMovimentacao](../src/main/java/model/TipoMovimentacao.java) | Enum polimórfico: cada tipo (`COMPRA`, `VENDA`, `CREDITO`, `SAQUE`) sabe como altera a posição |
+| [Posicao](../src/main/java/model/Posicao.java) | FTCoins, custo médio, totais e saldo em reais; recusa operações sem saldo |
+| [ApuracaoCarteira](../src/main/java/model/ApuracaoCarteira.java) | Reconstrói a posição atual a partir do histórico da carteira |
 
 ---
 
-## 7. Estado persistido em memória
+## 2. Registro de uma operação
+
+A operação é **aplicada à posição atual antes de ser gravada**. Assim valem exatamente as mesmas
+regras da apuração, e uma operação inválida nunca chega ao banco.
 
 ```mermaid
-flowchart TB
-    subgraph MovimentacaoDAOMemoria
-        proximoId["proximoId: int"]
-        map["movimentacoes: Map int MovimentacaoDTO"]
-    end
+sequenceDiagram
+    participant U as Usuário
+    participant MM as MenuMovimentacao
+    participant C as MovimentacaoController
+    participant A as ApuracaoCarteira
+    participant T as TipoMovimentacao
+    participant D as MovimentacaoDAO
 
-    subgraph OraculoDAOMemoria
-        cotacoes["cotacoes: Map LocalDate OraculoDTO"]
-    end
-
-    incluirOp["incluir()"] --> proximoId
-    incluirOp --> map
-    saldoOp["calcularSaldo()"] --> map
-```
-
-
-
----
-
-## 8. Mapa de arquivos envolvidos no fluxo
-
-```
-src/
-├── app/Main.java                           ← bootstrap, seed oráculo, lerData/lerDouble
-├── view/
-│   ├── MenuPrincipal.java                  ← roteia opção 2
-│   └── MenuMovimentacao.java               ← compra e venda
-├── controller/
-│   ├── MovimentacaoController.java
-│   └── CarteiraController.java             ← bloqueio exclusão com movimentos
-├── model/
-│   ├── Movimentacao.java
-│   ├── TipoMovimentacao.java
-│   └── Oraculo.java
-├── DTO/
-│   ├── MovimentacaoDTO.java
-│   └── OraculoDTO.java
-├── DAO/
-│   ├── MovimentacaoDAO.java
-│   ├── OraculoDAO.java
-│   └── memoria/
-│       ├── MovimentacaoDAOMemoria.java
-│       └── OraculoDAOMemoria.java
-└── exception/AppException.java
+    U->>MM: 1 (Compra), id da carteira
+    MM->>C: cotacaoDeHoje(), saldoEmReais(id)
+    MM->>U: Cotação de hoje: R$ 12,06 | Saldo em reais: R$ 200,00
+    U->>MM: quantidade
+    MM->>C: registrarCompra(id, quantidade)
+    C->>A: calcular(histórico da carteira)
+    A-->>C: posição atual
+    C->>T: COMPRA.aplicar(posição, hoje, quantidade, cotação)
+    Note over T: recusa se o saldo em reais não cobrir a compra
+    C->>D: incluir(movimentação)
+    MM->>U: Compra registrada com sucesso ... e o novo saldo em reais
 ```
 
 ---
 
-## 9. Execução manual (referência)
+## 3. Regras de cada tipo
 
-```powershell
-mvn package
-java -jar target/ft-coin-1.0.0-SNAPSHOT.jar
-```
+| Tipo | Código | Quantidade é | Efeito na posição | Recusada quando |
+| ---- | ------ | ------------ | ----------------- | --------------- |
+| Compra | `C` | FTCoins | soma FTCoins, recalcula o custo médio, debita `qtd × cotação` do saldo em reais | o saldo em reais não cobre o valor (só para compras a partir de `credito.vigencia`) |
+| Venda | `V` | FTCoins | subtrai FTCoins, gera resultado `qtd × (cotação − custo médio)`, credita o valor no saldo em reais | a quantidade excede o saldo de FTCoins |
+| Crédito | `D` | reais | soma ao saldo em reais | — |
+| Saque | `S` | reais | subtrai do saldo em reais | o valor excede o saldo em reais |
 
-**Caminho típico de teste:**
+Custo médio na compra: `(custoMédio × saldo + qtd × cotação) / (saldo + qtd)`. A venda não altera o
+custo médio.
 
-1. Menu Principal → **1 (Carteira)** → **1 (Incluir)** → anotar ID gerado → **0 (Voltar)**
-2. Menu Principal → **2 (Movimentação)** → **1 (Compra)** → ID da carteira, data de hoje (`dd/MM/yyyy`), quantidade (ex.: 10)
-3. **2 (Venda)** → mesma carteira, data de hoje, quantidade ≤ saldo (ex.: 5)
-4. Tentar venda acima do saldo → mensagem de erro
-5. Menu **1 (Carteira)** → **4 (Excluir)** carteira com movimentos → bloqueio
-6. **0 (Voltar)** → **0 (Sair)**
+**Vigência do crédito.** Compras com data anterior a `credito.vigencia` (em `ftcoin.properties`) foram
+feitas antes de o saldo em reais existir, então não mexem nele. Isso preserva o histórico antigo, que
+não teria saldo para justificar as compras.
 
-**Datas com cotação seed:** hoje e ontem (definidas em `Main.seedOraculo()`).
+**Data e cotação.** O usuário não informa data nem cotação: a data é a do sistema e a cotação vem do
+Oráculo (ver [fluxo-oraculo.md](fluxo-oraculo.md)). Isso impede vendas retroativas que invalidariam o
+histórico.
 
 ---
 
-## 10. Integrações e limitações
+## 4. Erros
 
-- `MovimentacaoDAO.listarPorCarteira()` e `calcularSaldo()` são reutilizados pelos Relatórios (ver [fluxo-relatorios.md](fluxo-relatorios.md)).
-- Não há edição nem exclusão de movimentação individual no menu.
-- As cotações podem ser cadastradas/consultadas/listadas em runtime pelo menu Oráculo (ver [fluxo-oraculo.md](fluxo-oraculo.md)), além do seed inicial no `Main`.
-- A persistência é exclusivamente em memória (sem banco de dados).
+| Situação | Mensagem (pt) |
+| -------- | ------------- |
+| Carteira inexistente | Carteira com identificador X não encontrada. |
+| Quantidade ≤ 0 ou texto inválido | Quantidade deve ser maior que zero. / Valor decimal inválido: X. |
+| Venda acima do saldo | A venda de X FTCoins excede o saldo de Y FTCoins. |
+| Compra ou saque sem saldo em reais | Saldo em reais insuficiente para a compra: disponível R$ X, necessário R$ Y. |
+| Banco indisponível | Erro ao incluir a movimentação: (erro do driver) |
 
+Em qualquer caso nada é gravado e o usuário volta ao menu.
+
+---
+
+## 5. Arquivos
+
+| Camada | Arquivos |
+| ------ | -------- |
+| View | `view/MenuMovimentacao.java` |
+| Controller | `controller/MovimentacaoController.java` |
+| Modelo | `model/TipoMovimentacao.java`, `model/Posicao.java`, `model/Movimentacao.java`, `model/ApuracaoCarteira.java` |
+| DAO | `dao/MovimentacaoDAO.java`, `dao/MovimentacaoDAOMemoria.java`, `dao/MovimentacaoDAOMariaDB.java` |
+| Testes | `MovimentacaoControllerTest`, `ApuracaoCarteiraTest` |

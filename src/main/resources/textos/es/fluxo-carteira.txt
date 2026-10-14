@@ -1,0 +1,20 @@
+=== FLUJO DE CARTERA ===
+La cartera guarda las monedas virtuales de un titular en una corredora.
+Acceda desde el menú principal: 1. Cartera.
+
+1. Crear cartera
+   Ingrese el nombre del titular y la corredora. El sistema
+   genera el identificador de la cartera: anótelo, se usa en
+   los movimientos y en los informes.
+2. Consultar cartera
+   Ingrese el identificador para ver el titular y la corredora.
+3. Editar cartera
+   Ingrese el identificador; el sistema muestra los datos
+   actuales y pide el nuevo titular y la nueva corredora.
+4. Eliminar cartera
+   Ingrese el identificador y confirme con S. Las carteras que
+   ya tienen movimientos no se pueden eliminar, para no perder
+   el historial de compras y ventas.
+
+Consejo: para encontrar el identificador de una cartera, use
+Informes > Listar carteras por identificador o por titular.

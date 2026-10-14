@@ -3,6 +3,9 @@ package model;
 import dto.CarteiraDTO;
 import exception.AppException;
 
+/**
+ * Carteira de moedas virtuais de um titular em uma corretora.
+ */
 public class Carteira {
 
     private int identificador;
@@ -44,10 +47,10 @@ public class Carteira {
 
     public void validar() throws AppException {
         if (nomeTitular == null || nomeTitular.trim().isEmpty()) {
-            throw new AppException("Nome do titular é obrigatório.");
+            throw new AppException("erro.carteira.semTitular");
         }
         if (corretora == null || corretora.trim().isEmpty()) {
-            throw new AppException("Corretora é obrigatória.");
+            throw new AppException("erro.carteira.semCorretora");
         }
     }
 

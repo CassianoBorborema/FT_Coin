@@ -1,41 +1,67 @@
 package view;
 
+import config.Mensagens;
 import controller.MovimentacaoController;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 
 /**
- * Compra e venda de FTCoins. As operações são registradas na data de hoje, à cotação do dia.
+ * Compra e venda de FTCoins, crédito e saque em reais. As operações são registradas na data de
+ * hoje, à cotação do dia.
  */
 public class MenuMovimentacao extends Menu {
 
     private final MovimentacaoController controller;
 
     public MenuMovimentacao(Console console, MovimentacaoController controller) {
-        super(console, "Movimentação");
+        super(console, Mensagens.get("movimentacao.titulo"));
         this.controller = controller;
-        adicionarOpcao("Compra de moeda virtual", () -> registrar("Compra", controller::registrarCompra));
-        adicionarOpcao("Venda de moeda virtual", () -> registrar("Venda", controller::registrarVenda));
+        adicionarOpcao(Mensagens.get("movimentacao.compra"),
+                () -> negociar("movimentacao.compraRegistrada", controller::registrarCompra));
+        adicionarOpcao(Mensagens.get("movimentacao.venda"),
+                () -> negociar("movimentacao.vendaRegistrada", controller::registrarVenda));
+        adicionarOpcao(Mensagens.get("movimentacao.credito"),
+                () -> movimentarReais("movimentacao.pedirCredito", "movimentacao.creditoRegistrado", controller::creditar));
+        adicionarOpcao(Mensagens.get("movimentacao.saque"),
+                () -> movimentarReais("movimentacao.pedirSaque", "movimentacao.saqueRegistrado", controller::sacar));
     }
 
-    /** Operação de registro do controller (compra ou venda). */
     @FunctionalInterface
     private interface Registro {
         MovimentacaoDTO registrar(int idCarteira, double quantidade) throws AppException;
     }
 
-    private void registrar(String operacao, Registro registro) throws AppException {
-        int idCarteira = console.lerInteiro("Digite o identificador da carteira:");
-        controller.validarCarteiraExiste(idCarteira);
-
+    private void negociar(String chaveSucesso, Registro registro) throws AppException {
+        int idCarteira = lerCarteira();
         double cotacao = controller.cotacaoDeHoje();
-        console.exibir("Cotação de hoje: " + Formatador.moeda(cotacao));
-        double quantidade = console.lerDecimal("Digite a quantidade:");
+        console.exibir(Mensagens.get("movimentacao.cotacaoESaldo", Formatador.moeda(cotacao),
+                Formatador.moeda(controller.saldoEmReais(idCarteira))));
+        double quantidade = console.lerDecimal(Mensagens.get("movimentacao.pedirQuantidade"));
 
         MovimentacaoDTO movimentacao = registro.registrar(idCarteira, quantidade);
-        console.exibir(operacao + " registrada com sucesso: "
-                + Formatador.quantidade(movimentacao.getQuantidade()) + " FTCoins em "
-                + Formatador.data(movimentacao.getData()) + " a " + Formatador.moeda(cotacao)
-                + " (total " + Formatador.moeda(movimentacao.getQuantidade() * cotacao) + ").");
+        console.exibir(Mensagens.get(chaveSucesso, Formatador.quantidade(movimentacao.getQuantidade()),
+                Formatador.data(movimentacao.getData()), Formatador.moeda(cotacao),
+                Formatador.moeda(movimentacao.getQuantidade() * cotacao)));
+        exibirSaldoEmReais(idCarteira);
+    }
+
+    private void movimentarReais(String chavePedido, String chaveSucesso, Registro registro) throws AppException {
+        int idCarteira = lerCarteira();
+        exibirSaldoEmReais(idCarteira);
+        double valor = console.lerDecimal(Mensagens.get(chavePedido));
+
+        registro.registrar(idCarteira, valor);
+        console.exibir(Mensagens.get(chaveSucesso, Formatador.moeda(valor)));
+        exibirSaldoEmReais(idCarteira);
+    }
+
+    private int lerCarteira() throws AppException {
+        int idCarteira = console.lerInteiro(Mensagens.get("pedir.carteira"));
+        controller.validarCarteiraExiste(idCarteira);
+        return idCarteira;
+    }
+
+    private void exibirSaldoEmReais(int idCarteira) throws AppException {
+        console.exibir(Mensagens.get("movimentacao.saldoReais", Formatador.moeda(controller.saldoEmReais(idCarteira))));
     }
 }

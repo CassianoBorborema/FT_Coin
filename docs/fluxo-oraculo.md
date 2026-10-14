@@ -1,118 +1,74 @@
 # Fluxo de Oráculo (FT_Coin)
 
-Este documento descreve o fluxo do **Oráculo** — o cadastro, a consulta e a listagem das cotações diárias usadas para validar movimentações e calcular relatórios.
+De onde vêm as cotações e como elas são consultadas.
 
 ---
 
-## 1. Visão geral
+## 1. Arquitetura
 
-O Oráculo segue o mesmo padrão **MVC + DTO + DAO** das demais funcionalidades, com persistência em memória.
+O resto da aplicação só conhece a interface `ProvedorCotacao` (`cotacaoEm(data)`). Hoje a cotação é
+**simulada**; quando a API do Oráculo existir, basta outra implementação da interface.
 
 ```mermaid
-flowchart TB
-    subgraph viewLayer [View]
-        MenuPrincipal["view.MenuPrincipal"]
-        MenuOraculo["view.MenuOraculo"]
-    end
-
-    subgraph controllerLayer [Controller]
-        OraculoController["controller.OraculoController"]
-    end
-
-    subgraph domainLayer [Domínio]
-        OraculoModel["model.Oraculo"]
-        OraculoDTO["DTO.OraculoDTO"]
-        AppException["exception.AppException"]
-    end
-
-    subgraph persistenceLayer [Persistência]
-        OraculoDAO["DAO.OraculoDAO"]
-        OraculoDAOMemoria["dao.memoria.OraculoDAOMemoria"]
-    end
-
-    MenuPrincipal -->|"opção 3"| MenuOraculo
-    MenuOraculo -->|"cadastrar/consultar/listar"| OraculoController
-    OraculoController -->|"valida via"| OraculoModel
-    OraculoController -->|"persiste/consulta"| OraculoDAO
-    OraculoDAO -.->|"implementa"| OraculoDAOMemoria
-    MenuOraculo -->|"captura e exibe"| AppException
+flowchart LR
+    MenuOraculo["view.MenuOraculo"] --> OraculoController["controller.OraculoController"]
+    OraculoController --> Provedor["model.ProvedorCotacao"]
+    MovimentacaoController["controller.MovimentacaoController"] --> Provedor
+    RelatorioController["controller.RelatorioController"] --> Provedor
+    Provedor -.->|"implementado por"| Historico["oraculo.CotacaoComHistorico"]
+    Historico -->|"1. memória"| Cache["Map data → cotação"]
+    Historico -->|"2. histórico"| OraculoDAO["dao.OraculoDAO"]
+    Historico -->|"3. fonte"| Simulado["oraculo.OraculoSimulado"]
 ```
 
-### Papel de cada componente
-
-| Componente | Arquivo | Responsabilidade |
-|------------|---------|------------------|
-| **MenuOraculo** | [src/main/java/view/MenuOraculo.java](../src/main/java/view/MenuOraculo.java) | Submenu cadastrar/consultar/listar; lê data e cotação |
-| **OraculoController** | [src/main/java/controller/OraculoController.java](../src/main/java/controller/OraculoController.java) | Valida e orquestra cadastro, consulta e listagem |
-| **Oraculo (model)** | [src/main/java/model/Oraculo.java](../src/main/java/model/Oraculo.java) | Valida data e cotação (> 0); `fromDTO()` / `toDTO()` |
-| **OraculoDTO** | [src/main/java/dto/OraculoDTO.java](../src/main/java/dto/OraculoDTO.java) | Transporte: `data`, `cotacao` |
-| **OraculoDAO** | [src/main/java/dao/OraculoDAO.java](../src/main/java/dao/OraculoDAO.java) | Contrato: incluir, consultar por data, listar todas, existe |
-| **OraculoDAOMemoria** | [src/main/java/dao/memoria/OraculoDAOMemoria.java](../src/main/java/dao/memoria/OraculoDAOMemoria.java) | `Map<LocalDate, OraculoDTO>`; listagem ordenada por data |
+| Componente | Responsabilidade |
+| ---------- | ---------------- |
+| [OraculoSimulado](../src/main/java/oraculo/OraculoSimulado.java) | Calcula a cotação de um dia pela fórmula da planilha de apuração |
+| [CotacaoComHistorico](../src/main/java/oraculo/CotacaoComHistorico.java) | Decorator: grava no `OraculoDAO` cada cotação obtida da fonte e responde pelo registro nas consultas seguintes |
+| [ProvedorCotacao](../src/main/java/model/ProvedorCotacao.java) | Contrato da cotação por data; `ultimaCotacaoAte(data)` volta até 31 dias procurando a mais recente |
+| [OraculoController](../src/main/java/controller/OraculoController.java) | Cotação de hoje, de uma data e de um período (até 366 dias) |
 
 ---
 
-## 2. Navegação no menu
+## 2. Cotação simulada
 
-```mermaid
-stateDiagram-v2
-    [*] --> MenuPrincipal
-    MenuPrincipal --> MenuOraculo: opcao 3
-    MenuOraculo --> Cadastrar: opcao 1
-    MenuOraculo --> Consultar: opcao 2
-    MenuOraculo --> Listar: opcao 3
-    MenuOraculo --> MenuPrincipal: opcao 0 Voltar
-    Cadastrar --> MenuOraculo: conclui ou erro
-    Consultar --> MenuOraculo: conclui ou erro
-    Listar --> MenuOraculo: conclui
+```
+cotação     = base + flutuação + valorização
+valorização = valorizacaoInicial + fatorValorizacao · ln(n)    (n = 1 na data inicial)
+flutuação   = sorteio uniforme em [-amplitude, +amplitude)
 ```
 
----
+- A flutuação usa uma semente derivada da data, então **a cotação de um dia é sempre a mesma**.
+- O resultado é arredondado para 2 casas.
+- Não há cotação antes de `oraculo.dataInicial` nem depois de hoje.
+- Os parâmetros ficam nas chaves `oraculo.*` do `ftcoin.properties`. A configuração é recusada se
+  permitir cotação ≤ 0 (`base + valorizacaoInicial - amplitude ≤ 0`).
 
-## 3. Operações
-
-### 3.1 Cadastrar cotação
-
-```mermaid
-sequenceDiagram
-    participant User as Usuário
-    participant MO as MenuOraculo
-    participant Main as app.Main
-    participant Ctrl as OraculoController
-    participant Model as Oraculo
-    participant DAO as OraculoDAOMemoria
-
-    User->>MO: opcao 1 Cadastrar
-    MO->>Main: lerData data
-    MO->>Main: lerDouble cotacao
-    MO->>Ctrl: cadastrar data cotacao
-    Ctrl->>Model: new Oraculo + validar
-    Ctrl->>DAO: incluir
-    Note over DAO: rejeita data já cadastrada
-    Ctrl->>DAO: consultarPorData
-    DAO-->>Ctrl: OraculoDTO
-    Ctrl-->>MO: OraculoDTO
-    MO->>User: exibe sucesso
-```
-
-### 3.2 Consultar e listar
-
-- **Consultar:** informa uma data; o DAO retorna a cotação ou lança `AppException` se não houver.
-- **Listar:** retorna todas as cotações ordenadas por data crescente (`OraculoDAO.listarTodas()`).
+**Por que gravar o histórico?** Uma cotação usada numa movimentação não pode mudar depois, senão a
+apuração do passado mudaria. Com o `CotacaoComHistorico`, a primeira consulta de uma data grava a
+cotação, e as seguintes leem o que foi gravado, mesmo que a fonte seja trocada pela API real. O mapa em
+memória evita ir ao banco mais de uma vez por data.
 
 ---
 
-## 4. Regras e validações
+## 3. Menu
 
-| Regra | Origem |
-|-------|--------|
-| Data obrigatória | `Oraculo.validar()` |
-| Cotação maior que zero | `Oraculo.validar()` |
-| Não duplicar cotação na mesma data | `OraculoDAOMemoria.incluir()` |
-| Data sem cotação ao consultar | `OraculoDAOMemoria.consultarPorData()` |
+| Opção | O que faz | Erros possíveis |
+| ----- | --------- | --------------- |
+| **1. Cotação de hoje** | Mostra a cotação da data do sistema | — |
+| **2. Consultar por data** | Lê uma data no formato do idioma (`dd/MM/yyyy` em pt/es, `MM/dd/yyyy` em en) | Data inválida ou inexistente (31/02), anterior à data inicial ou futura |
+| **3. Listar por período** | Lista a cotação de cada dia entre duas datas | Data final antes da inicial, período acima de 366 dias |
+
+O usuário **não cadastra** cotações: elas sempre vêm do Oráculo.
 
 ---
 
-## 5. Relação com os outros fluxos
+## 4. Arquivos
 
-- **Movimentação:** ao registrar compra/venda, a data precisa ter cotação cadastrada.
-- **Relatórios:** o cálculo de ganho/perda usa a cotação da data de cada movimentação e a cotação de hoje (ver [fluxo-relatorios.md](fluxo-relatorios.md)).
+| Camada | Arquivos |
+| ------ | -------- |
+| View | `view/MenuOraculo.java` |
+| Controller | `controller/OraculoController.java` |
+| Oráculo | `oraculo/OraculoSimulado.java`, `oraculo/CotacaoComHistorico.java`, `model/ProvedorCotacao.java` |
+| DAO | `dao/OraculoDAO.java`, `dao/OraculoDAOMemoria.java`, `dao/OraculoDAOMariaDB.java` |
+| Testes | `OraculoSimuladoTest`, `CotacaoComHistoricoTest`, `ProvedorCotacaoTest`, `OraculoControllerTest` |

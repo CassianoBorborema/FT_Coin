@@ -1,5 +1,7 @@
 package oraculo;
 
+import config.Configuracao;
+import config.Mensagens;
 import exception.AppException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -26,14 +28,50 @@ public class OraculoSimulado implements ProvedorCotacao {
 
     private static final int CASAS_DECIMAIS = 2;
 
-    private final ParametrosOraculoSimulado parametros;
+    /**
+     * Parâmetros da fórmula, lidos das chaves {@code oraculo.*}.
+     */
+    public record Parametros(LocalDate dataInicial, double base, double amplitude,
+                             double valorizacaoInicial, double fatorValorizacao, long semente) {
+
+        /**
+         * Como a valorização nunca diminui, a menor cotação possível é
+         * {@code base + valorizacaoInicial - amplitude}, que precisa ser positiva.
+         */
+        public Parametros {
+            if (dataInicial == null) {
+                throw new IllegalArgumentException(Mensagens.get("oraculo.erro.semData"));
+            }
+            if (amplitude < 0) {
+                throw new IllegalArgumentException(Mensagens.get("oraculo.erro.amplitude"));
+            }
+            if (fatorValorizacao < 0) {
+                throw new IllegalArgumentException(Mensagens.get("oraculo.erro.fator"));
+            }
+            if (base + valorizacaoInicial - amplitude <= 0) {
+                throw new IllegalArgumentException(Mensagens.get("oraculo.erro.cotacaoNaoPositiva"));
+            }
+        }
+
+        public static Parametros carregar(Configuracao configuracao) throws AppException {
+            try {
+                return new Parametros(
+                        configuracao.getData("oraculo.dataInicial"),
+                        configuracao.getDecimal("oraculo.base"),
+                        configuracao.getDecimal("oraculo.flutuacao.amplitude"),
+                        configuracao.getDecimal("oraculo.valorizacao.inicial"),
+                        configuracao.getDecimal("oraculo.valorizacao.fator"),
+                        configuracao.getInteiro("oraculo.semente"));
+            } catch (IllegalArgumentException e) {
+                throw new AppException(e, "erro.config.oraculo", e.getMessage());
+            }
+        }
+    }
+
+    private final Parametros parametros;
     private final Clock relogio;
 
-    /**
-     * @param parametros parâmetros da fórmula
-     * @param relogio    relógio que define o dia de hoje
-     */
-    public OraculoSimulado(ParametrosOraculoSimulado parametros, Clock relogio) {
+    public OraculoSimulado(Parametros parametros, Clock relogio) {
         this.parametros = parametros;
         this.relogio = relogio;
     }
@@ -41,31 +79,23 @@ public class OraculoSimulado implements ProvedorCotacao {
     @Override
     public double cotacaoEm(LocalDate data) throws AppException {
         if (data == null) {
-            throw new AppException("Data da cotação é obrigatória.");
+            throw new AppException("erro.cotacao.semData");
         }
         if (data.isBefore(parametros.dataInicial())) {
-            throw new AppException("O Oráculo só tem cotações a partir de " + parametros.dataInicial() + ".");
+            throw new AppException("erro.cotacao.antesDoInicio", parametros.dataInicial());
         }
         if (data.isAfter(LocalDate.now(relogio))) {
-            throw new AppException("Não há cotação para a data futura " + data + ".");
+            throw new AppException("erro.cotacao.futura", data);
         }
         double cotacao = parametros.base() + flutuacao(data) + valorizacao(data);
         return BigDecimal.valueOf(cotacao).setScale(CASAS_DECIMAIS, RoundingMode.HALF_UP).doubleValue();
     }
 
-    /**
-     * @param data data a partir da data inicial
-     * @return a parcela de valorização da cotação na data
-     */
     double valorizacao(LocalDate data) {
         long dia = ChronoUnit.DAYS.between(parametros.dataInicial(), data) + 1;
         return parametros.valorizacaoInicial() + parametros.fatorValorizacao() * Math.log(dia);
     }
 
-    /**
-     * @param data data da cotação
-     * @return a parcela de flutuação da cotação na data, sempre a mesma para a mesma data
-     */
     double flutuacao(LocalDate data) {
         double amplitude = parametros.amplitude();
         if (amplitude == 0) {

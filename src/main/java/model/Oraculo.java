@@ -3,6 +3,9 @@ package model;
 import dto.OraculoDTO;
 import exception.AppException;
 
+/**
+ * Cotação diária da moeda virtual informada pelo Oráculo.
+ */
 public class Oraculo {
 
     private java.time.LocalDate data;
@@ -34,10 +37,10 @@ public class Oraculo {
 
     public void validar() throws AppException {
         if (data == null) {
-            throw new AppException("Data da cotação é obrigatória.");
+            throw new AppException("erro.cotacao.semData");
         }
         if (cotacao <= 0) {
-            throw new AppException("Cotação deve ser maior que zero.");
+            throw new AppException("erro.cotacao.naoPositiva");
         }
     }
 

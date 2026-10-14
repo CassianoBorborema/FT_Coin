@@ -1,0 +1,33 @@
+=== REPORT FLOW ===
+Open it from the main menu: 4. Reports. Values in R$.
+
+1 and 2. List wallets
+   All wallets, sorted by ID or by holder name.
+3. Current balance
+   Amount of FTCoins, average cost, value of the coins at
+   average cost and at market price (latest price) and the
+   cash balance. At the end, you can print the balance to a
+   .txt file.
+4. Transaction history
+   One line per operation (buy, sell, deposit or withdrawal),
+   with the price of the day, the FTCoin balance, the average
+   cost and the cash balance right after the operation, and
+   the result of each sale.
+5. Daily evolution
+   One line per day, from the first operation until today, as
+   in the calculation spreadsheet. Columns:
+   - Bought / Sold: amounts traded on the day
+   - Qty held: FTCoins in the wallet at the end of the day
+   - Cost value: balance valued at average cost
+   - Trade result: result of the day's sales
+   - Acc. result: sum of the sale results up to the day
+   - Market value: balance valued at the day's price
+6. Gains and losses
+   Summary of each wallet:
+   - how much you bought and sold, and the operating profit
+     or loss (sold - bought);
+   - the value of the remaining coins, at average cost;
+   - the overall result (operating + coins at average cost);
+   - the result if you sold everything at the latest price;
+   - the available cash balance.
+   Percentages are calculated on the total bought.

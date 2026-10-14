@@ -1,0 +1,34 @@
+=== TRANSACTION FLOW ===
+Purchases and sales of FTCoins and the wallet's cash (R$).
+Open it from the main menu: 2. Transactions.
+
+Every operation is recorded with today's date, at today's
+price from the Oracle (menu 3).
+
+1. Buy virtual coins
+   Enter the wallet ID. The system shows today's price and the
+   cash balance, and asks for the amount of FTCoins. The
+   purchase value (amount x price) is debited from the cash
+   balance; without enough cash, the purchase is refused.
+2. Sell virtual coins
+   Same flow as the purchase. The sale is only accepted if the
+   wallet has enough FTCoins, and the sale value is added to
+   the cash balance.
+3. Deposit reais
+   Adds money to the wallet for the next purchases.
+4. Withdraw reais
+   Takes money out of the wallet, up to the cash balance.
+
+Amounts and values accept decimals, with a comma or a dot
+(e.g. 10.5).
+
+How each operation affects the wallet:
+- On a purchase, the average cost is recalculated: a weighted
+  average between the cost of the coins you already had and
+  the value of the new purchase.
+- On a sale, the average cost does not change. The result of
+  the sale is the amount sold times the difference between
+  the price and the average cost: positive is a profit,
+  negative is a loss.
+- Purchases made before cash deposits existed do not change
+  the cash balance.

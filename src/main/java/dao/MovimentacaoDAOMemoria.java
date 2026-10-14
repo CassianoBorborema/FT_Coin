@@ -1,0 +1,75 @@
+package dao;
+
+import dto.MovimentacaoDTO;
+import exception.AppException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Movimentações em memória; os dados se perdem ao fechar a aplicação.
+ */
+final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
+
+    private final Map<Integer, MovimentacaoDTO> movimentacoes = new HashMap<>();
+    private int proximoId = 1;
+
+    @Override
+    public void incluir(MovimentacaoDTO movimentacao) throws AppException {
+        int id = movimentacao.getIdMovimento();
+
+        if (id == 0) {
+            id = proximoId++;
+        } else if (movimentacoes.containsKey(id)) {
+            throw new AppException("erro.movimentacao.duplicada", id);
+        } else if (id >= proximoId) {
+            proximoId = id + 1;
+        }
+
+        MovimentacaoDTO copia = copiar(movimentacao);
+        copia.setIdMovimento(id);
+        movimentacoes.put(id, copia);
+        movimentacao.setIdMovimento(id);
+    }
+
+    @Override
+    public MovimentacaoDTO consultarPorId(int idMovimento) throws AppException {
+        MovimentacaoDTO movimentacao = movimentacoes.get(idMovimento);
+        if (movimentacao == null) {
+            throw new AppException("erro.movimentacao.naoEncontrada", idMovimento);
+        }
+        return copiar(movimentacao);
+    }
+
+    @Override
+    public List<MovimentacaoDTO> listarPorCarteira(int idCarteira) throws AppException {
+        List<MovimentacaoDTO> lista = new ArrayList<>();
+        for (MovimentacaoDTO movimentacao : movimentacoes.values()) {
+            if (movimentacao.getIdCarteira() == idCarteira) {
+                lista.add(copiar(movimentacao));
+            }
+        }
+        return lista;
+    }
+
+    @Override
+    public boolean possuiMovimentacoes(int idCarteira) throws AppException {
+        for (MovimentacaoDTO movimentacao : movimentacoes.values()) {
+            if (movimentacao.getIdCarteira() == idCarteira) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private MovimentacaoDTO copiar(MovimentacaoDTO original) {
+        return new MovimentacaoDTO(
+                original.getIdMovimento(),
+                original.getIdCarteira(),
+                original.getData(),
+                original.getTipo(),
+                original.getQuantidade()
+        );
+    }
+}
