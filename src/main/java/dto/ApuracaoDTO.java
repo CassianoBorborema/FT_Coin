@@ -11,12 +11,13 @@ import model.TipoMovimentacao;
  *
  * @param cotacaoAtual     última cotação disponível, usada na valoração a mercado
  * @param dataCotacaoAtual data dessa cotação
+ * @param saldoReais       dinheiro disponível na carteira para compras
  */
 public record ApuracaoDTO(int idCarteira, double cotacaoAtual, LocalDate dataCotacaoAtual, double saldoQuantidade,
                           double custoMedio, double saldoCustoMedio, double saldoMercado, double totalComprado,
                           double totalVendido, double resultadoOperacional, double resultadoCustoMedio,
                           double percentualCustoMedio, double resultadoMercado, double percentualMercado,
-                          List<Linha> linhas) {
+                          double saldoReais, List<Linha> linhas) {
 
     public ApuracaoDTO {
         linhas = List.copyOf(linhas);
@@ -25,11 +26,12 @@ public record ApuracaoDTO(int idCarteira, double cotacaoAtual, LocalDate dataCot
     /**
      * Uma movimentação com a cotação do dia e a posição da carteira logo após a operação.
      * Nas compras, o custo médio já inclui a nova compra; nas vendas, o resultado da operação é
-     * calculado sobre o custo médio vigente.
+     * calculado sobre o custo médio vigente. Em créditos e saques, {@code quantidade} e
+     * {@code valor} são o valor em reais.
      */
     public record Linha(LocalDate data, TipoMovimentacao tipo, double quantidade, double cotacao, double valor,
                         double saldoQuantidade, double custoMedio, double saldoCustoMedio, double saldoMercado,
-                        double resultadoOperacao, double resultadoAcumulado) {
+                        double resultadoOperacao, double resultadoAcumulado, double saldoReais) {
     }
 
     /**

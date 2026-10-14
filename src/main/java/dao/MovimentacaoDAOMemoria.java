@@ -51,17 +51,6 @@ final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
     }
 
     @Override
-    public double calcularSaldo(int idCarteira) throws AppException {
-        double saldo = 0;
-        for (MovimentacaoDTO movimentacao : movimentacoes.values()) {
-            if (movimentacao.getIdCarteira() == idCarteira) {
-                saldo += movimentacao.getTipo().getSinal() * movimentacao.getQuantidade();
-            }
-        }
-        return saldo;
-    }
-
-    @Override
     public boolean possuiMovimentacoes(int idCarteira) throws AppException {
         for (MovimentacaoDTO movimentacao : movimentacoes.values()) {
             if (movimentacao.getIdCarteira() == idCarteira) {

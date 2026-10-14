@@ -82,21 +82,6 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     }
 
     @Override
-    public double calcularSaldo(int idCarteira) throws AppException {
-        return conexoes.executar("calcular o saldo", conexao -> {
-            try (PreparedStatement ps = conexao.prepareStatement(
-                    "SELECT COALESCE(SUM(CASE tipo WHEN 'C' THEN quantidade ELSE -quantidade END), 0)"
-                            + " FROM movimentacao WHERE id_carteira = ?")) {
-                ps.setInt(1, idCarteira);
-                try (ResultSet rs = ps.executeQuery()) {
-                    rs.next();
-                    return rs.getDouble(1);
-                }
-            }
-        });
-    }
-
-    @Override
     public boolean possuiMovimentacoes(int idCarteira) throws AppException {
         return conexoes.executar("verificar as movimentações", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(

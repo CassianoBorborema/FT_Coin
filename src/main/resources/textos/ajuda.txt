@@ -4,9 +4,10 @@ Navegue digitando o número da opção desejada e use 0 para voltar/sair.
 
 1. Carteira: incluir, consultar, editar e excluir carteiras.
    A exclusão é bloqueada quando há movimentações vinculadas.
-2. Movimentação: registrar compras e vendas de moeda virtual.
-   A operação é registrada na data de hoje, à cotação do dia
-   informada pelo Oráculo, e a venda exige saldo suficiente.
+2. Movimentação: comprar e vender moeda virtual, creditar e
+   sacar reais. A operação é registrada na data de hoje, à
+   cotação do dia informada pelo Oráculo. A compra usa o saldo
+   em reais da carteira e a venda exige FTCoins suficientes.
 3. Oráculo: consultar a cotação de hoje, de uma data ou de um
    período. As cotações são geradas pelo Oráculo e usadas nas
    movimentações e nos relatórios.

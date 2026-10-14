@@ -1,6 +1,7 @@
 package model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -110,6 +111,49 @@ class ApuracaoCarteiraTest {
     }
 
     @Test
+    void creditoESaqueMovimentamSoOSaldoEmReais() throws AppException {
+        ApuracaoCarteira apuracao = ApuracaoCarteira.calcular(List.of(
+                credito(1, DIA_1, 100),
+                compra(2, DIA_2, 10),       // 10 x 2 = 20
+                saque(3, DIA_3, 30),
+                venda(4, DIA_3, 5)          // 5 x 3 = 15
+        ), COTACAO_DO_DIA, DIA_1);
+
+        ApuracaoDTO.Linha credito = apuracao.getLinhas().get(0);
+        assertEquals(100, credito.valor(), TOLERANCIA);
+        assertEquals(0, credito.saldoQuantidade(), TOLERANCIA);
+        assertEquals(100 - 20 - 30 + 15, apuracao.getPosicao().getSaldoReais(), TOLERANCIA);
+        assertEquals(20, apuracao.getTotalComprado(), TOLERANCIA);
+        assertEquals(5, apuracao.getSaldoQuantidade(), TOLERANCIA);
+    }
+
+    @Test
+    void compraNaVigenciaSemSaldoEmReaisEhInconsistente() {
+        assertThrows(AppException.class, () -> ApuracaoCarteira.calcular(
+                List.of(compra(1, DIA_2, 10)), COTACAO_DO_DIA, DIA_2));
+    }
+
+    @Test
+    void compraAntesDaVigenciaNaoMexeNoSaldoEmReais() throws AppException {
+        ApuracaoCarteira apuracao = ApuracaoCarteira.calcular(List.of(
+                compra(1, DIA_1, 10),
+                credito(2, DIA_2, 50)
+        ), COTACAO_DO_DIA, DIA_2);
+
+        assertEquals(50, apuracao.getPosicao().getSaldoReais(), TOLERANCIA);
+    }
+
+    @Test
+    void cacheCorrespondeSoAsMesmasMovimentacoes() throws AppException {
+        List<MovimentacaoDTO> movimentacoes = List.of(compra(1, DIA_1, 10), compra(2, DIA_2, 5));
+        ApuracaoCarteira apuracao = ApuracaoCarteira.calcular(movimentacoes, COTACAO_DO_DIA);
+
+        assertTrue(apuracao.correspondeA(movimentacoes));
+        assertFalse(apuracao.correspondeA(List.of(compra(1, DIA_1, 10))));
+        assertFalse(apuracao.correspondeA(List.of(compra(1, DIA_1, 10), compra(3, DIA_2, 5))));
+    }
+
+    @Test
     void evolucaoDiariaTemUmaLinhaPorDiaAteADataFinal() throws AppException {
         List<ApuracaoDTO.Dia> dias = ApuracaoCarteira.evolucaoDiaria(List.of(
                 compra(1, DIA_1, 10),
@@ -150,6 +194,14 @@ class ApuracaoCarteiraTest {
 
     private static MovimentacaoDTO compra(int id, LocalDate data, double quantidade) {
         return new MovimentacaoDTO(id, 1, data, TipoMovimentacao.COMPRA, quantidade);
+    }
+
+    private static MovimentacaoDTO credito(int id, LocalDate data, double valor) {
+        return new MovimentacaoDTO(id, 1, data, TipoMovimentacao.CREDITO, valor);
+    }
+
+    private static MovimentacaoDTO saque(int id, LocalDate data, double valor) {
+        return new MovimentacaoDTO(id, 1, data, TipoMovimentacao.SAQUE, valor);
     }
 
     private static MovimentacaoDTO venda(int id, LocalDate data, double quantidade) {

@@ -12,7 +12,7 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 | **Menu principal**       | Implementado | Carteira (1), Movimentação (2), Oráculo (3), Relatórios (4) e Ajuda (5) integrados |
 | **Carteira (CRUD)**      | Implementado | Incluir, consultar, editar e excluir com validações e confirmação de exclusão      |
 | **Exclusão de carteira** | Implementado | Bloqueada quando existem movimentações vinculadas                                  |
-| **Movimentação**         | Implementado | Compra e venda na data do sistema, à cotação do dia, com validação de saldo        |
+| **Movimentação**         | Implementado | Compra, venda, crédito e saque na data do sistema; compra usa o saldo em reais     |
 | **Oráculo**              | Simulado     | Cotação de hoje, por data e por período, gerada pela fórmula da planilha           |
 | **Relatórios**           | Implementado | Listagens, saldo (com impressão), histórico, evolução diária e resumo de ganho/perda |
 | **Ajuda**                | Implementado | Como funciona, fluxos de carteira, movimentação e relatórios, e créditos          |
@@ -219,10 +219,15 @@ esperar o tempo de conexão), use `persistencia=memoria` por qualquer uma das fo
 
 ### Movimentação
 
-1. Menu **2 (Movimentação)** → **1 (Compra)** → ID da carteira → conferir a cotação de hoje → quantidade (ex.: 10)
-2. **2 (Venda)** → mesma carteira, quantidade ≤ saldo (ex.: 5)
-3. Tentar venda acima do saldo → erro esperado
-4. Menu **1 (Carteira)** → **4 (Excluir)** carteira com movimentos → bloqueio
+1. Menu **2 (Movimentação)** → **3 (Crédito em reais)** → ID da carteira → valor (ex.: 200)
+2. **1 (Compra)** → ID da carteira → conferir a cotação de hoje e o saldo em reais → quantidade (ex.: 10)
+3. **2 (Venda)** → mesma carteira, quantidade ≤ saldo (ex.: 5); o valor da venda volta para o saldo em reais
+4. **4 (Saque em reais)** → valor ≤ saldo em reais
+5. Tentar compra sem saldo em reais ou venda acima do saldo de FTCoins → erro esperado
+6. Menu **1 (Carteira)** → **4 (Excluir)** carteira com movimentos → bloqueio
+
+> A regra do saldo em reais vale para compras a partir de `credito.vigencia` (em `ftcoin.properties`).
+> Compras anteriores a essa data não mexem no saldo em reais.
 
 ### Oráculo
 

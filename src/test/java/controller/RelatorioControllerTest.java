@@ -2,6 +2,8 @@ package controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
@@ -38,7 +40,7 @@ class RelatorioControllerTest {
         movimentacaoDAO = Persistencia.emMemoria().movimentacoes();
         cotacoes = new CotacoesFixas();
         controller = new RelatorioController(carteiraDAO, movimentacaoDAO, cotacoes,
-                CotacoesFixas.relogioEm(HOJE));
+                CotacoesFixas.relogioEm(HOJE), LocalDate.MAX);
     }
 
     @Test
@@ -79,7 +81,7 @@ class RelatorioControllerTest {
         carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
         ProvedorCotacao oraculo = spy(new CotacoesFixas().com(HOJE, 10.0));
         RelatorioController relatorios = new RelatorioController(carteiraDAO, movimentacaoDAO, oraculo,
-                CotacoesFixas.relogioEm(HOJE));
+                CotacoesFixas.relogioEm(HOJE), LocalDate.MAX);
 
         relatorios.apurar(1);
 
@@ -108,6 +110,28 @@ class RelatorioControllerTest {
 
         assertEquals(List.of(ONTEM, HOJE), dias.stream().map(ApuracaoDTO.Dia::data).toList());
         assertEquals(1_200, dias.getLast().saldoMercado(), TOLERANCIA);
+    }
+
+    @Test
+    void apuracaoFicaEmCacheAteEntrarMovimentacaoNova() throws AppException {
+        carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
+        movimentacaoDAO.incluir(new MovimentacaoDTO(0, 1, ONTEM, TipoMovimentacao.COMPRA, 100));
+        ProvedorCotacao oraculo = spy(new CotacoesFixas().com(ONTEM, 10.0).com(HOJE, 12.0));
+        RelatorioController relatorios = new RelatorioController(carteiraDAO, movimentacaoDAO, oraculo,
+                CotacoesFixas.relogioEm(HOJE), LocalDate.MAX);
+        relatorios.apurar(1);
+        clearInvocations(oraculo);
+
+        ApuracaoDTO emCache = relatorios.apurar(1);
+
+        verify(oraculo, never()).cotacaoEm(ONTEM);
+        assertEquals(100, emCache.saldoQuantidade(), TOLERANCIA);
+
+        movimentacaoDAO.incluir(new MovimentacaoDTO(0, 1, HOJE, TipoMovimentacao.VENDA, 40));
+        ApuracaoDTO recalculada = relatorios.apurar(1);
+
+        verify(oraculo).cotacaoEm(ONTEM);
+        assertEquals(60, recalculada.saldoQuantidade(), TOLERANCIA);
     }
 
     @Test

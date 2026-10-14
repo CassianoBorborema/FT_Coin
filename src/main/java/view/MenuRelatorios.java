@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class MenuRelatorios extends Menu {
 
-    private static final String FORMATO_HISTORICO = "%-10s %-6s %12s %13s %14s %12s %13s %15s%n";
+    private static final String FORMATO_HISTORICO = "%-10s %-7s %12s %10s %12s %12s %12s %14s %14s%n";
     private static final String FORMATO_EVOLUCAO = "%-10s %9s %9s %9s %11s %11s %14s %13s %14s %14s%n";
 
     private final RelatorioController controller;
@@ -54,6 +54,7 @@ public class MenuRelatorios extends Menu {
         linhas.add(campo("Valor a custo médio", Formatador.moeda(apuracao.saldoCustoMedio())));
         linhas.add(campo("Cotação atual", Formatador.moeda(apuracao.cotacaoAtual())));
         linhas.add(campo("Valor a mercado", Formatador.moeda(apuracao.saldoMercado())));
+        linhas.add(campo("Saldo em reais", Formatador.moeda(apuracao.saldoReais())));
         linhas.forEach(console::exibir);
 
         if (console.confirmar("Deseja imprimir este saldo em arquivo?")) {
@@ -72,17 +73,19 @@ public class MenuRelatorios extends Menu {
         }
         console.exibir("Histórico da carteira " + identificador + " (valores em R$):");
         console.exibirFormatado(FORMATO_HISTORICO, "Data", "Tipo", "Qtd.", "Cotação", "Valor", "Saldo (qtd)",
-                "Custo médio", "Res. operação");
+                "Custo médio", "Res. operação", "Saldo (R$)");
         for (ApuracaoDTO.Linha linha : linhas) {
+            boolean ftcoins = linha.tipo().movimentaFTCoins();
             console.exibirFormatado(FORMATO_HISTORICO,
                     Formatador.data(linha.data()),
                     linha.tipo().getDescricao(),
-                    Formatador.quantidade(linha.quantidade()),
-                    Formatador.numero(linha.cotacao()),
+                    ftcoins ? Formatador.quantidade(linha.quantidade()) : "-",
+                    ftcoins ? Formatador.numero(linha.cotacao()) : "-",
                     Formatador.numero(linha.valor()),
                     Formatador.quantidade(linha.saldoQuantidade()),
                     Formatador.numero(linha.custoMedio()),
-                    Formatador.numero(linha.resultadoOperacao()));
+                    Formatador.numero(linha.resultadoOperacao()),
+                    Formatador.numero(linha.saldoReais()));
         }
     }
 
@@ -155,6 +158,7 @@ public class MenuRelatorios extends Menu {
         console.exibir("  Se vender todas as moedas na última cotação (" + Formatador.moeda(apuracao.cotacaoAtual())
                 + " em " + Formatador.data(apuracao.dataCotacaoAtual()) + "), seu resultado passaria a ser "
                 + Formatador.resultado(apuracao.resultadoMercado(), apuracao.percentualMercado()) + ".");
+        console.exibir("  Saldo em reais disponível na carteira: " + Formatador.moeda(apuracao.saldoReais()) + ".");
     }
 
     private static String campo(String rotulo, String valor) {

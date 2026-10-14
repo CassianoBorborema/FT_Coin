@@ -20,13 +20,17 @@ public class ApuracaoCarteira {
     private static final double CEM_PORCENTO = 100.0;
 
     private final List<ApuracaoDTO.Linha> linhas;
+    private final Posicao posicao;
+    private final int ultimoIdMovimento;
     private final double saldoQuantidade;
     private final double custoMedio;
     private final double totalComprado;
     private final double totalVendido;
 
-    private ApuracaoCarteira(List<ApuracaoDTO.Linha> linhas, Posicao posicao) {
+    private ApuracaoCarteira(List<ApuracaoDTO.Linha> linhas, Posicao posicao, int ultimoIdMovimento) {
         this.linhas = Collections.unmodifiableList(linhas);
+        this.posicao = posicao;
+        this.ultimoIdMovimento = ultimoIdMovimento;
         this.saldoQuantidade = posicao.getQuantidade();
         this.custoMedio = posicao.temSaldo() ? posicao.getCustoMedio() : 0;
         this.totalComprado = posicao.getTotalComprado();
@@ -44,17 +48,29 @@ public class ApuracaoCarteira {
      */
     public static ApuracaoCarteira calcular(List<MovimentacaoDTO> movimentacoes, ProvedorCotacao cotacoes)
             throws AppException {
+        return calcular(movimentacoes, cotacoes, LocalDate.MAX);
+    }
+
+    /**
+     * @param vigenciaCredito a partir desta data as compras debitam o saldo em reais
+     */
+    public static ApuracaoCarteira calcular(List<MovimentacaoDTO> movimentacoes, ProvedorCotacao cotacoes,
+                                            LocalDate vigenciaCredito) throws AppException {
         List<ApuracaoDTO.Linha> linhas = new ArrayList<>();
-        Posicao posicao = new Posicao();
+        Posicao posicao = new Posicao(vigenciaCredito);
+        int ultimoId = 0;
         for (MovimentacaoDTO movimentacao : ordenar(movimentacoes)) {
             double cotacao = cotacoes.cotacaoEm(movimentacao.getData());
             double resultadoOperacao = aplicar(movimentacao, posicao, cotacao);
             linhas.add(new ApuracaoDTO.Linha(movimentacao.getData(), movimentacao.getTipo(),
-                    movimentacao.getQuantidade(), cotacao, movimentacao.getQuantidade() * cotacao,
+                    movimentacao.getQuantidade(), cotacao,
+                    movimentacao.getTipo().valor(movimentacao.getQuantidade(), cotacao),
                     posicao.getQuantidade(), posicao.getCustoMedio(), posicao.getSaldoCustoMedio(),
-                    posicao.getQuantidade() * cotacao, resultadoOperacao, posicao.getResultadoAcumulado()));
+                    posicao.getQuantidade() * cotacao, resultadoOperacao, posicao.getResultadoAcumulado(),
+                    posicao.getSaldoReais()));
+            ultimoId = Math.max(ultimoId, movimentacao.getIdMovimento());
         }
-        return new ApuracaoCarteira(linhas, posicao);
+        return new ApuracaoCarteira(linhas, posicao, ultimoId);
     }
 
     /**
@@ -66,12 +82,18 @@ public class ApuracaoCarteira {
     public static List<ApuracaoDTO.Dia> evolucaoDiaria(List<MovimentacaoDTO> movimentacoes,
                                                        ProvedorCotacao cotacoes, LocalDate ate)
             throws AppException {
+        return evolucaoDiaria(movimentacoes, cotacoes, ate, LocalDate.MAX);
+    }
+
+    public static List<ApuracaoDTO.Dia> evolucaoDiaria(List<MovimentacaoDTO> movimentacoes,
+                                                       ProvedorCotacao cotacoes, LocalDate ate,
+                                                       LocalDate vigenciaCredito) throws AppException {
         List<MovimentacaoDTO> ordenadas = ordenar(movimentacoes);
         List<ApuracaoDTO.Dia> dias = new ArrayList<>();
         if (ordenadas.isEmpty()) {
             return dias;
         }
-        Posicao posicao = new Posicao();
+        Posicao posicao = new Posicao(vigenciaCredito);
         int proxima = 0;
         for (LocalDate dia = ordenadas.getFirst().getData(); !dia.isAfter(ate); dia = dia.plusDays(1)) {
             int primeiraDoDia = proxima;
@@ -121,7 +143,7 @@ public class ApuracaoCarteira {
                     + " possui tipo ou quantidade inválidos.");
         }
         try {
-            return movimentacao.getTipo().aplicar(posicao, quantidade, cotacao);
+            return movimentacao.getTipo().aplicar(posicao, movimentacao.getData(), quantidade, cotacao);
         } catch (AppException e) {
             throw new AppException("Histórico inconsistente em " + movimentacao.getData() + ": " + e.getMessage());
         }
@@ -135,6 +157,23 @@ public class ApuracaoCarteira {
         } catch (AppException _) {
             return null;
         }
+    }
+
+    /**
+     * Posição ao fim da apuração. Serve para validar uma nova operação aplicando-a sobre ela;
+     * depois disso a apuração não deve mais ser usada.
+     */
+    public Posicao getPosicao() {
+        return posicao;
+    }
+
+    /**
+     * Indica se a apuração foi feita sobre estas mesmas movimentações. Como movimentações não são
+     * alteradas nem excluídas e os identificadores só crescem, basta comparar quantidade e maior id.
+     */
+    public boolean correspondeA(List<MovimentacaoDTO> movimentacoes) {
+        int maiorId = movimentacoes.stream().mapToInt(MovimentacaoDTO::getIdMovimento).max().orElse(0);
+        return movimentacoes.size() == linhas.size() && maiorId == ultimoIdMovimento;
     }
 
     public double getSaldoQuantidade() {
@@ -187,7 +226,7 @@ public class ApuracaoCarteira {
         return new ApuracaoDTO(idCarteira, cotacao, cotacaoAtual.getData(), saldoQuantidade, custoMedio,
                 getSaldoCustoMedio(), saldoQuantidade * cotacao, totalComprado, totalVendido,
                 getResultadoOperacional(), resultadoCustoMedio, percentualSobreComprado(resultadoCustoMedio),
-                resultadoMercado, percentualSobreComprado(resultadoMercado), linhas);
+                resultadoMercado, percentualSobreComprado(resultadoMercado), posicao.getSaldoReais(), linhas);
     }
 
     private double percentualSobreComprado(double resultado) {

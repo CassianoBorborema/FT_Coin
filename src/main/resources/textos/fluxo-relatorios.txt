@@ -6,12 +6,12 @@ Acesse pelo menu principal: 4. Relatórios. Valores em R$.
    do titular.
 3. Saldo atual
    Quantidade de FTCoins, custo médio, valor das moedas a custo
-   médio e a mercado (pela última cotação). Ao final, você pode
-   imprimir o saldo em um arquivo .txt.
+   médio e a mercado (pela última cotação) e o saldo em reais.
+   Ao final, você pode imprimir o saldo em um arquivo .txt.
 4. Histórico de movimentação
-   Uma linha por compra ou venda, com a cotação do dia, o saldo
-   e o custo médio logo após a operação e o resultado de cada
-   venda.
+   Uma linha por operação (compra, venda, crédito ou saque), com
+   a cotação do dia, o saldo de FTCoins, o custo médio e o saldo
+   em reais logo após a operação, e o resultado de cada venda.
 5. Evolução diária
    Uma linha por dia, desde a primeira operação até hoje, como na
    planilha de apuração. Colunas:
@@ -27,5 +27,6 @@ Acesse pelo menu principal: 4. Relatórios. Valores em R$.
      operacional (vendido - comprado);
    - o valor das moedas que restam, a custo médio;
    - o resultado geral (operacional + moedas a custo médio);
-   - o resultado se você vendesse tudo na última cotação.
+   - o resultado se você vendesse tudo na última cotação;
+   - o saldo em reais disponível.
    Os percentuais são calculados sobre o total comprado.

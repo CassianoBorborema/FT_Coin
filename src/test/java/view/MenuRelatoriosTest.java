@@ -38,7 +38,8 @@ class MenuRelatoriosTest {
         persistencia.carteiras().incluir(new CarteiraDTO(0, "Ana", "XP"));
         persistencia.movimentacoes().incluir(new MovimentacaoDTO(0, 1, HOJE.minusDays(1), TipoMovimentacao.COMPRA, 10));
         controller = new RelatorioController(persistencia.carteiras(), persistencia.movimentacoes(),
-                new CotacoesFixas().com(HOJE.minusDays(1), 10.0).com(HOJE, 12.0), CotacoesFixas.relogioEm(HOJE));
+                new CotacoesFixas().com(HOJE.minusDays(1), 10.0).com(HOJE, 12.0), CotacoesFixas.relogioEm(HOJE),
+                LocalDate.MAX);
     }
 
     @Test

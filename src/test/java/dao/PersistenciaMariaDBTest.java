@@ -58,6 +58,27 @@ class PersistenciaMariaDBTest extends PersistenciaContrato {
     }
 
     @Test
+    void bancoCriadoAntesDoCreditoPassaAAceitarCreditoESaque() throws AppException {
+        Persistencia persistencia = criarPersistenciaVazia();
+        CarteiraDTO carteira = new CarteiraDTO(0, "Ana", "XP");
+        persistencia.carteiras().incluir(carteira);
+        conexoes.executar("voltar à restrição antiga", conexao -> {
+            try (Statement statement = conexao.createStatement()) {
+                statement.execute("ALTER TABLE movimentacao DROP CONSTRAINT ck_movimentacao_tipo");
+                statement.execute("ALTER TABLE movimentacao ADD CONSTRAINT ck_movimentacao_tipo CHECK (tipo IN ('C', 'V'))");
+            }
+            return null;
+        });
+        MovimentacaoDTO credito = new MovimentacaoDTO(0, carteira.getIdentificador(), LocalDate.of(2026, 1, 1),
+                TipoMovimentacao.CREDITO, 100);
+        assertThrows(PersistenciaException.class, () -> persistencia.movimentacoes().incluir(credito));
+
+        conexoes.criarTabelas();
+
+        assertDoesNotThrow(() -> persistencia.movimentacoes().incluir(credito));
+    }
+
+    @Test
     void bancoRecusaMovimentacaoDeCarteiraInexistente() throws AppException {
         Persistencia persistencia = criarPersistenciaVazia();
 

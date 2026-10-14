@@ -1,20 +1,26 @@
 === FLUXO DE MOVIMENTAÇÃO ===
-Compras e vendas de FTCoins. Acesse pelo menu principal:
-2. Movimentação.
+Compras e vendas de FTCoins e o dinheiro (R$) da carteira.
+Acesse pelo menu principal: 2. Movimentação.
 
 Toda operação é registrada na data de hoje, à cotação do dia
 informada pelo Oráculo (menu 3).
 
 1. Compra de moeda virtual
    Informe o identificador da carteira. O sistema mostra a
-   cotação de hoje e pede a quantidade de FTCoins. O valor da
-   compra é a quantidade multiplicada pela cotação.
+   cotação de hoje e o saldo em reais, e pede a quantidade de
+   FTCoins. O valor da compra (quantidade x cotação) é debitado
+   do saldo em reais; sem saldo suficiente, a compra é recusada.
 2. Venda de moeda virtual
    Mesmo fluxo da compra. A venda só é aceita se a carteira
-   tiver FTCoins suficientes.
+   tiver FTCoins suficientes, e o valor da venda entra no saldo
+   em reais.
+3. Crédito em reais
+   Deposita dinheiro na carteira para as próximas compras.
+4. Saque em reais
+   Retira dinheiro da carteira, até o saldo em reais disponível.
 
-Quantidades aceitam casas decimais, com vírgula ou ponto
-(ex.: 10,5).
+Quantidades e valores aceitam casas decimais, com vírgula ou
+ponto (ex.: 10,5).
 
 Como a operação afeta a carteira:
 - Na compra, o custo médio é recalculado: média ponderada entre
@@ -22,3 +28,5 @@ Como a operação afeta a carteira:
 - Na venda, o custo médio não muda. O resultado da venda é a
   quantidade vendida vezes a diferença entre a cotação e o custo
   médio: positivo é lucro, negativo é prejuízo.
+- Compras feitas antes de o crédito em reais existir não mexem
+  no saldo em reais.

@@ -160,14 +160,14 @@ public abstract class PersistenciaContrato {
     }
 
     @Test
-    void saldoSomaComprasESubtraiVendas() throws AppException {
+    void todosOsTiposDeMovimentacaoSaoGravados() throws AppException {
         int carteira = novaCarteira();
-        assertEquals(0, movimentacoes.calcularSaldo(carteira), TOLERANCIA);
+        for (TipoMovimentacao tipo : TipoMovimentacao.values()) {
+            movimentacoes.incluir(new MovimentacaoDTO(0, carteira, DIA_1, tipo, 10));
+        }
 
-        movimentacoes.incluir(new MovimentacaoDTO(0, carteira, DIA_1, TipoMovimentacao.COMPRA, 10));
-        movimentacoes.incluir(new MovimentacaoDTO(0, carteira, DIA_2, TipoMovimentacao.VENDA, 3.5));
-
-        assertEquals(6.5, movimentacoes.calcularSaldo(carteira), TOLERANCIA);
+        assertEquals(List.of(TipoMovimentacao.values()), movimentacoes.listarPorCarteira(carteira).stream()
+                .map(MovimentacaoDTO::getTipo).collect(Collectors.toList()));
     }
 
     @Test

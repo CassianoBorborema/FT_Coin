@@ -8,6 +8,7 @@ import controller.RelatorioController;
 import dao.Persistencia;
 import exception.AppException;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.NoSuchElementException;
 import model.ProvedorCotacao;
 import oraculo.CotacaoComHistorico;
@@ -46,6 +47,7 @@ public final class Main {
         Configuracao configuracao = Configuracao.carregar();
         Clock relogio = Clock.systemDefaultZone();
 
+        LocalDate vigenciaCredito = configuracao.getData("credito.vigencia");
         Persistencia persistencia = escolherPersistencia(configuracao, console);
         console.exibir("Persistência: " + persistencia.descricao() + ".");
 
@@ -56,10 +58,10 @@ public final class Main {
         CarteiraController carteiraController =
                 new CarteiraController(persistencia.carteiras(), persistencia.movimentacoes());
         MovimentacaoController movimentacaoController = new MovimentacaoController(
-                persistencia.movimentacoes(), persistencia.carteiras(), cotacoes, relogio);
+                persistencia.movimentacoes(), persistencia.carteiras(), cotacoes, relogio, vigenciaCredito);
         OraculoController oraculoController = new OraculoController(cotacoes, relogio);
         RelatorioController relatorioController = new RelatorioController(
-                persistencia.carteiras(), persistencia.movimentacoes(), cotacoes, relogio);
+                persistencia.carteiras(), persistencia.movimentacoes(), cotacoes, relogio, vigenciaCredito);
 
         return new MenuPrincipal(console,
                 new MenuCarteira(console, carteiraController),
