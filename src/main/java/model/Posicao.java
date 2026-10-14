@@ -15,6 +15,8 @@ public class Posicao {
 
     private double quantidade;
     private double custoMedio;
+    private double quantidadeComprada;
+    private double quantidadeVendida;
     private double totalComprado;
     private double totalVendido;
     private double resultadoAcumulado;
@@ -23,6 +25,7 @@ public class Posicao {
         double valor = quantidade * cotacao;
         custoMedio = (custoMedio * this.quantidade + valor) / (this.quantidade + quantidade);
         this.quantidade += quantidade;
+        quantidadeComprada += quantidade;
         totalComprado += valor;
     }
 
@@ -39,6 +42,7 @@ public class Posicao {
         if (this.quantidade <= TOLERANCIA) {
             this.quantidade = 0;
         }
+        quantidadeVendida += quantidade;
         totalVendido += quantidade * cotacao;
         resultadoAcumulado += resultado;
         return resultado;
@@ -59,6 +63,14 @@ public class Posicao {
 
     public double getSaldoCustoMedio() {
         return quantidade * custoMedio;
+    }
+
+    public double getQuantidadeComprada() {
+        return quantidadeComprada;
+    }
+
+    public double getQuantidadeVendida() {
+        return quantidadeVendida;
     }
 
     public double getTotalComprado() {

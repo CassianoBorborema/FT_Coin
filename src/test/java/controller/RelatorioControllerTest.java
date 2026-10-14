@@ -2,10 +2,8 @@ package controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import dao.CarteiraDAO;
 import dao.MovimentacaoDAO;
@@ -79,8 +77,7 @@ class RelatorioControllerTest {
     @Test
     void cotacaoAtualEhConsultadaNaDataDoSistema() throws AppException {
         carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
-        ProvedorCotacao oraculo = mock(ProvedorCotacao.class);
-        when(oraculo.cotacaoEm(any())).thenReturn(10.0);
+        ProvedorCotacao oraculo = spy(new CotacoesFixas().com(HOJE, 10.0));
         RelatorioController relatorios = new RelatorioController(carteiraDAO, movimentacaoDAO, oraculo,
                 CotacoesFixas.relogioEm(HOJE));
 
@@ -90,12 +87,27 @@ class RelatorioControllerTest {
     }
 
     @Test
-    void apurarSemCotacaoDeHojeFalha() throws AppException {
+    void semCotacaoDeHojeUsaAUltimaDisponivel() throws AppException {
         carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
         cotacoes.com(ONTEM, 10.0);
         movimentacaoDAO.incluir(new MovimentacaoDTO(0, 1, ONTEM, TipoMovimentacao.COMPRA, 100));
 
-        assertThrows(AppException.class, () -> controller.apurar(1));
+        ApuracaoDTO apuracao = controller.apurar(1);
+
+        assertEquals(10.0, apuracao.cotacaoAtual(), TOLERANCIA);
+        assertEquals(ONTEM, apuracao.dataCotacaoAtual());
+    }
+
+    @Test
+    void evolucaoDiariaVaiDaPrimeiraMovimentacaoAteHoje() throws AppException {
+        carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
+        cotacoes.com(ONTEM.minusDays(1), 9.0).com(ONTEM, 10.0).com(HOJE, 12.0);
+        movimentacaoDAO.incluir(new MovimentacaoDTO(0, 1, ONTEM, TipoMovimentacao.COMPRA, 100));
+
+        List<ApuracaoDTO.Dia> dias = controller.evolucaoDiaria(1);
+
+        assertEquals(List.of(ONTEM, HOJE), dias.stream().map(ApuracaoDTO.Dia::data).toList());
+        assertEquals(1_200, dias.getLast().saldoMercado(), TOLERANCIA);
     }
 
     @Test

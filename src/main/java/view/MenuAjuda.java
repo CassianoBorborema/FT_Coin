@@ -5,22 +5,23 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Guia de uso e créditos da aplicação.
+ * Guia de uso, fluxos de cada área e créditos.
  */
 public class MenuAjuda extends Menu {
 
-    private static final String CAMINHO_TEXTO_AJUDA = "/textos/ajuda.txt";
-    private static final String CAMINHO_CREDITOS = "/textos/creditos.txt";
 
     public MenuAjuda(Console console) {
         super(console, "Ajuda");
-        adicionarOpcao("Como funciona", () -> exibirTexto(CAMINHO_TEXTO_AJUDA));
-        adicionarOpcao("Créditos", () -> exibirTexto(CAMINHO_CREDITOS));
+        adicionarOpcao("Como funciona", () -> exibirTexto("ajuda"));
+        adicionarOpcao("Fluxo de carteira", () -> exibirTexto("fluxo-carteira"));
+        adicionarOpcao("Fluxo de movimentação", () -> exibirTexto("fluxo-movimentacao"));
+        adicionarOpcao("Fluxo de relatórios", () -> exibirTexto("fluxo-relatorios"));
+        adicionarOpcao("Créditos", () -> exibirTexto("creditos"));
     }
 
-    private void exibirTexto(String caminho) {
+    private void exibirTexto(String nome) {
         console.exibir("");
-        console.exibir(lerRecurso(caminho));
+        console.exibir(lerRecurso("/textos/" + nome + ".txt"));
     }
 
     private String lerRecurso(String caminho) {

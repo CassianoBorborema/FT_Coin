@@ -2,7 +2,10 @@ package model;
 
 import dto.ApuracaoDTO;
 import dto.MovimentacaoDTO;
+import dto.OraculoDTO;
 import exception.AppException;
+import exception.PersistenciaException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,98 +44,148 @@ public class ApuracaoCarteira {
      */
     public static ApuracaoCarteira calcular(List<MovimentacaoDTO> movimentacoes, ProvedorCotacao cotacoes)
             throws AppException {
-        List<MovimentacaoDTO> ordenadas = new ArrayList<>(movimentacoes);
-        ordenadas.sort(Comparator.comparing(MovimentacaoDTO::getData)
-                .thenComparingInt(MovimentacaoDTO::getIdMovimento));
-
         List<ApuracaoDTO.Linha> linhas = new ArrayList<>();
         Posicao posicao = new Posicao();
-
-        for (MovimentacaoDTO movimentacao : ordenadas) {
-            double quantidade = movimentacao.getQuantidade();
-            if (movimentacao.getTipo() == null || quantidade <= 0) {
-                throw new AppException("Movimentação " + movimentacao.getIdMovimento()
-                        + " possui tipo ou quantidade inválidos.");
-            }
-
+        for (MovimentacaoDTO movimentacao : ordenar(movimentacoes)) {
             double cotacao = cotacoes.cotacaoEm(movimentacao.getData());
-            double resultadoOperacao;
-            try {
-                resultadoOperacao = movimentacao.getTipo().aplicar(posicao, quantidade, cotacao);
-            } catch (AppException e) {
-                throw new AppException("Histórico inconsistente em " + movimentacao.getData() + ": " + e.getMessage());
-            }
-
-            linhas.add(new ApuracaoDTO.Linha(movimentacao.getData(), movimentacao.getTipo(), quantidade,
-                    cotacao, quantidade * cotacao, posicao.getQuantidade(), posicao.getCustoMedio(),
-                    posicao.getSaldoCustoMedio(), posicao.getQuantidade() * cotacao,
-                    resultadoOperacao, posicao.getResultadoAcumulado()));
+            double resultadoOperacao = aplicar(movimentacao, posicao, cotacao);
+            linhas.add(new ApuracaoDTO.Linha(movimentacao.getData(), movimentacao.getTipo(),
+                    movimentacao.getQuantidade(), cotacao, movimentacao.getQuantidade() * cotacao,
+                    posicao.getQuantidade(), posicao.getCustoMedio(), posicao.getSaldoCustoMedio(),
+                    posicao.getQuantidade() * cotacao, resultadoOperacao, posicao.getResultadoAcumulado()));
         }
         return new ApuracaoCarteira(linhas, posicao);
     }
 
-    /** @return quantidade de FTCoins em carteira */
+    /**
+     * Uma linha por dia, da primeira movimentação até {@code ate}, como na planilha de apuração.
+     * Dias sem operação e sem cotação disponível ficam de fora.
+     *
+     * @throws AppException se faltar cotação num dia com operação ou o histórico for inconsistente
+     */
+    public static List<ApuracaoDTO.Dia> evolucaoDiaria(List<MovimentacaoDTO> movimentacoes,
+                                                       ProvedorCotacao cotacoes, LocalDate ate)
+            throws AppException {
+        List<MovimentacaoDTO> ordenadas = ordenar(movimentacoes);
+        List<ApuracaoDTO.Dia> dias = new ArrayList<>();
+        if (ordenadas.isEmpty()) {
+            return dias;
+        }
+        Posicao posicao = new Posicao();
+        int proxima = 0;
+        for (LocalDate dia = ordenadas.getFirst().getData(); !dia.isAfter(ate); dia = dia.plusDays(1)) {
+            int primeiraDoDia = proxima;
+            while (proxima < ordenadas.size() && ordenadas.get(proxima).getData().equals(dia)) {
+                proxima++;
+            }
+            List<MovimentacaoDTO> doDia = ordenadas.subList(primeiraDoDia, proxima);
+            Double cotacao = cotacaoSeHouver(cotacoes, dia);
+            if (cotacao == null && doDia.isEmpty()) {
+                continue;
+            }
+            if (cotacao == null) {
+                cotacao = cotacoes.cotacaoEm(dia);
+            }
+
+            double quantidadeComprada = posicao.getQuantidadeComprada();
+            double quantidadeVendida = posicao.getQuantidadeVendida();
+            double valorComprado = posicao.getTotalComprado();
+            double valorVendido = posicao.getTotalVendido();
+            double resultadoDoDia = 0;
+            for (MovimentacaoDTO movimentacao : doDia) {
+                resultadoDoDia += aplicar(movimentacao, posicao, cotacao);
+            }
+            dias.add(new ApuracaoDTO.Dia(dia, cotacao,
+                    posicao.getQuantidadeComprada() - quantidadeComprada,
+                    posicao.getQuantidadeVendida() - quantidadeVendida,
+                    posicao.getTotalComprado() - valorComprado,
+                    posicao.getTotalVendido() - valorVendido,
+                    posicao.getQuantidade(), posicao.getCustoMedio(), posicao.getSaldoCustoMedio(),
+                    resultadoDoDia, posicao.getResultadoAcumulado(), posicao.getQuantidade() * cotacao));
+        }
+        return dias;
+    }
+
+    private static List<MovimentacaoDTO> ordenar(List<MovimentacaoDTO> movimentacoes) {
+        List<MovimentacaoDTO> ordenadas = new ArrayList<>(movimentacoes);
+        ordenadas.sort(Comparator.comparing(MovimentacaoDTO::getData)
+                .thenComparingInt(MovimentacaoDTO::getIdMovimento));
+        return ordenadas;
+    }
+
+    private static double aplicar(MovimentacaoDTO movimentacao, Posicao posicao, double cotacao)
+            throws AppException {
+        double quantidade = movimentacao.getQuantidade();
+        if (movimentacao.getTipo() == null || quantidade <= 0) {
+            throw new AppException("Movimentação " + movimentacao.getIdMovimento()
+                    + " possui tipo ou quantidade inválidos.");
+        }
+        try {
+            return movimentacao.getTipo().aplicar(posicao, quantidade, cotacao);
+        } catch (AppException e) {
+            throw new AppException("Histórico inconsistente em " + movimentacao.getData() + ": " + e.getMessage());
+        }
+    }
+
+    private static Double cotacaoSeHouver(ProvedorCotacao cotacoes, LocalDate dia) throws AppException {
+        try {
+            return cotacoes.cotacaoEm(dia);
+        } catch (PersistenciaException e) {
+            throw e;
+        } catch (AppException _) {
+            return null;
+        }
+    }
+
     public double getSaldoQuantidade() {
         return saldoQuantidade;
     }
 
-    /** @return custo médio por FTCoin (zero quando não há saldo) */
+    /** Zero quando não há saldo. */
     public double getCustoMedio() {
         return custoMedio;
     }
 
-    /** @return soma dos valores de todas as compras */
     public double getTotalComprado() {
         return totalComprado;
     }
 
-    /** @return soma dos valores de todas as vendas */
     public double getTotalVendido() {
         return totalVendido;
     }
 
-    /** @return histórico apurado linha a linha, em ordem cronológica */
     public List<ApuracaoDTO.Linha> getLinhas() {
         return linhas;
     }
 
-    /** @return saldo em carteira valorado a custo médio */
     public double getSaldoCustoMedio() {
         return saldoQuantidade * custoMedio;
     }
 
-    /** @return total vendido menos total comprado */
+    /** Total vendido menos total comprado. */
     public double getResultadoOperacional() {
         return totalVendido - totalComprado;
     }
 
-    /** @return resultado operacional somado ao saldo valorado a custo médio */
+    /** Resultado operacional somado ao saldo valorado a custo médio. */
     public double getResultadoCustoMedio() {
         return getResultadoOperacional() + getSaldoCustoMedio();
     }
 
-    /**
-     * Resultado caso todo o saldo fosse vendido à cotação informada.
-     *
-     * @param cotacaoAtual cotação usada para valorar o saldo
-     * @return resultado operacional somado ao saldo valorado a mercado
-     */
+    /** Resultado caso todo o saldo fosse vendido à cotação informada. */
     public double getResultadoMercado(double cotacaoAtual) {
         return getResultadoOperacional() + saldoQuantidade * cotacaoAtual;
     }
 
     /**
-     * Converte a apuração para o objeto de transporte usado pelas camadas superiores.
-     *
-     * @param idCarteira   identificador da carteira apurada
-     * @param cotacaoAtual cotação usada na valoração a mercado
-     * @return o DTO com a posição, os resultados e o histórico da carteira
+     * @param cotacaoAtual cotação usada na valoração a mercado, com a sua data
      */
-    public ApuracaoDTO toDTO(int idCarteira, double cotacaoAtual) {
+    public ApuracaoDTO toDTO(int idCarteira, OraculoDTO cotacaoAtual) {
+        double cotacao = cotacaoAtual.getCotacao();
         double resultadoCustoMedio = getResultadoCustoMedio();
-        double resultadoMercado = getResultadoMercado(cotacaoAtual);
-        return new ApuracaoDTO(idCarteira, cotacaoAtual, saldoQuantidade, custoMedio,
-                getSaldoCustoMedio(), saldoQuantidade * cotacaoAtual, totalComprado, totalVendido,
+        double resultadoMercado = getResultadoMercado(cotacao);
+        return new ApuracaoDTO(idCarteira, cotacao, cotacaoAtual.getData(), saldoQuantidade, custoMedio,
+                getSaldoCustoMedio(), saldoQuantidade * cotacao, totalComprado, totalVendido,
                 getResultadoOperacional(), resultadoCustoMedio, percentualSobreComprado(resultadoCustoMedio),
                 resultadoMercado, percentualSobreComprado(resultadoMercado), linhas);
     }

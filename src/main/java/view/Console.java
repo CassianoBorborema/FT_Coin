@@ -1,11 +1,16 @@
 package view;
 
 import exception.AppException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -20,10 +25,19 @@ public class Console {
 
     private final Scanner entrada;
     private final PrintStream saida;
+    private final Path diretorioArquivos;
 
     public Console(InputStream entrada, PrintStream saida) {
+        this(entrada, saida, Path.of(""));
+    }
+
+    /**
+     * @param diretorioArquivos onde {@link #salvarArquivo} grava os arquivos
+     */
+    public Console(InputStream entrada, PrintStream saida, Path diretorioArquivos) {
         this.entrada = new Scanner(entrada);
         this.saida = saida;
+        this.diretorioArquivos = diretorioArquivos;
     }
 
     public void exibir(String mensagem) {
@@ -81,6 +95,20 @@ public class Console {
             return LocalDate.parse(texto, FORMATO_DATA);
         } catch (DateTimeParseException _) {
             throw new AppException("Data inválida: " + texto + ". Use o formato dd/MM/yyyy.");
+        }
+    }
+
+    /**
+     * @return o caminho completo do arquivo gravado
+     * @throws AppException se não for possível gravar
+     */
+    public Path salvarArquivo(String nome, List<String> linhas) throws AppException {
+        Path arquivo = diretorioArquivos.resolve(nome).toAbsolutePath();
+        try {
+            Files.write(arquivo, linhas, StandardCharsets.UTF_8);
+            return arquivo;
+        } catch (IOException e) {
+            throw new AppException("Não foi possível salvar " + arquivo + ": " + e.getMessage(), e);
         }
     }
 

@@ -7,7 +7,7 @@ import exception.AppException;
  */
 public enum TipoMovimentacao {
 
-    COMPRA('C', 1) {
+    COMPRA('C', 1, "Compra") {
         @Override
         public double aplicar(Posicao posicao, double quantidade, double cotacao) {
             posicao.comprar(quantidade, cotacao);
@@ -15,7 +15,7 @@ public enum TipoMovimentacao {
         }
     },
 
-    VENDA('V', -1) {
+    VENDA('V', -1, "Venda") {
         @Override
         public double aplicar(Posicao posicao, double quantidade, double cotacao) throws AppException {
             return posicao.vender(quantidade, cotacao);
@@ -24,10 +24,16 @@ public enum TipoMovimentacao {
 
     private final char codigo;
     private final int sinal;
+    private final String descricao;
 
-    TipoMovimentacao(char codigo, int sinal) {
+    TipoMovimentacao(char codigo, int sinal, String descricao) {
         this.codigo = codigo;
         this.sinal = sinal;
+        this.descricao = descricao;
+    }
+
+    public String getDescricao() {
+        return descricao;
     }
 
     public char getCodigo() {

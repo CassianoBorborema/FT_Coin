@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dto.ApuracaoDTO;
 import dto.MovimentacaoDTO;
+import dto.OraculoDTO;
 import exception.AppException;
 import java.time.LocalDate;
 import java.util.List;
@@ -29,7 +30,7 @@ class ApuracaoCarteiraTest {
         assertEquals(0, apuracao.getSaldoQuantidade(), TOLERANCIA);
         assertEquals(0, apuracao.getCustoMedio(), TOLERANCIA);
         assertEquals(0, apuracao.getResultadoCustoMedio(), TOLERANCIA);
-        assertEquals(0, apuracao.toDTO(1, 10).percentualCustoMedio(), TOLERANCIA);
+        assertEquals(0, apuracao.toDTO(1, new OraculoDTO(DIA_1, 10)).percentualCustoMedio(), TOLERANCIA);
     }
 
     @Test
@@ -105,7 +106,46 @@ class ApuracaoCarteiraTest {
         ), COTACAO_DO_DIA);
 
         assertEquals(-20 + 10 * 5, apuracao.getResultadoMercado(5), TOLERANCIA);
-        assertEquals(150, apuracao.toDTO(1, 5).percentualMercado(), TOLERANCIA);
+        assertEquals(150, apuracao.toDTO(1, new OraculoDTO(DIA_3, 5)).percentualMercado(), TOLERANCIA);
+    }
+
+    @Test
+    void evolucaoDiariaTemUmaLinhaPorDiaAteADataFinal() throws AppException {
+        List<ApuracaoDTO.Dia> dias = ApuracaoCarteira.evolucaoDiaria(List.of(
+                compra(1, DIA_1, 10),
+                compra(2, DIA_3, 10),
+                venda(3, DIA_3, 5)
+        ), COTACAO_DO_DIA, DIA_3.plusDays(1));
+
+        assertEquals(4, dias.size());
+        ApuracaoDTO.Dia semOperacao = dias.get(1);
+        assertEquals(0, semOperacao.quantidadeComprada(), TOLERANCIA);
+        assertEquals(10 * 2, semOperacao.saldoMercado(), TOLERANCIA);
+        ApuracaoDTO.Dia compraEVenda = dias.get(2);
+        assertEquals(10, compraEVenda.quantidadeComprada(), TOLERANCIA);
+        assertEquals(5, compraEVenda.quantidadeVendida(), TOLERANCIA);
+        assertEquals(15, compraEVenda.saldoQuantidade(), TOLERANCIA);
+        assertEquals(5 * (3 - 2), compraEVenda.resultadoOperacao(), TOLERANCIA);
+    }
+
+    @Test
+    void evolucaoDiariaPulaDiasSemCotacaoESemOperacao() throws AppException {
+        ProvedorCotacao semCotacaoNoDia2 = data -> {
+            if (data.equals(DIA_2)) {
+                throw new AppException("sem cotação");
+            }
+            return data.getDayOfMonth();
+        };
+
+        List<ApuracaoDTO.Dia> dias = ApuracaoCarteira.evolucaoDiaria(
+                List.of(compra(1, DIA_1, 10)), semCotacaoNoDia2, DIA_3);
+
+        assertEquals(List.of(DIA_1, DIA_3), dias.stream().map(ApuracaoDTO.Dia::data).toList());
+    }
+
+    @Test
+    void evolucaoDiariaSemMovimentacoesEhVazia() throws AppException {
+        assertTrue(ApuracaoCarteira.evolucaoDiaria(List.of(), COTACAO_DO_DIA, DIA_3).isEmpty());
     }
 
     private static MovimentacaoDTO compra(int id, LocalDate data, double quantidade) {

@@ -11,10 +11,12 @@ Navegue digitando o número da opção desejada e use 0 para voltar/sair.
    período. As cotações são geradas pelo Oráculo e usadas nas
    movimentações e nos relatórios.
 4. Relatórios: listar carteiras (por identificador ou titular),
-   consultar saldo atual, histórico de movimentação e o
-   ganho/perda de cada carteira, valorizados a custo médio
-   e a mercado (cotação de hoje do Oráculo).
-5. Ajuda: este guia de uso do sistema.
+   saldo atual (com opção de impressão), histórico de
+   movimentação, evolução diária e o ganho/perda de cada
+   carteira, valorizados a custo médio e a mercado (última
+   cotação do Oráculo).
+5. Ajuda: este guia, os fluxos de carteira, movimentação e
+   relatórios, e os créditos.
 
 Datas devem ser informadas no formato dd/MM/yyyy.
 Quantidades aceitam vírgula ou ponto como separador decimal.

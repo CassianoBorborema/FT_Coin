@@ -14,8 +14,8 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 | **Exclusão de carteira** | Implementado | Bloqueada quando existem movimentações vinculadas                                  |
 | **Movimentação**         | Implementado | Compra e venda na data do sistema, à cotação do dia, com validação de saldo        |
 | **Oráculo**              | Simulado     | Cotação de hoje, por data e por período, gerada pela fórmula da planilha           |
-| **Relatórios**           | Implementado | Listagens (id/titular), saldo, histórico e ganho/perda (custo médio e mercado)  |
-| **Ajuda**                | Implementado | Texto "Como funciona" (guia de uso)                                                |
+| **Relatórios**           | Implementado | Listagens, saldo (com impressão), histórico, evolução diária e resumo de ganho/perda |
+| **Ajuda**                | Implementado | Como funciona, fluxos de carteira, movimentação e relatórios, e créditos          |
 | **Persistência**         | Implementado | MariaDB; se o banco não estiver acessível, segue em memória                        |
 
 
@@ -96,9 +96,7 @@ FT_Coin/
     │       ├── ftcoin.properties            # Configuração (persistência, banco e oráculo)
     │       ├── db/
     │       │   └── schema.sql               # Tabelas do MariaDB
-    │       └── textos/
-    │           ├── ajuda.txt                # Texto longo da tela de ajuda
-    │           └── creditos.txt             # Tela de créditos
+    │       └── textos/                      # Ajuda, fluxos (carteira, movimentação, relatórios) e créditos
     └── test/
         └── java/
             ├── model/
@@ -234,8 +232,9 @@ esperar o tempo de conexão), use `persistencia=memoria` por qualquer uma das fo
 ### Relatórios
 
 1. Menu **4 (Relatórios)** → **1/2** listar carteiras por id/titular
-2. **3 (Saldo atual)** e **4 (Histórico)** → informar ID da carteira
-3. **5 (Ganhos e perdas)** → resultado por carteira a custo médio e a mercado (cotação de hoje)
+2. **3 (Saldo atual)** → informar ID → responder **S** para imprimir o saldo em `saldo-carteira-<id>-<data>.txt`
+3. **4 (Histórico)** e **5 (Evolução diária)** → informar ID da carteira
+4. **6 (Ganhos e perdas)** → resumo de cada carteira no formato da planilha de apuração, a custo médio e a mercado (última cotação)
 
 ### Oráculo simulado
 

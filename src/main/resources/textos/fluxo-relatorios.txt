@@ -1,0 +1,31 @@
+=== FLUXO DE RELATÓRIOS ===
+Acesse pelo menu principal: 4. Relatórios. Valores em R$.
+
+1 e 2. Listar carteiras
+   Todas as carteiras, ordenadas por identificador ou pelo nome
+   do titular.
+3. Saldo atual
+   Quantidade de FTCoins, custo médio, valor das moedas a custo
+   médio e a mercado (pela última cotação). Ao final, você pode
+   imprimir o saldo em um arquivo .txt.
+4. Histórico de movimentação
+   Uma linha por compra ou venda, com a cotação do dia, o saldo
+   e o custo médio logo após a operação e o resultado de cada
+   venda.
+5. Evolução diária
+   Uma linha por dia, desde a primeira operação até hoje, como na
+   planilha de apuração. Colunas:
+   - Compra / Venda: quantidades movimentadas no dia
+   - Saldo (qtd): FTCoins em carteira ao fim do dia
+   - Sd. financeiro: saldo valorado a custo médio
+   - Res. operação: resultado das vendas do dia
+   - Res. acumulado: soma dos resultados das vendas até o dia
+   - Sd. mercado: saldo valorado pela cotação do dia
+6. Ganhos e perdas
+   Resumo de cada carteira:
+   - quanto você comprou e vendeu, e o lucro ou prejuízo
+     operacional (vendido - comprado);
+   - o valor das moedas que restam, a custo médio;
+   - o resultado geral (operacional + moedas a custo médio);
+   - o resultado se você vendesse tudo na última cotação.
+   Os percentuais são calculados sobre o total comprado.

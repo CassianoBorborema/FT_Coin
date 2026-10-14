@@ -7,10 +7,10 @@ import dto.CarteiraDTO;
 import exception.AppException;
 import java.time.Clock;
 import java.time.LocalDate;
-import model.ApuracaoCarteira;
-import model.ProvedorCotacao;
 import java.util.Comparator;
 import java.util.List;
+import model.ApuracaoCarteira;
+import model.ProvedorCotacao;
 
 public class RelatorioController {
 
@@ -43,7 +43,7 @@ public class RelatorioController {
 
     /**
      * Apura a carteira: saldo em FTCoins, custo médio, valoração a custo médio e a mercado
-     * (pela cotação de hoje) e o histórico de movimentações com a posição após cada operação.
+     * (pela última cotação disponível) e o histórico com a posição após cada operação.
      * Alimenta os relatórios de saldo atual, histórico e ganho/perda.
      *
      * @param idCarteira identificador da carteira
@@ -56,6 +56,13 @@ public class RelatorioController {
         ApuracaoCarteira apuracao = ApuracaoCarteira.calcular(
                 movimentacaoDAO.listarPorCarteira(idCarteira), cotacoes
         );
-        return apuracao.toDTO(idCarteira, cotacoes.cotacaoEm(LocalDate.now(relogio)));
+        return apuracao.toDTO(idCarteira, cotacoes.ultimaCotacaoAte(LocalDate.now(relogio)));
+    }
+
+    /** Uma linha por dia, da primeira movimentação até hoje, como na planilha de apuração. */
+    public List<ApuracaoDTO.Dia> evolucaoDiaria(int idCarteira) throws AppException {
+        carteiraDAO.validarExistente(idCarteira);
+        return ApuracaoCarteira.evolucaoDiaria(
+                movimentacaoDAO.listarPorCarteira(idCarteira), cotacoes, LocalDate.now(relogio));
     }
 }
