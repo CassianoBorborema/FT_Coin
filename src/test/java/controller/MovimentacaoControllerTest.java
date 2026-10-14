@@ -1,16 +1,22 @@
 package controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import dao.CarteiraDAO;
 import dao.MovimentacaoDAO;
-import dao.memoria.CarteiraDAOMemoria;
-import dao.memoria.MovimentacaoDAOMemoria;
+import dao.Persistencia;
 import dto.CarteiraDTO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
+import exception.PersistenciaException;
+import java.sql.SQLException;
 import java.time.LocalDate;
+import model.ProvedorCotacao;
 import model.TipoMovimentacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,8 +31,8 @@ class MovimentacaoControllerTest {
 
     @BeforeEach
     void setUp() throws AppException {
-        CarteiraDAO carteiraDAO = new CarteiraDAOMemoria();
-        movimentacaoDAO = new MovimentacaoDAOMemoria();
+        CarteiraDAO carteiraDAO = Persistencia.emMemoria().carteiras();
+        movimentacaoDAO = Persistencia.emMemoria().movimentacoes();
         controller = new MovimentacaoController(movimentacaoDAO, carteiraDAO,
                 new CotacoesFixas().com(HOJE, 10.0), CotacoesFixas.relogioEm(HOJE));
 
@@ -67,12 +73,27 @@ class MovimentacaoControllerTest {
 
     @Test
     void movimentacaoSemCotacaoDeHojeEhRecusada() throws AppException {
-        CarteiraDAO carteiraDAO = new CarteiraDAOMemoria();
+        CarteiraDAO carteiraDAO = Persistencia.emMemoria().carteiras();
         carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
-        MovimentacaoController semCotacao = new MovimentacaoController(new MovimentacaoDAOMemoria(),
+        MovimentacaoController semCotacao = new MovimentacaoController(Persistencia.emMemoria().movimentacoes(),
                 carteiraDAO, new CotacoesFixas(), CotacoesFixas.relogioEm(HOJE));
 
         assertThrows(AppException.class, () -> semCotacao.registrarCompra(1, 10));
+    }
+
+    @Test
+    void falhaAoObterCotacaoNaoRegistraMovimentacao() throws AppException {
+        CarteiraDAO carteiraDAO = Persistencia.emMemoria().carteiras();
+        carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
+        MovimentacaoDAO movimentacoes = Persistencia.emMemoria().movimentacoes();
+        ProvedorCotacao cotacoes = mock(ProvedorCotacao.class);
+        when(cotacoes.cotacaoEm(any())).thenThrow(
+                new PersistenciaException("banco fora do ar", new SQLException("conexão recusada")));
+        MovimentacaoController comFalha = new MovimentacaoController(movimentacoes, carteiraDAO, cotacoes,
+                CotacoesFixas.relogioEm(HOJE));
+
+        assertThrows(PersistenciaException.class, () -> comFalha.registrarCompra(1, 10));
+        assertFalse(movimentacoes.possuiMovimentacoes(1));
     }
 
     @Test

@@ -1,6 +1,6 @@
 # FT_Coin
 
-Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvolvido em **Java (17+)** com build **Maven** com arquitetura **MVC**, interface **CLI** e persistência via padrão **DAO** (em memória ou **MariaDB**).
+Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvolvido em **Java 25** com build **Maven**, arquitetura **MVC**, interface **CLI** e persistência via padrão **DAO** (em memória ou **MariaDB**).
 
 ---
 
@@ -36,7 +36,7 @@ A aplicação **compila e executa** todos os fluxos ponta a ponta.
 
 ```
 FT_Coin/
-├── pom.xml                                  # Build Maven (Java 17+, JUnit 5, driver MariaDB)
+├── pom.xml                                  # Build Maven (Java 25, JUnit, Mockito, JaCoCo, MariaDB)
 ├── docs/
 │   ├── README.md
 │   ├── fluxo-carteira.md
@@ -60,33 +60,20 @@ FT_Coin/
     │   │   │   └── ProvedorCotacao.java     # Contrato de cotação por data
     │   │   ├── oraculo/
     │   │   │   ├── OraculoSimulado.java     # Cotação pela fórmula da planilha
-    │   │   │   ├── ParametrosOraculoSimulado.java
     │   │   │   └── CotacaoComHistorico.java # Registra cada cotação obtida no OraculoDAO
     │   │   ├── dto/
     │   │   │   ├── CarteiraDTO.java
     │   │   │   ├── MovimentacaoDTO.java
     │   │   │   ├── OraculoDTO.java
-    │   │   │   ├── ApuracaoDTO.java
-    │   │   │   └── LinhaApuracaoDTO.java
+    │   │   │   └── ApuracaoDTO.java         # Record com a linha do histórico aninhada
     │   │   ├── dao/
-    │   │   │   ├── CarteiraDAO.java
+    │   │   │   ├── CarteiraDAO.java         # Interfaces seladas (sealed)
     │   │   │   ├── MovimentacaoDAO.java
     │   │   │   ├── OraculoDAO.java
-    │   │   │   ├── FabricaDAO.java          # Cria os DAOs de uma persistência
-    │   │   │   ├── memoria/
-    │   │   │   │   ├── FabricaDAOMemoria.java
-    │   │   │   │   ├── CarteiraDAOMemoria.java
-    │   │   │   │   ├── MovimentacaoDAOMemoria.java
-    │   │   │   │   └── OraculoDAOMemoria.java
-    │   │   │   └── mariadb/
-    │   │   │       ├── FabricaDAOMariaDB.java
-    │   │   │       ├── CarteiraDAOMariaDB.java
-    │   │   │       ├── MovimentacaoDAOMariaDB.java
-    │   │   │       └── OraculoDAOMariaDB.java
-    │   │   ├── infra/db/
-    │   │   │   ├── ConfiguracaoBanco.java   # URL, usuário, senha e timeout
-    │   │   │   ├── FabricaConexao.java      # Conexões JDBC e transações
-    │   │   │   └── InicializadorBanco.java  # Cria as tabelas na inicialização
+    │   │   │   ├── *DAOMemoria.java         # Implementações em memória
+    │   │   │   ├── *DAOMariaDB.java         # Implementações em MariaDB
+    │   │   │   ├── FabricaConexao.java      # Conexões JDBC, transações e criação das tabelas
+    │   │   │   └── Persistencia.java        # Escolhe e agrupa os DAOs (memória ou MariaDB)
     │   │   ├── controller/
     │   │   │   ├── CarteiraController.java
     │   │   │   ├── MovimentacaoController.java
@@ -95,7 +82,6 @@ FT_Coin/
     │   │   ├── view/
     │   │   │   ├── Console.java             # Entrada e saída de texto
     │   │   │   ├── Menu.java                # Base dos menus (opções, laço e erros)
-    │   │   │   ├── OpcaoMenu.java
     │   │   │   ├── Formatador.java          # Datas, moeda e quantidades
     │   │   │   ├── MenuPrincipal.java
     │   │   │   ├── MenuCarteira.java
@@ -119,8 +105,7 @@ FT_Coin/
             │   ├── ApuracaoCarteiraTest.java
             │   └── ApuracaoCarteiraPlanilhaTest.java   # Reproduz a planilha de apuração de referência
             ├── controller/                              # Controllers com DAOs em memória
-            ├── dao/                                     # Contrato dos DAOs (memória e MariaDB em contêiner)
-            ├── infra/db/                                # Configuração e conexão com o banco
+            ├── dao/                                     # Contrato dos DAOs (memória e MariaDB em contêiner) e conexão
             ├── oraculo/                                 # Oráculo simulado e histórico de cotações
             ├── view/                                    # Menu e Console
             └── testutil/                                # Cotações fixas e relógio parado para testes
@@ -133,8 +118,7 @@ FT_Coin/
 | -------------- | --------------------------- | --------------------------------------------------- |
 | **Model**      | `model`                     | Entidades de domínio, validações e apuração         |
 | **DTO**        | `dto`                       | Transporte entre view, controller e DAO             |
-| **DAO**        | `dao`, `dao.memoria`, `dao.mariadb` | Contratos e persistência em memória e MariaDB |
-| **Infra**      | `infra.db`                  | Conexão JDBC, transações e criação das tabelas      |
+| **DAO**        | `dao`                       | Interfaces seladas e persistência em memória e MariaDB |
 | **Controller** | `controller`                | Regras de negócio e orquestração                    |
 | **View**       | `view`                      | Menus CLI, entrada/saída e formatação               |
 | **Oráculo**    | `oraculo`                   | Fontes de cotação (simulada) e histórico            |
@@ -170,7 +154,7 @@ O script completo está em [schema.sql](src/main/resources/db/schema.sql).
 
 ## Compilação e execução
 
-**Pré-requisitos:** JDK 17 ou superior e [Maven](https://maven.apache.org/download.cgi) 3.9+ no PATH (ou a IDE, que já traz o Maven embutido).
+**Pré-requisitos:** JDK 25 ou superior e [Maven](https://maven.apache.org/download.cgi) 3.9+ no PATH (ou a IDE, que já traz o Maven embutido).
 
 Na raiz do repositório:
 
@@ -184,10 +168,11 @@ Outros comandos úteis:
 | Comando                  | O que faz                                  |
 | ------------------------ | ------------------------------------------ |
 | `mvn test`               | Roda só os testes                          |
+| `mvn verify`             | Testes + relatório de cobertura do JaCoCo em `target/site/jacoco/index.html` |
 | `mvn javadoc:javadoc`    | Gera o Javadoc em `target/reports/apidocs` |
 | `mvn clean`              | Apaga a pasta `target/`                    |
 
-> **IDE:** Eclipse (*Import → Existing Maven Projects*), IntelliJ e VS Code abrem o `pom.xml` diretamente.
+> **IDE:** Eclipse (*Import → Existing Maven Projects*), IntelliJ e VS Code abrem o `pom.xml` diretamente. Configure a IDE com um JDK 25+; se ela acusar erros como "`_` is a keyword", recarregue o projeto Maven.
 
 > **Testes com MariaDB:** os testes dos DAOs do banco sobem um MariaDB em contêiner (Testcontainers) e
 > precisam do Docker em execução. Sem Docker, esses testes são ignorados e o restante roda normalmente.

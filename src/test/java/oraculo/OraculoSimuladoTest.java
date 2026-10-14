@@ -62,7 +62,7 @@ class OraculoSimuladoTest {
     @Test
     void sementeDiferenteGeraOutraSerie() throws AppException {
         OraculoSimulado outraSemente = new OraculoSimulado(
-                new ParametrosOraculoSimulado(INICIO, 10, AMPLITUDE, 1.40, 0.435, 7), CotacoesFixas.relogioEm(HOJE));
+                new OraculoSimulado.Parametros(INICIO, 10, AMPLITUDE, 1.40, 0.435, 7), CotacoesFixas.relogioEm(HOJE));
 
         assertNotEquals(oraculo.cotacaoEm(HOJE), outraSemente.cotacaoEm(HOJE));
     }
@@ -80,11 +80,11 @@ class OraculoSimuladoTest {
     @Test
     void parametrosQuePermitemCotacaoNaoPositivaSaoRecusados() {
         assertThrows(IllegalArgumentException.class,
-                () -> new ParametrosOraculoSimulado(INICIO, 1, 3, 1.40, 0.435, 1));
+                () -> new OraculoSimulado.Parametros(INICIO, 1, 3, 1.40, 0.435, 1));
     }
 
     private static OraculoSimulado criar(double amplitude) {
-        return new OraculoSimulado(new ParametrosOraculoSimulado(INICIO, 10, amplitude, 1.40, 0.435, 2026),
+        return new OraculoSimulado(new OraculoSimulado.Parametros(INICIO, 10, amplitude, 1.40, 0.435, 2026),
                 CotacoesFixas.relogioEm(HOJE));
     }
 }

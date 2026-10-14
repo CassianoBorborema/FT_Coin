@@ -3,7 +3,6 @@ package view;
 import controller.RelatorioController;
 import dto.ApuracaoDTO;
 import dto.CarteiraDTO;
-import dto.LinhaApuracaoDTO;
 import exception.AppException;
 import java.util.List;
 import model.TipoMovimentacao;
@@ -44,16 +43,16 @@ public class MenuRelatorios extends Menu {
         int identificador = console.lerInteiro("Digite o identificador da carteira:");
         ApuracaoDTO apuracao = controller.apurar(identificador);
         console.exibir("Saldo atual da carteira " + identificador + ":");
-        exibirCampo("Quantidade (FTCoins)", Formatador.quantidade(apuracao.getSaldoQuantidade()));
-        exibirCampo("Custo médio", Formatador.moeda(apuracao.getCustoMedio()));
-        exibirCampo("Valor a custo médio", Formatador.moeda(apuracao.getSaldoCustoMedio()));
-        exibirCampo("Cotação atual", Formatador.moeda(apuracao.getCotacaoAtual()));
-        exibirCampo("Valor a mercado", Formatador.moeda(apuracao.getSaldoMercado()));
+        exibirCampo("Quantidade (FTCoins)", Formatador.quantidade(apuracao.saldoQuantidade()));
+        exibirCampo("Custo médio", Formatador.moeda(apuracao.custoMedio()));
+        exibirCampo("Valor a custo médio", Formatador.moeda(apuracao.saldoCustoMedio()));
+        exibirCampo("Cotação atual", Formatador.moeda(apuracao.cotacaoAtual()));
+        exibirCampo("Valor a mercado", Formatador.moeda(apuracao.saldoMercado()));
     }
 
     private void exibirHistorico() throws AppException {
         int identificador = console.lerInteiro("Digite o identificador da carteira:");
-        List<LinhaApuracaoDTO> linhas = controller.apurar(identificador).getLinhas();
+        List<ApuracaoDTO.Linha> linhas = controller.apurar(identificador).linhas();
         if (linhas.isEmpty()) {
             console.exibir("Nenhuma movimentação registrada para a carteira " + identificador + ".");
             return;
@@ -61,16 +60,16 @@ public class MenuRelatorios extends Menu {
         console.exibir("Histórico da carteira " + identificador + " (valores em R$):");
         console.exibirFormatado(FORMATO_TABELA, "Data", "Tipo", "Qtd.", "Cotação", "Valor", "Saldo (qtd)",
                 "Custo médio", "Res. operação");
-        for (LinhaApuracaoDTO linha : linhas) {
+        for (ApuracaoDTO.Linha linha : linhas) {
             console.exibirFormatado(FORMATO_TABELA,
-                    Formatador.data(linha.getData()),
-                    linha.getTipo() == TipoMovimentacao.COMPRA ? "Compra" : "Venda",
-                    Formatador.quantidade(linha.getQuantidade()),
-                    Formatador.numero(linha.getCotacao()),
-                    Formatador.numero(linha.getValor()),
-                    Formatador.quantidade(linha.getSaldoQuantidade()),
-                    Formatador.numero(linha.getCustoMedio()),
-                    Formatador.numero(linha.getResultadoOperacao()));
+                    Formatador.data(linha.data()),
+                    linha.tipo() == TipoMovimentacao.COMPRA ? "Compra" : "Venda",
+                    Formatador.quantidade(linha.quantidade()),
+                    Formatador.numero(linha.cotacao()),
+                    Formatador.numero(linha.valor()),
+                    Formatador.quantidade(linha.saldoQuantidade()),
+                    Formatador.numero(linha.custoMedio()),
+                    Formatador.numero(linha.resultadoOperacao()));
         }
     }
 
@@ -93,18 +92,18 @@ public class MenuRelatorios extends Menu {
     }
 
     private void exibirResultados(ApuracaoDTO apuracao) {
-        exibirCampo("Total comprado", Formatador.moeda(apuracao.getTotalComprado()));
-        exibirCampo("Total vendido", Formatador.moeda(apuracao.getTotalVendido()));
-        exibirCampo(apuracao.getResultadoOperacional() >= 0 ? "Lucro operacional" : "Prejuízo operacional",
-                Formatador.moeda(apuracao.getResultadoOperacional()));
-        exibirCampo("Saldo (FTCoins)", Formatador.quantidade(apuracao.getSaldoQuantidade()));
-        exibirCampo("Valor a custo médio", Formatador.moeda(apuracao.getSaldoCustoMedio()));
-        exibirCampo("Valor a mercado", Formatador.moeda(apuracao.getSaldoMercado())
-                + " (cotação atual " + Formatador.moeda(apuracao.getCotacaoAtual()) + ")");
+        exibirCampo("Total comprado", Formatador.moeda(apuracao.totalComprado()));
+        exibirCampo("Total vendido", Formatador.moeda(apuracao.totalVendido()));
+        exibirCampo(apuracao.resultadoOperacional() >= 0 ? "Lucro operacional" : "Prejuízo operacional",
+                Formatador.moeda(apuracao.resultadoOperacional()));
+        exibirCampo("Saldo (FTCoins)", Formatador.quantidade(apuracao.saldoQuantidade()));
+        exibirCampo("Valor a custo médio", Formatador.moeda(apuracao.saldoCustoMedio()));
+        exibirCampo("Valor a mercado", Formatador.moeda(apuracao.saldoMercado())
+                + " (cotação atual " + Formatador.moeda(apuracao.cotacaoAtual()) + ")");
         exibirCampo("Resultado a custo médio",
-                Formatador.resultado(apuracao.getResultadoCustoMedio(), apuracao.getPercentualCustoMedio()));
+                Formatador.resultado(apuracao.resultadoCustoMedio(), apuracao.percentualCustoMedio()));
         exibirCampo("Resultado a mercado",
-                Formatador.resultado(apuracao.getResultadoMercado(), apuracao.getPercentualMercado()));
+                Formatador.resultado(apuracao.resultadoMercado(), apuracao.percentualMercado()));
     }
 
     private void exibirCampo(String rotulo, String valor) {

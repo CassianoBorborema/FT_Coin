@@ -18,10 +18,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Comportamento que toda implementação de {@link FabricaDAO} deve ter. Cada persistência
- * estende esta classe e informa como criar uma fábrica com os dados vazios.
+ * Comportamento que toda {@link Persistencia} deve ter. Cada uma estende esta classe e informa
+ * como criar a persistência com os dados vazios.
  */
-public abstract class FabricaDAOContrato {
+public abstract class PersistenciaContrato {
 
     private static final double TOLERANCIA = 1e-9;
     private static final LocalDate DIA_1 = LocalDate.of(2026, 1, 1);
@@ -31,14 +31,14 @@ public abstract class FabricaDAOContrato {
     private MovimentacaoDAO movimentacoes;
     private OraculoDAO cotacoes;
 
-    protected abstract FabricaDAO criarFabricaVazia() throws Exception;
+    protected abstract Persistencia criarPersistenciaVazia() throws Exception;
 
     @BeforeEach
     void criarDAOs() throws Exception {
-        FabricaDAO fabrica = criarFabricaVazia();
-        carteiras = fabrica.carteiraDAO();
-        movimentacoes = fabrica.movimentacaoDAO();
-        cotacoes = fabrica.oraculoDAO();
+        Persistencia persistencia = criarPersistenciaVazia();
+        carteiras = persistencia.carteiras();
+        movimentacoes = persistencia.movimentacoes();
+        cotacoes = persistencia.cotacoes();
     }
 
     @Test

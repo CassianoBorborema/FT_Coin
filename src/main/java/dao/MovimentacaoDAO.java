@@ -4,7 +4,7 @@ import dto.MovimentacaoDTO;
 import exception.AppException;
 import java.util.List;
 
-public interface MovimentacaoDAO {
+public sealed interface MovimentacaoDAO permits MovimentacaoDAOMemoria, MovimentacaoDAOMariaDB {
 
     void incluir(MovimentacaoDTO movimentacao) throws AppException;
 

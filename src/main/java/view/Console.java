@@ -45,7 +45,7 @@ public class Console {
     public int lerOpcao() {
         try {
             return Integer.parseInt(entrada.nextLine().trim());
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             return OPCAO_INVALIDA;
         }
     }
@@ -60,7 +60,7 @@ public class Console {
         String texto = lerLinha(mensagem);
         try {
             return Integer.parseInt(texto);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             throw new AppException("Valor numérico inválido: " + texto + ".");
         }
     }
@@ -70,7 +70,7 @@ public class Console {
         String texto = lerLinha(mensagem);
         try {
             return Double.parseDouble(texto.replace(',', '.'));
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             throw new AppException("Valor decimal inválido: " + texto + ".");
         }
     }
@@ -79,7 +79,7 @@ public class Console {
         String texto = lerLinha(mensagem + " (dd/MM/yyyy):");
         try {
             return LocalDate.parse(texto, FORMATO_DATA);
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException _) {
             throw new AppException("Data inválida: " + texto + ". Use o formato dd/MM/yyyy.");
         }
     }

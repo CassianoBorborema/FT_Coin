@@ -1,5 +1,6 @@
 package oraculo;
 
+import config.Configuracao;
 import exception.AppException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -26,10 +27,51 @@ public class OraculoSimulado implements ProvedorCotacao {
 
     private static final int CASAS_DECIMAIS = 2;
 
-    private final ParametrosOraculoSimulado parametros;
+    /**
+     * Parâmetros da fórmula, lidos das chaves {@code oraculo.*}.
+     */
+    public record Parametros(LocalDate dataInicial, double base, double amplitude,
+                             double valorizacaoInicial, double fatorValorizacao, long semente) {
+
+        /**
+         * Como a valorização nunca diminui, a menor cotação possível é
+         * {@code base + valorizacaoInicial - amplitude}, que precisa ser positiva.
+         */
+        public Parametros {
+            if (dataInicial == null) {
+                throw new IllegalArgumentException("A data inicial do oráculo é obrigatória.");
+            }
+            if (amplitude < 0) {
+                throw new IllegalArgumentException("A amplitude da flutuação não pode ser negativa.");
+            }
+            if (fatorValorizacao < 0) {
+                throw new IllegalArgumentException("O fator de valorização não pode ser negativo.");
+            }
+            if (base + valorizacaoInicial - amplitude <= 0) {
+                throw new IllegalArgumentException(
+                        "Os parâmetros do oráculo permitem cotação menor ou igual a zero (base + valorização inicial - amplitude).");
+            }
+        }
+
+        public static Parametros carregar(Configuracao configuracao) throws AppException {
+            try {
+                return new Parametros(
+                        configuracao.getData("oraculo.dataInicial"),
+                        configuracao.getDecimal("oraculo.base"),
+                        configuracao.getDecimal("oraculo.flutuacao.amplitude"),
+                        configuracao.getDecimal("oraculo.valorizacao.inicial"),
+                        configuracao.getDecimal("oraculo.valorizacao.fator"),
+                        configuracao.getInteiro("oraculo.semente"));
+            } catch (IllegalArgumentException e) {
+                throw new AppException(e.getMessage());
+            }
+        }
+    }
+
+    private final Parametros parametros;
     private final Clock relogio;
 
-    public OraculoSimulado(ParametrosOraculoSimulado parametros, Clock relogio) {
+    public OraculoSimulado(Parametros parametros, Clock relogio) {
         this.parametros = parametros;
         this.relogio = relogio;
     }

@@ -15,7 +15,15 @@ public abstract class Menu {
     protected final Console console;
     private final String titulo;
     private final String rotuloSaida;
-    private final List<OpcaoMenu> opcoes = new ArrayList<>();
+    private final List<Opcao> opcoes = new ArrayList<>();
+
+    @FunctionalInterface
+    public interface Acao {
+        void executar() throws AppException;
+    }
+
+    private record Opcao(String rotulo, Acao acao) {
+    }
 
     protected Menu(Console console, String titulo, String rotuloSaida) {
         this.console = console;
@@ -27,8 +35,8 @@ public abstract class Menu {
         this(console, titulo, "Voltar");
     }
 
-    protected final void adicionarOpcao(String rotulo, OpcaoMenu.Acao acao) {
-        opcoes.add(new OpcaoMenu(rotulo, acao));
+    protected final void adicionarOpcao(String rotulo, Acao acao) {
+        opcoes.add(new Opcao(rotulo, acao));
     }
 
     public void exibir() {
@@ -55,11 +63,14 @@ public abstract class Menu {
         console.exibir("Qual opção deseja?");
     }
 
-    private void executar(OpcaoMenu opcao) {
+    /** Nenhum erro de uma opção encerra a aplicação: o usuário vê a mensagem e volta ao menu. */
+    private void executar(Opcao opcao) {
         try {
             opcao.acao().executar();
         } catch (AppException e) {
             console.exibirErro(e.getMessage());
+        } catch (RuntimeException e) {
+            console.exibirErro("Erro inesperado (" + e.getClass().getSimpleName() + "): " + e.getMessage());
         }
     }
 }

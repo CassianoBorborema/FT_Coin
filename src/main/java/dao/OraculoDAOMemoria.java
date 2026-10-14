@@ -1,6 +1,5 @@
-package dao.memoria;
+package dao;
 
-import dao.OraculoDAO;
 import dto.OraculoDTO;
 import exception.AppException;
 import model.Oraculo;
@@ -11,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OraculoDAOMemoria implements OraculoDAO {
+final class OraculoDAOMemoria implements OraculoDAO {
 
     private final Map<LocalDate, OraculoDTO> cotacoes = new HashMap<>();
 

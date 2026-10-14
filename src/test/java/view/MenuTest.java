@@ -29,6 +29,9 @@ class MenuTest {
             adicionarOpcao("Com erro", () -> {
                 throw new AppException("falhou de propósito");
             });
+            adicionarOpcao("Com erro inesperado", () -> {
+                throw new IllegalStateException("estado inválido");
+            });
         }
     }
 
@@ -60,6 +63,16 @@ class MenuTest {
         menu.exibir();
 
         assertTrue(texto().contains("Erro: falhou de propósito"));
+        assertEquals(List.of("primeira"), menu.executadas);
+    }
+
+    @Test
+    void erroInesperadoNaoEncerraAAplicacao() {
+        MenuExemplo menu = new MenuExemplo(console("3\n1\n0\n"));
+
+        menu.exibir();
+
+        assertTrue(texto().contains("Erro inesperado (IllegalStateException): estado inválido"));
         assertEquals(List.of("primeira"), menu.executadas);
     }
 

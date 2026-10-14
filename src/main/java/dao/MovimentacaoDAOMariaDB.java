@@ -1,9 +1,7 @@
-package dao.mariadb;
+package dao;
 
-import dao.MovimentacaoDAO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
-import infra.db.FabricaConexao;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,13 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import model.TipoMovimentacao;
 
-public class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
+final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
     private static final String COLUNAS = "id, id_carteira, data, tipo, quantidade";
 
     private final FabricaConexao conexoes;
 
-    public MovimentacaoDAOMariaDB(FabricaConexao conexoes) {
+    MovimentacaoDAOMariaDB(FabricaConexao conexoes) {
         this.conexoes = conexoes;
     }
 

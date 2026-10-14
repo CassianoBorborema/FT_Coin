@@ -6,8 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dao.CarteiraDAO;
 import dao.MovimentacaoDAO;
-import dao.memoria.CarteiraDAOMemoria;
-import dao.memoria.MovimentacaoDAOMemoria;
+import dao.Persistencia;
 import dto.CarteiraDTO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
@@ -24,8 +23,8 @@ class CarteiraControllerTest {
 
     @BeforeEach
     void setUp() {
-        carteiraDAO = new CarteiraDAOMemoria();
-        movimentacaoDAO = new MovimentacaoDAOMemoria();
+        carteiraDAO = Persistencia.emMemoria().carteiras();
+        movimentacaoDAO = Persistencia.emMemoria().movimentacoes();
         controller = new CarteiraController(carteiraDAO, movimentacaoDAO);
     }
 

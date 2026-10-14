@@ -1,6 +1,5 @@
-package dao.memoria;
+package dao;
 
-import dao.CarteiraDAO;
 import dto.CarteiraDTO;
 import exception.AppException;
 import java.util.ArrayList;
@@ -8,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CarteiraDAOMemoria implements CarteiraDAO {
+final class CarteiraDAOMemoria implements CarteiraDAO {
 
     private final Map<Integer, CarteiraDTO> carteiras = new HashMap<>();
 

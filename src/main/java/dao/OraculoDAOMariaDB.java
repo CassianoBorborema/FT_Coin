@@ -1,9 +1,7 @@
-package dao.mariadb;
+package dao;
 
-import dao.OraculoDAO;
 import dto.OraculoDTO;
 import exception.AppException;
-import infra.db.FabricaConexao;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,11 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import model.Oraculo;
 
-public class OraculoDAOMariaDB implements OraculoDAO {
+final class OraculoDAOMariaDB implements OraculoDAO {
 
     private final FabricaConexao conexoes;
 
-    public OraculoDAOMariaDB(FabricaConexao conexoes) {
+    OraculoDAOMariaDB(FabricaConexao conexoes) {
         this.conexoes = conexoes;
     }
 

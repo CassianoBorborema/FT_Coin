@@ -16,23 +16,29 @@
  AUTORES
 ---------------------------------------------------------
 
-  Vinicius Pommer Petto      - RA 252160
-  Vinicius Eduardo Machado   - RA 267014
-  Vinicius Correia Leite     - RA 195444
-  Nicolas Fogaca da Costa    - RA 241143
-  Joao Paulo S. Pacolla      - RA 221170
-  Gabriel Rodrigues Firmino  - RA 219400
-  Guilherme Leal Ribeiro     - RA 237816
-  Cassiano Ladeia Borborema  - RA 257721
+  Product Owner
+    Vinicius Correia Leite     - RA 195444
+  Product Manager
+    Vinicius Pommer Petto      - RA 252160
+  Scrum Master
+    Cassiano Ladeia Borborema  - RA 257721
+  Testers
+    Nicolas Fogaca da Costa    - RA 241143
+    Vinicius Eduardo Machado   - RA 267014
+  Desenvolvedores
+    Gabriel Rodrigues Firmino  - RA 219400
+    Guilherme Leal Ribeiro     - RA 237816
+    Joao Paulo S. Pacolla      - RA 221170
 
 ---------------------------------------------------------
  TECNOLOGIAS
 ---------------------------------------------------------
 
-  - Java 9+
-  - Arquitetura MVC
-  - Padrao DAO
+  - Java 25 e Maven
+  - Arquitetura MVC com DTO
+  - Padrao DAO (memoria e MariaDB)
   - Interface CLI
+  - JUnit, Mockito e JaCoCo
 
 ---------------------------------------------------------
  COPYRIGHT

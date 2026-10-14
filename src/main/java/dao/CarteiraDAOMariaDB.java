@@ -1,9 +1,7 @@
-package dao.mariadb;
+package dao;
 
-import dao.CarteiraDAO;
 import dto.CarteiraDTO;
 import exception.AppException;
-import infra.db.FabricaConexao;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,13 +9,13 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CarteiraDAOMariaDB implements CarteiraDAO {
+final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     private static final String COLUNAS = "id, nome_titular, corretora";
 
     private final FabricaConexao conexoes;
 
-    public CarteiraDAOMariaDB(FabricaConexao conexoes) {
+    CarteiraDAOMariaDB(FabricaConexao conexoes) {
         this.conexoes = conexoes;
     }
 

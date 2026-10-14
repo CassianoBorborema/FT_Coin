@@ -110,7 +110,7 @@ public class Configuracao {
         String valor = getTexto(chave);
         try {
             return Double.parseDouble(valor);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             throw new AppException("Configuração " + chave + " deve ser um número: " + valor + ".");
         }
     }
@@ -119,7 +119,7 @@ public class Configuracao {
         String valor = getTexto(chave);
         try {
             return Long.parseLong(valor);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             throw new AppException("Configuração " + chave + " deve ser um número inteiro: " + valor + ".");
         }
     }
@@ -128,7 +128,7 @@ public class Configuracao {
         String valor = getTexto(chave);
         try {
             return LocalDate.parse(valor);
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException _) {
             throw new AppException("Configuração " + chave + " deve ser uma data no formato yyyy-MM-dd: " + valor + ".");
         }
     }

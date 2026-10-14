@@ -5,21 +5,13 @@ import controller.CarteiraController;
 import controller.MovimentacaoController;
 import controller.OraculoController;
 import controller.RelatorioController;
-import dao.CarteiraDAO;
-import dao.FabricaDAO;
-import dao.MovimentacaoDAO;
-import dao.mariadb.FabricaDAOMariaDB;
-import dao.memoria.FabricaDAOMemoria;
+import dao.Persistencia;
 import exception.AppException;
-import infra.db.ConfiguracaoBanco;
-import infra.db.FabricaConexao;
-import infra.db.InicializadorBanco;
 import java.time.Clock;
 import java.util.NoSuchElementException;
 import model.ProvedorCotacao;
 import oraculo.CotacaoComHistorico;
 import oraculo.OraculoSimulado;
-import oraculo.ParametrosOraculoSimulado;
 import view.Console;
 import view.MenuAjuda;
 import view.MenuCarteira;
@@ -45,7 +37,7 @@ public final class Main {
             console.exibir("Saindo da aplicação...");
         } catch (AppException e) {
             console.exibirErro("Não foi possível iniciar o FT_Coin. " + e.getMessage());
-        } catch (NoSuchElementException e) {
+        } catch (NoSuchElementException _) {
             console.exibir("\nEntrada encerrada. Saindo da aplicação...");
         }
     }
@@ -54,20 +46,20 @@ public final class Main {
         Configuracao configuracao = Configuracao.carregar();
         Clock relogio = Clock.systemDefaultZone();
 
-        FabricaDAO fabricaDAO = criarFabricaDAO(configuracao, console);
-        CarteiraDAO carteiraDAO = fabricaDAO.carteiraDAO();
-        MovimentacaoDAO movimentacaoDAO = fabricaDAO.movimentacaoDAO();
+        Persistencia persistencia = escolherPersistencia(configuracao, console);
+        console.exibir("Persistência: " + persistencia.descricao() + ".");
 
         ProvedorCotacao cotacoes = new CotacaoComHistorico(
-                new OraculoSimulado(ParametrosOraculoSimulado.carregar(configuracao), relogio),
-                fabricaDAO.oraculoDAO());
+                new OraculoSimulado(OraculoSimulado.Parametros.carregar(configuracao), relogio),
+                persistencia.cotacoes());
 
-        CarteiraController carteiraController = new CarteiraController(carteiraDAO, movimentacaoDAO);
-        MovimentacaoController movimentacaoController =
-                new MovimentacaoController(movimentacaoDAO, carteiraDAO, cotacoes, relogio);
+        CarteiraController carteiraController =
+                new CarteiraController(persistencia.carteiras(), persistencia.movimentacoes());
+        MovimentacaoController movimentacaoController = new MovimentacaoController(
+                persistencia.movimentacoes(), persistencia.carteiras(), cotacoes, relogio);
         OraculoController oraculoController = new OraculoController(cotacoes, relogio);
-        RelatorioController relatorioController =
-                new RelatorioController(carteiraDAO, movimentacaoDAO, cotacoes, relogio);
+        RelatorioController relatorioController = new RelatorioController(
+                persistencia.carteiras(), persistencia.movimentacoes(), cotacoes, relogio);
 
         return new MenuPrincipal(console,
                 new MenuCarteira(console, carteiraController),
@@ -81,30 +73,21 @@ public final class Main {
      * Com {@code persistencia=auto}, tenta o MariaDB e, se não conseguir conectar, avisa o motivo
      * e segue em memória. Com {@code memoria}, nem tenta o banco.
      */
-    private static FabricaDAO criarFabricaDAO(Configuracao configuracao, Console console) throws AppException {
+    private static Persistencia escolherPersistencia(Configuracao configuracao, Console console)
+            throws AppException {
         String persistencia = configuracao.getTexto("persistencia", "auto");
-        switch (persistencia) {
-            case "auto":
+        return switch (persistencia) {
+            case "auto" -> {
                 try {
-                    ConfiguracaoBanco banco = ConfiguracaoBanco.carregar(configuracao);
-                    FabricaConexao conexoes = new FabricaConexao(banco);
-                    new InicializadorBanco(conexoes).inicializar();
-                    console.exibir("Persistência: MariaDB (" + banco.url() + ").");
-                    return new FabricaDAOMariaDB(conexoes);
+                    yield Persistencia.mariaDB(configuracao);
                 } catch (AppException e) {
                     console.exibir("Aviso: MariaDB indisponível. " + e.getMessage());
-                    return emMemoria(console);
+                    yield Persistencia.emMemoria();
                 }
-            case "memoria":
-                return emMemoria(console);
-            default:
-                throw new AppException("Persistência desconhecida: " + persistencia + ". Use auto ou memoria.");
-        }
-    }
-
-    private static FabricaDAO emMemoria(Console console) {
-        console.exibir("Persistência: memória (os dados são perdidos ao sair).");
-        return new FabricaDAOMemoria();
+            }
+            case "memoria" -> Persistencia.emMemoria();
+            default -> throw new AppException("Persistência desconhecida: " + persistencia + ". Use auto ou memoria.");
+        };
     }
 
     private static void exibirBoasVindas(Console console) {

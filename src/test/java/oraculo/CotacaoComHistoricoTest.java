@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dao.OraculoDAO;
-import dao.memoria.OraculoDAOMemoria;
+import dao.Persistencia;
 import dto.OraculoDTO;
 import exception.AppException;
 import java.time.LocalDate;
@@ -25,7 +25,7 @@ class CotacaoComHistoricoTest {
     @BeforeEach
     void setUp() {
         fonte = new CotacoesFixas().com(DIA, 13.84);
-        historico = new OraculoDAOMemoria();
+        historico = Persistencia.emMemoria().cotacoes();
         cotacoes = new CotacaoComHistorico(fonte, historico);
     }
 

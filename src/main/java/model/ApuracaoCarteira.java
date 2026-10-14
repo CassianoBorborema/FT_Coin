@@ -1,7 +1,6 @@
 package model;
 
 import dto.ApuracaoDTO;
-import dto.LinhaApuracaoDTO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 import java.util.ArrayList;
@@ -17,13 +16,13 @@ public class ApuracaoCarteira {
 
     private static final double CEM_PORCENTO = 100.0;
 
-    private final List<LinhaApuracaoDTO> linhas;
+    private final List<ApuracaoDTO.Linha> linhas;
     private final double saldoQuantidade;
     private final double custoMedio;
     private final double totalComprado;
     private final double totalVendido;
 
-    private ApuracaoCarteira(List<LinhaApuracaoDTO> linhas, Posicao posicao) {
+    private ApuracaoCarteira(List<ApuracaoDTO.Linha> linhas, Posicao posicao) {
         this.linhas = Collections.unmodifiableList(linhas);
         this.saldoQuantidade = posicao.getQuantidade();
         this.custoMedio = posicao.temSaldo() ? posicao.getCustoMedio() : 0;
@@ -46,7 +45,7 @@ public class ApuracaoCarteira {
         ordenadas.sort(Comparator.comparing(MovimentacaoDTO::getData)
                 .thenComparingInt(MovimentacaoDTO::getIdMovimento));
 
-        List<LinhaApuracaoDTO> linhas = new ArrayList<>();
+        List<ApuracaoDTO.Linha> linhas = new ArrayList<>();
         Posicao posicao = new Posicao();
 
         for (MovimentacaoDTO movimentacao : ordenadas) {
@@ -64,7 +63,7 @@ public class ApuracaoCarteira {
                 throw new AppException("Histórico inconsistente em " + movimentacao.getData() + ": " + e.getMessage());
             }
 
-            linhas.add(new LinhaApuracaoDTO(movimentacao.getData(), movimentacao.getTipo(), quantidade,
+            linhas.add(new ApuracaoDTO.Linha(movimentacao.getData(), movimentacao.getTipo(), quantidade,
                     cotacao, quantidade * cotacao, posicao.getQuantidade(), posicao.getCustoMedio(),
                     posicao.getSaldoCustoMedio(), posicao.getQuantidade() * cotacao,
                     resultadoOperacao, posicao.getResultadoAcumulado()));
@@ -93,7 +92,7 @@ public class ApuracaoCarteira {
     }
 
     /** @return histórico apurado linha a linha, em ordem cronológica */
-    public List<LinhaApuracaoDTO> getLinhas() {
+    public List<ApuracaoDTO.Linha> getLinhas() {
         return linhas;
     }
 

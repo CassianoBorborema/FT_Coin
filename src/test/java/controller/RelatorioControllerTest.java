@@ -2,17 +2,21 @@ package controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import dao.CarteiraDAO;
 import dao.MovimentacaoDAO;
-import dao.memoria.CarteiraDAOMemoria;
-import dao.memoria.MovimentacaoDAOMemoria;
+import dao.Persistencia;
 import dto.ApuracaoDTO;
 import dto.CarteiraDTO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 import java.time.LocalDate;
 import java.util.List;
+import model.ProvedorCotacao;
 import java.util.stream.Collectors;
 import model.TipoMovimentacao;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,8 +36,8 @@ class RelatorioControllerTest {
 
     @BeforeEach
     void setUp() {
-        carteiraDAO = new CarteiraDAOMemoria();
-        movimentacaoDAO = new MovimentacaoDAOMemoria();
+        carteiraDAO = Persistencia.emMemoria().carteiras();
+        movimentacaoDAO = Persistencia.emMemoria().movimentacoes();
         cotacoes = new CotacoesFixas();
         controller = new RelatorioController(carteiraDAO, movimentacaoDAO, cotacoes,
                 CotacoesFixas.relogioEm(HOJE));
@@ -66,10 +70,23 @@ class RelatorioControllerTest {
 
         ApuracaoDTO apuracao = controller.apurar(1);
 
-        assertEquals(12.0, apuracao.getCotacaoAtual(), TOLERANCIA);
-        assertEquals(1_200, apuracao.getSaldoMercado(), TOLERANCIA);
-        assertEquals(200, apuracao.getResultadoMercado(), TOLERANCIA);
-        assertEquals(0, apuracao.getResultadoCustoMedio(), TOLERANCIA);
+        assertEquals(12.0, apuracao.cotacaoAtual(), TOLERANCIA);
+        assertEquals(1_200, apuracao.saldoMercado(), TOLERANCIA);
+        assertEquals(200, apuracao.resultadoMercado(), TOLERANCIA);
+        assertEquals(0, apuracao.resultadoCustoMedio(), TOLERANCIA);
+    }
+
+    @Test
+    void cotacaoAtualEhConsultadaNaDataDoSistema() throws AppException {
+        carteiraDAO.incluir(new CarteiraDTO(0, "Ana", "XP"));
+        ProvedorCotacao oraculo = mock(ProvedorCotacao.class);
+        when(oraculo.cotacaoEm(any())).thenReturn(10.0);
+        RelatorioController relatorios = new RelatorioController(carteiraDAO, movimentacaoDAO, oraculo,
+                CotacoesFixas.relogioEm(HOJE));
+
+        relatorios.apurar(1);
+
+        verify(oraculo).cotacaoEm(HOJE);
     }
 
     @Test

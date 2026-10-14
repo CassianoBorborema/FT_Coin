@@ -1,6 +1,5 @@
-package dao.memoria;
+package dao;
 
-import dao.MovimentacaoDAO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 import java.util.ArrayList;
@@ -8,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MovimentacaoDAOMemoria implements MovimentacaoDAO {
+final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
 
     private final Map<Integer, MovimentacaoDTO> movimentacoes = new HashMap<>();
     private int proximoId = 1;

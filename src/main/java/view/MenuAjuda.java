@@ -29,7 +29,7 @@ public class MenuAjuda extends Menu {
                 return "Texto indisponível (arquivo não encontrado: " + caminho + ").";
             }
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
+        } catch (IOException _) {
             return "Texto indisponível (erro ao ler: " + caminho + ").";
         }
     }

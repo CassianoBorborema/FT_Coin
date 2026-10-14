@@ -1,4 +1,4 @@
-package infra.db;
+package dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -13,11 +13,11 @@ import java.util.Map;
 import java.util.Properties;
 import org.junit.jupiter.api.Test;
 
-class InfraBancoTest {
+class FabricaConexaoTest {
 
     @Test
     void scriptEhSeparadoEmComandosSemComentarios() {
-        List<String> comandos = InicializadorBanco.comandos(
+        List<String> comandos = FabricaConexao.comandos(
                 "-- comentário; com ponto e vírgula\nCREATE TABLE a (x INT);\n\n  -- outro\nCREATE TABLE b (y INT);\n");
 
         assertEquals(List.of("CREATE TABLE a (x INT)", "CREATE TABLE b (y INT)"), comandos);
@@ -30,7 +30,7 @@ class InfraBancoTest {
         propriedades.setProperty("db.usuario", "ftcoin");
         Map<String, String> ambiente = Map.of("FTCOIN_DB_SENHA", "segredo", "FTCOIN_DB_USUARIO", "outro");
 
-        ConfiguracaoBanco banco = ConfiguracaoBanco.carregar(Configuracao.de(propriedades, ambiente::get));
+        FabricaConexao.ConfiguracaoBanco banco = FabricaConexao.ConfiguracaoBanco.carregar(Configuracao.de(propriedades, ambiente::get));
 
         assertEquals("jdbc:mariadb://localhost:3306/ftcoin", banco.url());
         assertEquals("outro", banco.usuario());
@@ -43,12 +43,12 @@ class InfraBancoTest {
         Properties propriedades = new Properties();
         propriedades.setProperty("db.usuario", "ftcoin");
 
-        assertThrows(AppException.class, () -> ConfiguracaoBanco.carregar(Configuracao.de(propriedades)));
+        assertThrows(AppException.class, () -> FabricaConexao.ConfiguracaoBanco.carregar(Configuracao.de(propriedades)));
     }
 
     @Test
     void senhaNaoApareceNoToString() {
-        ConfiguracaoBanco banco = new ConfiguracaoBanco("jdbc:mariadb://localhost/ftcoin", "ftcoin", "segredo", 5);
+        FabricaConexao.ConfiguracaoBanco banco = new FabricaConexao.ConfiguracaoBanco("jdbc:mariadb://localhost/ftcoin", "ftcoin", "segredo", 5);
 
         assertFalse(banco.toString().contains("segredo"));
         assertTrue(banco.toString().contains("ftcoin"));
@@ -57,7 +57,7 @@ class InfraBancoTest {
     @Test
     void bancoInacessivelGeraPersistenciaException() {
         FabricaConexao conexoes = new FabricaConexao(
-                new ConfiguracaoBanco("jdbc:mariadb://127.0.0.1:1/ftcoin", "ftcoin", "", 1));
+                new FabricaConexao.ConfiguracaoBanco("jdbc:mariadb://127.0.0.1:1/ftcoin", "ftcoin", "", 1));
 
         PersistenciaException erro = assertThrows(PersistenciaException.class, conexoes::testarConexao);
         assertTrue(erro.getMessage().contains("Não foi possível conectar"));

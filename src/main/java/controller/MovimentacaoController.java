@@ -17,14 +17,14 @@ import model.TipoMovimentacao;
 public class MovimentacaoController {
 
     private final MovimentacaoDAO movimentacaoDAO;
-    private final ValidadorCarteira validadorCarteira;
+    private final CarteiraDAO carteiraDAO;
     private final ProvedorCotacao cotacoes;
     private final Clock relogio;
 
     public MovimentacaoController(MovimentacaoDAO movimentacaoDAO, CarteiraDAO carteiraDAO,
                                   ProvedorCotacao cotacoes, Clock relogio) {
         this.movimentacaoDAO = movimentacaoDAO;
-        this.validadorCarteira = new ValidadorCarteira(carteiraDAO);
+        this.carteiraDAO = carteiraDAO;
         this.cotacoes = cotacoes;
         this.relogio = relogio;
     }
@@ -49,12 +49,12 @@ public class MovimentacaoController {
      * @throws AppException se a carteira não estiver cadastrada
      */
     public void validarCarteiraExiste(int idCarteira) throws AppException {
-        validadorCarteira.validarExistente(idCarteira);
+        carteiraDAO.validarExistente(idCarteira);
     }
 
     private MovimentacaoDTO registrar(int idCarteira, double quantidade, TipoMovimentacao tipo)
             throws AppException {
-        validadorCarteira.validarExistente(idCarteira);
+        carteiraDAO.validarExistente(idCarteira);
         LocalDate hoje = LocalDate.now(relogio);
         cotacoes.cotacaoEm(hoje);
 

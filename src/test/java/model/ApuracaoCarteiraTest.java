@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dto.LinhaApuracaoDTO;
+import dto.ApuracaoDTO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 import java.time.LocalDate;
@@ -29,7 +29,7 @@ class ApuracaoCarteiraTest {
         assertEquals(0, apuracao.getSaldoQuantidade(), TOLERANCIA);
         assertEquals(0, apuracao.getCustoMedio(), TOLERANCIA);
         assertEquals(0, apuracao.getResultadoCustoMedio(), TOLERANCIA);
-        assertEquals(0, apuracao.toDTO(1, 10).getPercentualCustoMedio(), TOLERANCIA);
+        assertEquals(0, apuracao.toDTO(1, 10).percentualCustoMedio(), TOLERANCIA);
     }
 
     @Test
@@ -51,8 +51,8 @@ class ApuracaoCarteiraTest {
                 venda(2, DIA_3, 4)      // 4 x (3 - 1) = 8
         ), COTACAO_DO_DIA);
 
-        LinhaApuracaoDTO venda = apuracao.getLinhas().get(1);
-        assertEquals(8, venda.getResultadoOperacao(), TOLERANCIA);
+        ApuracaoDTO.Linha venda = apuracao.getLinhas().get(1);
+        assertEquals(8, venda.resultadoOperacao(), TOLERANCIA);
         assertEquals(1, apuracao.getCustoMedio(), TOLERANCIA);
         assertEquals(6, apuracao.getSaldoQuantidade(), TOLERANCIA);
         assertEquals(12 - 10, apuracao.getResultadoOperacional(), TOLERANCIA);
@@ -66,7 +66,7 @@ class ApuracaoCarteiraTest {
                 compra(3, DIA_3, 5)
         ), COTACAO_DO_DIA);
 
-        assertEquals(0, apuracao.getLinhas().get(1).getSaldoQuantidade(), TOLERANCIA);
+        assertEquals(0, apuracao.getLinhas().get(1).saldoQuantidade(), TOLERANCIA);
         assertEquals(3, apuracao.getCustoMedio(), TOLERANCIA);
     }
 
@@ -77,7 +77,7 @@ class ApuracaoCarteiraTest {
                 compra(1, DIA_1, 10)
         ), COTACAO_DO_DIA);
 
-        assertEquals(DIA_1, apuracao.getLinhas().get(0).getData());
+        assertEquals(DIA_1, apuracao.getLinhas().get(0).data());
         assertEquals(5, apuracao.getSaldoQuantidade(), TOLERANCIA);
     }
 
@@ -105,7 +105,7 @@ class ApuracaoCarteiraTest {
         ), COTACAO_DO_DIA);
 
         assertEquals(-20 + 10 * 5, apuracao.getResultadoMercado(5), TOLERANCIA);
-        assertEquals(150, apuracao.toDTO(1, 5).getPercentualMercado(), TOLERANCIA);
+        assertEquals(150, apuracao.toDTO(1, 5).percentualMercado(), TOLERANCIA);
     }
 
     private static MovimentacaoDTO compra(int id, LocalDate data, double quantidade) {

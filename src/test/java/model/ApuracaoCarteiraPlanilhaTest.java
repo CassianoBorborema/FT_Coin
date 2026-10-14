@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dto.ApuracaoDTO;
-import dto.LinhaApuracaoDTO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 import java.time.LocalDate;
@@ -79,22 +78,22 @@ class ApuracaoCarteiraPlanilhaTest {
     @Test
     @DisplayName("Cada linha com operação reproduz a posição e o resultado da planilha")
     void linhasReproduzemPlanilha() {
-        List<LinhaApuracaoDTO> linhas = apuracao.getLinhas();
+        List<ApuracaoDTO.Linha> linhas = apuracao.linhas();
         assertEquals(PLANILHA.length, linhas.size());
 
         for (int i = 0; i < PLANILHA.length; i++) {
             Object[] esperado = PLANILHA[i];
-            LinhaApuracaoDTO linha = linhas.get(i);
+            ApuracaoDTO.Linha linha = linhas.get(i);
             String contexto = "dia " + esperado[0];
             assertAll(contexto,
-                    () -> assertEquals(dia((int) esperado[0]), linha.getData(), contexto),
-                    () -> assertEquals(esperado[1], linha.getTipo(), contexto),
-                    () -> assertEquals((double) esperado[2], linha.getValor(), TOLERANCIA_CENTAVO, contexto),
-                    () -> assertEquals((int) esperado[3], linha.getSaldoQuantidade(), TOLERANCIA_CENTAVO, contexto),
-                    () -> assertEquals((double) esperado[4], linha.getCustoMedio(), TOLERANCIA_CENTAVO, contexto),
-                    () -> assertEquals((double) esperado[5], linha.getSaldoCustoMedio(), TOLERANCIA_ACUMULADA, contexto),
-                    () -> assertEquals((double) esperado[6], linha.getResultadoOperacao(), TOLERANCIA_ACUMULADA, contexto),
-                    () -> assertEquals((double) esperado[7], linha.getResultadoAcumulado(), TOLERANCIA_ACUMULADA, contexto));
+                    () -> assertEquals(dia((int) esperado[0]), linha.data(), contexto),
+                    () -> assertEquals(esperado[1], linha.tipo(), contexto),
+                    () -> assertEquals((double) esperado[2], linha.valor(), TOLERANCIA_CENTAVO, contexto),
+                    () -> assertEquals((int) esperado[3], linha.saldoQuantidade(), TOLERANCIA_CENTAVO, contexto),
+                    () -> assertEquals((double) esperado[4], linha.custoMedio(), TOLERANCIA_CENTAVO, contexto),
+                    () -> assertEquals((double) esperado[5], linha.saldoCustoMedio(), TOLERANCIA_ACUMULADA, contexto),
+                    () -> assertEquals((double) esperado[6], linha.resultadoOperacao(), TOLERANCIA_ACUMULADA, contexto),
+                    () -> assertEquals((double) esperado[7], linha.resultadoAcumulado(), TOLERANCIA_ACUMULADA, contexto));
         }
     }
 
@@ -102,23 +101,23 @@ class ApuracaoCarteiraPlanilhaTest {
     @DisplayName("Totais da planilha: quantidades e valores comprados e vendidos")
     void totaisReproduzemPlanilha() {
         assertAll(
-                () -> assertEquals(1_000, apuracao.getSaldoQuantidade(), TOLERANCIA_CENTAVO),
-                () -> assertEquals(76_798.50, apuracao.getTotalComprado(), TOLERANCIA_ACUMULADA),
-                () -> assertEquals(61_507.89, apuracao.getTotalVendido(), TOLERANCIA_ACUMULADA),
-                () -> assertEquals(12.15, apuracao.getCustoMedio(), TOLERANCIA_CENTAVO),
-                () -> assertEquals(12_148.86, apuracao.getSaldoCustoMedio(), TOLERANCIA_ACUMULADA),
-                () -> assertEquals(14_655.06, apuracao.getSaldoMercado(), TOLERANCIA_CENTAVO));
+                () -> assertEquals(1_000, apuracao.saldoQuantidade(), TOLERANCIA_CENTAVO),
+                () -> assertEquals(76_798.50, apuracao.totalComprado(), TOLERANCIA_ACUMULADA),
+                () -> assertEquals(61_507.89, apuracao.totalVendido(), TOLERANCIA_ACUMULADA),
+                () -> assertEquals(12.15, apuracao.custoMedio(), TOLERANCIA_CENTAVO),
+                () -> assertEquals(12_148.86, apuracao.saldoCustoMedio(), TOLERANCIA_ACUMULADA),
+                () -> assertEquals(14_655.06, apuracao.saldoMercado(), TOLERANCIA_CENTAVO));
     }
 
     @Test
     @DisplayName("Resumo da planilha: resultado operacional, geral e a mercado")
     void resumoReproduzPlanilha() {
         assertAll(
-                () -> assertEquals(-15_290.61, apuracao.getResultadoOperacional(), TOLERANCIA_ACUMULADA),
-                () -> assertEquals(-3_141.75, apuracao.getResultadoCustoMedio(), TOLERANCIA_ACUMULADA),
-                () -> assertEquals(-4.09, apuracao.getPercentualCustoMedio(), TOLERANCIA_PERCENTUAL),
-                () -> assertEquals(-635.55, apuracao.getResultadoMercado(), TOLERANCIA_ACUMULADA),
-                () -> assertEquals(-0.83, apuracao.getPercentualMercado(), TOLERANCIA_PERCENTUAL));
+                () -> assertEquals(-15_290.61, apuracao.resultadoOperacional(), TOLERANCIA_ACUMULADA),
+                () -> assertEquals(-3_141.75, apuracao.resultadoCustoMedio(), TOLERANCIA_ACUMULADA),
+                () -> assertEquals(-4.09, apuracao.percentualCustoMedio(), TOLERANCIA_PERCENTUAL),
+                () -> assertEquals(-635.55, apuracao.resultadoMercado(), TOLERANCIA_ACUMULADA),
+                () -> assertEquals(-0.83, apuracao.percentualMercado(), TOLERANCIA_PERCENTUAL));
     }
 
     private static LocalDate dia(int dia) {

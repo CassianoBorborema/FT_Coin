@@ -16,7 +16,6 @@ public class RelatorioController {
 
     private final CarteiraDAO carteiraDAO;
     private final MovimentacaoDAO movimentacaoDAO;
-    private final ValidadorCarteira validadorCarteira;
     private final ProvedorCotacao cotacoes;
     private final Clock relogio;
 
@@ -24,7 +23,6 @@ public class RelatorioController {
                                ProvedorCotacao cotacoes, Clock relogio) {
         this.carteiraDAO = carteiraDAO;
         this.movimentacaoDAO = movimentacaoDAO;
-        this.validadorCarteira = new ValidadorCarteira(carteiraDAO);
         this.cotacoes = cotacoes;
         this.relogio = relogio;
     }
@@ -54,7 +52,7 @@ public class RelatorioController {
      *                      ou se o histórico da carteira for inconsistente
      */
     public ApuracaoDTO apurar(int idCarteira) throws AppException {
-        validadorCarteira.validarExistente(idCarteira);
+        carteiraDAO.validarExistente(idCarteira);
         ApuracaoCarteira apuracao = ApuracaoCarteira.calcular(
                 movimentacaoDAO.listarPorCarteira(idCarteira), cotacoes
         );

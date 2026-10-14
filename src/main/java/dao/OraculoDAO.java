@@ -5,7 +5,7 @@ import exception.AppException;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface OraculoDAO {
+public sealed interface OraculoDAO permits OraculoDAOMemoria, OraculoDAOMariaDB {
 
     void incluir(OraculoDTO oraculo) throws AppException;
 
