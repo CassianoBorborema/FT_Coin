@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Cria as tabelas da aplicação a partir do script {@value #SCRIPT_SCHEMA} do classpath.
- * O script usa {@code CREATE TABLE IF NOT EXISTS}, então pode ser executado a cada inicialização.
+ * Cria as tabelas que faltarem a partir de {@value #SCRIPT_SCHEMA}. Pode rodar a cada inicialização.
  */
 public class InicializadorBanco {
 
@@ -22,11 +21,6 @@ public class InicializadorBanco {
         this.fabricaConexao = fabricaConexao;
     }
 
-    /**
-     * Testa a conexão e cria as tabelas que ainda não existem.
-     *
-     * @throws AppException se o banco estiver inacessível ou o script falhar
-     */
     public void inicializar() throws AppException {
         fabricaConexao.testarConexao();
         List<String> comandos = comandos(lerScript());
@@ -52,11 +46,8 @@ public class InicializadorBanco {
     }
 
     /**
-     * Separa o script em comandos, ignorando comentários de linha ({@code --}).
-     * O script não pode ter {@code ;} dentro de textos.
-     *
-     * @param script conteúdo do script SQL
-     * @return os comandos, sem o {@code ;} final
+     * Separa o script em comandos pelo {@code ;}, ignorando comentários {@code --}.
+     * Por isso o script não pode ter {@code ;} dentro de textos.
      */
     static List<String> comandos(String script) {
         StringBuilder semComentarios = new StringBuilder();

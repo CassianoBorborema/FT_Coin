@@ -6,7 +6,7 @@ import dao.MovimentacaoDAO;
 import dao.OraculoDAO;
 
 /**
- * DAOs em memória. Os dados existem enquanto a aplicação estiver aberta.
+ * DAOs em memória: os dados se perdem ao sair.
  */
 public class FabricaDAOMemoria implements FabricaDAO {
 

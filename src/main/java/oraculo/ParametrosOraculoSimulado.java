@@ -5,23 +5,14 @@ import exception.AppException;
 import java.time.LocalDate;
 
 /**
- * Parâmetros da fórmula de cotação do {@link OraculoSimulado}.
- *
- * @param dataInicial        primeiro dia com cotação (dia 1 da valorização)
- * @param base               valor base da cotação
- * @param amplitude          limite da flutuação diária, para mais e para menos
- * @param valorizacaoInicial valorização no dia 1
- * @param fatorValorizacao   fator aplicado a {@code ln(n)} na valorização
- * @param semente            semente do sorteio da flutuação
+ * Parâmetros da fórmula do {@link OraculoSimulado}, lidos das chaves {@code oraculo.*}.
  */
 public record ParametrosOraculoSimulado(LocalDate dataInicial, double base, double amplitude,
                                         double valorizacaoInicial, double fatorValorizacao, long semente) {
 
     /**
-     * Valida os parâmetros. A cotação mínima possível (base + valorização inicial - amplitude)
-     * precisa ser positiva, já que a valorização nunca diminui.
-     *
-     * @throws IllegalArgumentException se algum parâmetro for inválido
+     * Como a valorização nunca diminui, a menor cotação possível é
+     * {@code base + valorizacaoInicial - amplitude}, que precisa ser positiva.
      */
     public ParametrosOraculoSimulado {
         if (dataInicial == null) {
@@ -39,13 +30,6 @@ public record ParametrosOraculoSimulado(LocalDate dataInicial, double base, doub
         }
     }
 
-    /**
-     * Lê os parâmetros das chaves {@code oraculo.*} da configuração.
-     *
-     * @param configuracao configuração da aplicação
-     * @return os parâmetros do oráculo simulado
-     * @throws AppException se alguma chave faltar ou tiver valor inválido
-     */
     public static ParametrosOraculoSimulado carregar(Configuracao configuracao) throws AppException {
         try {
             return new ParametrosOraculoSimulado(

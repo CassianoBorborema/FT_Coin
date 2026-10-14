@@ -19,7 +19,6 @@ class MenuTest {
 
     private final ByteArrayOutputStream saida = new ByteArrayOutputStream();
 
-    /** Menu de teste que registra as opções executadas. */
     private static class MenuExemplo extends Menu {
 
         private final List<String> executadas = new ArrayList<>();

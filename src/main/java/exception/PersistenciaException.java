@@ -1,8 +1,7 @@
 package exception;
 
 /**
- * Falha de acesso ao banco de dados, como conexão recusada ou erro de SQL.
- * A causa original fica disponível em {@link #getCause()}.
+ * Falha de acesso ao banco de dados. A {@code SQLException} original fica em {@link #getCause()}.
  */
 public class PersistenciaException extends AppException {
 

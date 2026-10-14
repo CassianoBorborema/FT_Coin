@@ -39,12 +39,6 @@ public class Configuracao {
         this.ambiente = ambiente;
     }
 
-    /**
-     * Carrega a configuração padrão da aplicação.
-     *
-     * @return a configuração carregada
-     * @throws AppException se o arquivo não existir ou não puder ser lido
-     */
     public static Configuracao carregar() throws AppException {
         Properties propriedades = new Properties();
         try (InputStream in = Configuracao.class.getResourceAsStream(ARQUIVO_PADRAO)) {
@@ -70,24 +64,10 @@ public class Configuracao {
         }
     }
 
-    /**
-     * Cria uma configuração a partir de propriedades já carregadas (útil em testes).
-     *
-     * @param propriedades pares chave/valor da configuração
-     * @return a configuração
-     */
     public static Configuracao de(Properties propriedades) {
         return de(propriedades, variavel -> null);
     }
 
-    /**
-     * Cria uma configuração com propriedades e variáveis de ambiente definidas pelo chamador
-     * (útil em testes).
-     *
-     * @param propriedades pares chave/valor da configuração
-     * @param ambiente     consulta de variáveis de ambiente pelo nome
-     * @return a configuração
-     */
     public static Configuracao de(Properties propriedades, UnaryOperator<String> ambiente) {
         Properties copia = new Properties();
         copia.putAll(propriedades);
@@ -95,8 +75,6 @@ public class Configuracao {
     }
 
     /**
-     * @param chave chave da configuração
-     * @return o valor da chave, sem espaços nas pontas
      * @throws AppException se a chave não estiver configurada
      */
     public String getTexto(String chave) throws AppException {
@@ -107,11 +85,6 @@ public class Configuracao {
         return valor.trim();
     }
 
-    /**
-     * @param chave  chave da configuração
-     * @param padrao valor usado se a chave não estiver configurada
-     * @return o valor da chave (pode ser vazio) ou o padrão
-     */
     public String getTexto(String chave, String padrao) {
         String valor = buscar(chave);
         return valor == null ? padrao : valor.trim();
@@ -128,19 +101,11 @@ public class Configuracao {
         return valor;
     }
 
-    /**
-     * @param chave chave da configuração, por exemplo {@code db.senha}
-     * @return o nome da variável de ambiente equivalente, por exemplo {@code FTCOIN_DB_SENHA}
-     */
+    /** Ex.: {@code db.senha} → {@code FTCOIN_DB_SENHA}. */
     static String nomeVariavelAmbiente(String chave) {
         return PREFIXO_AMBIENTE + chave.replace('.', '_').toUpperCase(Locale.ROOT);
     }
 
-    /**
-     * @param chave chave da configuração
-     * @return o valor da chave como número decimal (separador ponto)
-     * @throws AppException se a chave não existir ou não for um número
-     */
     public double getDecimal(String chave) throws AppException {
         String valor = getTexto(chave);
         try {
@@ -150,11 +115,6 @@ public class Configuracao {
         }
     }
 
-    /**
-     * @param chave chave da configuração
-     * @return o valor da chave como número inteiro
-     * @throws AppException se a chave não existir ou não for um inteiro
-     */
     public long getInteiro(String chave) throws AppException {
         String valor = getTexto(chave);
         try {
@@ -164,11 +124,6 @@ public class Configuracao {
         }
     }
 
-    /**
-     * @param chave chave da configuração
-     * @return o valor da chave como data no formato ISO ({@code yyyy-MM-dd})
-     * @throws AppException se a chave não existir ou não for uma data válida
-     */
     public LocalDate getData(String chave) throws AppException {
         String valor = getTexto(chave);
         try {
