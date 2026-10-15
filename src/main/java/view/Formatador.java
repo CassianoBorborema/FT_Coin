@@ -38,9 +38,9 @@ public final class Formatador {
         return moeda(valor) + " (" + String.format(Mensagens.locale(), "%.2f%%", zerarSeInsignificante(percentual)) + ")";
     }
 
+    /** Titular e corretora. O identificador fica de fora: o usuário escolhe carteiras pela lista. */
     public static String carteira(CarteiraDTO carteira) {
-        return Mensagens.get("carteira.formato", carteira.getIdentificador(), carteira.getNomeTitular(),
-                carteira.getCorretora());
+        return Mensagens.get("carteira.formato", carteira.getNomeTitular(), carteira.getCorretora());
     }
 
     /** Evita exibir "-0,00" para valores que arredondam para zero. */

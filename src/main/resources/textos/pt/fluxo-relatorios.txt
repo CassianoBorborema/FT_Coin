@@ -2,8 +2,8 @@
 Acesse pelo menu principal: 4. Relatórios. Valores em R$.
 
 1 e 2. Listar carteiras
-   Todas as carteiras, ordenadas por identificador ou pelo nome
-   do titular.
+   Todas as carteiras, na ordem em que foram cadastradas ou pelo
+   nome do titular.
 3. Saldo atual
    Quantidade de FTCoins, custo médio, valor das moedas a custo
    médio e a mercado (pela última cotação) e o saldo em reais.

@@ -2,8 +2,8 @@
 Acceda desde el menú principal: 4. Informes. Valores en R$.
 
 1 y 2. Listar carteras
-   Todas las carteras, ordenadas por identificador o por el
-   nombre del titular.
+   Todas las carteras, en orden de creación o por el nombre
+   del titular.
 3. Saldo actual
    Cantidad de FTCoins, costo medio, valor de las monedas a
    costo medio y a mercado (por la última cotización) y el

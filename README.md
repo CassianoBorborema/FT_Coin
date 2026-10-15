@@ -10,7 +10,7 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 | Área                     | Status       | Observação                                                                         |
 | ------------------------ | ------------ | ---------------------------------------------------------------------------------- |
 | **Menu principal**       | Implementado | Carteira (1), Movimentação (2), Oráculo (3), Relatórios (4) e Ajuda (5) integrados |
-| **Carteira (CRUD)**      | Implementado | Incluir, consultar, editar e excluir com validações e confirmação de exclusão      |
+| **Carteira (CRUD)**      | Implementado | Incluir, listar, editar e excluir com validações e confirmação de exclusão      |
 | **Exclusão de carteira** | Implementado | Bloqueada quando existem movimentações vinculadas                                  |
 | **Movimentação**         | Implementado | Compra, venda, crédito e saque na data do sistema; compra usa o saldo em reais     |
 | **Oráculo**              | Simulado     | Cotação de hoje, por data e por período, gerada pela fórmula da planilha           |
@@ -147,7 +147,7 @@ O script completo está em [schema.sql](src/main/resources/db/schema.sql).
 ## Requisitos do sistema (escopo)
 
 - **Interface:** CLI com menu principal (Carteira, Movimentação, Oráculo, Relatórios, Ajuda, Sair) e submenus.
-- **Carteira:** incluir, consultar, editar e excluir.
+- **Carteira:** incluir, listar, editar e excluir.
 - **Movimentação:** compra e venda de moeda virtual, crédito e saque em reais.
 - **Oráculo:** consultar cotações diárias, usadas nas movimentações e nos cálculos. Até a API existir, as cotações são simuladas pela fórmula da planilha de referência.
 - **Relatórios:** listagens ordenadas, saldo, histórico e ganho/perda por carteira, valorizados a custo médio e a mercado.
@@ -231,13 +231,16 @@ esperar o tempo de conexão), use `persistencia=memoria` por qualquer uma das fo
 
 ### Carteira
 
-1. Menu **1 (Carteira)** → **1 (Incluir)** → titular e corretora → anotar ID
-2. **2 (Consultar)** → informar ID → **0 (Voltar)**
+1. Menu **1 (Carteira)** → **1 (Incluir)** → titular e corretora
+2. **2 (Listar carteiras)** → ver todas as carteiras → **0 (Voltar)**
+
+> Onde uma carteira é necessária, o sistema lista as carteiras (titular e corretora) e você escolhe
+> pelo número da lista; não é preciso saber o identificador.
 
 ### Movimentação
 
-1. Menu **2 (Movimentação)** → **3 (Crédito em reais)** → ID da carteira → valor (ex.: 200)
-2. **1 (Compra)** → ID da carteira → conferir a cotação de hoje e o saldo em reais → quantidade (ex.: 10)
+1. Menu **2 (Movimentação)** → **3 (Crédito em reais)** → escolher a carteira → valor (ex.: 200)
+2. **1 (Compra)** → escolher a carteira → conferir a cotação de hoje e o saldo em reais → quantidade (ex.: 10)
 3. **2 (Venda)** → mesma carteira, quantidade ≤ saldo (ex.: 5); o valor da venda volta para o saldo em reais
 4. **4 (Saque em reais)** → valor ≤ saldo em reais
 5. Tentar compra sem saldo em reais ou venda acima do saldo de FTCoins → erro esperado
@@ -253,9 +256,9 @@ esperar o tempo de conexão), use `persistencia=memoria` por qualquer uma das fo
 
 ### Relatórios
 
-1. Menu **4 (Relatórios)** → **1/2** listar carteiras por id/titular
-2. **3 (Saldo atual)** → informar ID → responder **S** para imprimir o saldo em `saldo-carteira-<id>-<data>.txt`
-3. **4 (Histórico)** e **5 (Evolução diária)** → informar ID da carteira
+1. Menu **4 (Relatórios)** → **1/2** listar carteiras por ordem de cadastro/titular
+2. **3 (Saldo atual)** → escolher a carteira → responder **S** para imprimir o saldo em `saldo-carteira-<id>-<data>.txt`
+3. **4 (Histórico)** e **5 (Evolução diária)** → escolher a carteira
 4. **6 (Ganhos e perdas)** → resumo de cada carteira no formato da planilha de apuração, a custo médio e a mercado (última cotação)
 
 ### Oráculo simulado

@@ -6,7 +6,7 @@ Toda operación se registra con la fecha de hoy, a la
 cotización del día informada por el Oráculo (menú 3).
 
 1. Compra de moneda virtual
-   Ingrese el identificador de la cartera. El sistema muestra
+   Elija la cartera en la lista. El sistema muestra
    la cotización de hoy y el saldo en reales, y pide la
    cantidad de FTCoins. El valor de la compra (cantidad x
    cotización) se descuenta del saldo en reales; sin saldo

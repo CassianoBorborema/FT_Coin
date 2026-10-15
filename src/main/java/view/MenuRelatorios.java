@@ -8,6 +8,7 @@ import exception.AppException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Relatórios das carteiras: listagens, saldo atual, histórico, evolução diária e ganho/perda.
@@ -22,8 +23,8 @@ public class MenuRelatorios extends Menu {
     public MenuRelatorios(Console console, RelatorioController controller) {
         super(console, Mensagens.get("relatorios.titulo"));
         this.controller = controller;
-        adicionarOpcao(Mensagens.get("relatorios.listarPorId"),
-                () -> exibirCarteiras(controller.listarPorIdentificador(), "relatorios.ordenadasPorId"));
+        adicionarOpcao(Mensagens.get("relatorios.listarPorCadastro"),
+                () -> exibirCarteiras(controller.listarPorIdentificador(), "relatorios.ordenadasPorCadastro"));
         adicionarOpcao(Mensagens.get("relatorios.listarPorTitular"),
                 () -> exibirCarteiras(controller.listarPorTitular(), "relatorios.ordenadasPorTitular"));
         adicionarOpcao(Mensagens.get("relatorios.saldo"), this::exibirSaldo);
@@ -44,11 +45,15 @@ public class MenuRelatorios extends Menu {
     }
 
     private void exibirSaldo() throws AppException {
-        int identificador = console.lerInteiro(Mensagens.get("pedir.carteira"));
+        Optional<CarteiraDTO> carteira = escolherCarteira(controller.listarPorTitular());
+        if (carteira.isEmpty()) {
+            return;
+        }
+        int identificador = carteira.get().getIdentificador();
         ApuracaoDTO apuracao = controller.apurar(identificador);
 
         List<String> linhas = new ArrayList<>();
-        linhas.add(Mensagens.get("saldo.cabecalho", identificador, apuracao.dataCotacaoAtual()));
+        linhas.add(Mensagens.get("saldo.cabecalho", Formatador.carteira(carteira.get()), apuracao.dataCotacaoAtual()));
         linhas.add(campo("saldo.quantidade", Formatador.quantidade(apuracao.saldoQuantidade())));
         linhas.add(campo("saldo.custoMedio", Formatador.moeda(apuracao.custoMedio())));
         linhas.add(campo("saldo.valorCustoMedio", Formatador.moeda(apuracao.saldoCustoMedio())));
@@ -65,13 +70,17 @@ public class MenuRelatorios extends Menu {
     }
 
     private void exibirHistorico() throws AppException {
-        int identificador = console.lerInteiro(Mensagens.get("pedir.carteira"));
-        List<ApuracaoDTO.Linha> linhas = controller.apurar(identificador).linhas();
-        if (linhas.isEmpty()) {
-            console.exibir(Mensagens.get("relatorios.semMovimentacoes", identificador));
+        Optional<CarteiraDTO> carteira = escolherCarteira(controller.listarPorTitular());
+        if (carteira.isEmpty()) {
             return;
         }
-        console.exibir(Mensagens.get("historico.titulo", identificador));
+        String descricao = Formatador.carteira(carteira.get());
+        List<ApuracaoDTO.Linha> linhas = controller.apurar(carteira.get().getIdentificador()).linhas();
+        if (linhas.isEmpty()) {
+            console.exibir(Mensagens.get("relatorios.semMovimentacoes", descricao));
+            return;
+        }
+        console.exibir(Mensagens.get("historico.titulo", descricao));
         console.exibirFormatado(FORMATO_HISTORICO, colunas("data", "tipo", "quantidade", "cotacao", "valor",
                 "saldoQuantidade", "custoMedio", "resultadoOperacao", "saldoReais"));
         for (ApuracaoDTO.Linha linha : linhas) {
@@ -90,13 +99,17 @@ public class MenuRelatorios extends Menu {
     }
 
     private void exibirEvolucaoDiaria() throws AppException {
-        int identificador = console.lerInteiro(Mensagens.get("pedir.carteira"));
-        List<ApuracaoDTO.Dia> dias = controller.evolucaoDiaria(identificador);
-        if (dias.isEmpty()) {
-            console.exibir(Mensagens.get("relatorios.semMovimentacoes", identificador));
+        Optional<CarteiraDTO> carteira = escolherCarteira(controller.listarPorTitular());
+        if (carteira.isEmpty()) {
             return;
         }
-        console.exibir(Mensagens.get("evolucao.titulo", identificador));
+        String descricao = Formatador.carteira(carteira.get());
+        List<ApuracaoDTO.Dia> dias = controller.evolucaoDiaria(carteira.get().getIdentificador());
+        if (dias.isEmpty()) {
+            console.exibir(Mensagens.get("relatorios.semMovimentacoes", descricao));
+            return;
+        }
+        console.exibir(Mensagens.get("evolucao.titulo", descricao));
         console.exibirFormatado(FORMATO_EVOLUCAO, colunas("data", "cotacao", "compra", "venda", "saldoQuantidade",
                 "custoMedio", "saldoFinanceiro", "resultadoOperacao", "resultadoAcumulado", "saldoMercado"));
         double quantidadeComprada = 0;

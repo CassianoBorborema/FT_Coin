@@ -2,10 +2,12 @@ package controller;
 
 import dao.CarteiraDAO;
 import dao.MovimentacaoDAO;
+import dto.CarteiraDTO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.List;
 import model.ApuracaoCarteira;
 import model.Movimentacao;
 import model.Posicao;
@@ -61,15 +63,9 @@ public class MovimentacaoController {
         return posicaoAtual(idCarteira).getSaldoReais();
     }
 
-    /**
-     * Verifica se a carteira existe. É público para que a view avise o usuário
-     * logo após a digitação do identificador, sem esperar os demais dados.
-     *
-     * @param idCarteira identificador da carteira
-     * @throws AppException se a carteira não estiver cadastrada
-     */
-    public void validarCarteiraExiste(int idCarteira) throws AppException {
-        carteiraDAO.validarExistente(idCarteira);
+    /** Carteiras em que o usuário pode movimentar. */
+    public List<CarteiraDTO> listarCarteiras() throws AppException {
+        return carteiraDAO.listarTodas();
     }
 
     /**

@@ -42,7 +42,7 @@ flowchart TB
 
 | Componente | Responsabilidade |
 | ---------- | ---------------- |
-| [MenuCarteira](../src/main/java/view/MenuCarteira.java) | Opções de incluir, consultar, editar e excluir; lê os dados e exibe o resultado |
+| [MenuCarteira](../src/main/java/view/MenuCarteira.java) | Opções de incluir, listar, editar e excluir; lê os dados e exibe o resultado |
 | [Menu](../src/main/java/view/Menu.java) | Base de todos os menus: numera as opções, repete até o 0 e mostra os erros sem encerrar a aplicação |
 | [CarteiraController](../src/main/java/controller/CarteiraController.java) | Valida o identificador, monta o DTO, valida pelo modelo e chama o DAO |
 | [Carteira](../src/main/java/model/Carteira.java) | Regras da entidade: titular e corretora obrigatórios |
@@ -80,12 +80,17 @@ controller nem view.
 
 ## 3. Operações
 
+Nenhuma operação pede o identificador da carteira. Editar e excluir usam `Menu.escolherCarteira`,
+que lista as carteiras por titular para o usuário escolher pelo número da lista; 0 cancela e volta
+ao menu. O identificador não aparece na interface, para não ser confundido com o número da lista.
+Sem carteiras cadastradas, a operação avisa que é preciso incluir uma.
+
 | Opção | O que acontece | Erros possíveis |
 | ----- | -------------- | --------------- |
 | **1. Incluir** | Lê titular e corretora, valida e grava. O DAO gera o identificador (na memória, o menor livre; no MariaDB, `AUTO_INCREMENT`) | Titular ou corretora vazios |
-| **2. Consultar** | Lê o identificador e mostra `#id - titular (corretora: X)` | Identificador ≤ 0 ou inexistente |
-| **3. Editar** | Mostra os dados atuais, lê os novos e grava | Os mesmos do incluir e do consultar |
-| **4. Excluir** | Mostra a carteira, pede confirmação (S/N) e exclui | Carteira com movimentações (o histórico não pode ser perdido) |
+| **2. Listar** | Mostra todas as carteiras por titular, sem pedir escolha | — |
+| **3. Editar** | Escolha na lista, mostra os dados atuais, lê os novos e grava | Os mesmos do incluir |
+| **4. Excluir** | Escolha na lista, pede confirmação (S/N) e exclui | Carteira com movimentações (o histórico não pode ser perdido) |
 
 ```mermaid
 sequenceDiagram
@@ -102,7 +107,7 @@ sequenceDiagram
     Note over D: identificador gerado é gravado de volta no DTO
     C->>D: consultarPorId(id)
     D-->>MC: CarteiraDTO
-    MC->>U: Carteira incluída com sucesso: #1 - Ana (corretora: XP)
+    MC->>U: Carteira incluída com sucesso: Ana (corretora: XP)
 ```
 
 ---

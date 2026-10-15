@@ -2,19 +2,18 @@
 A carteira guarda as moedas virtuais de um titular em uma corretora.
 Acesse pelo menu principal: 1. Carteira.
 
+Sempre que uma operação precisa de uma carteira, o sistema mostra
+a lista de carteiras (titular e corretora) e você escolhe pelo
+número da lista. Use 0 para cancelar.
+
 1. Incluir carteira
-   Informe o nome do titular e a corretora. O sistema gera o
-   identificador da carteira: anote-o, ele é usado nas
-   movimentações e nos relatórios.
-2. Consultar carteira
-   Informe o identificador para ver titular e corretora.
+   Informe o nome do titular e a corretora.
+2. Listar carteiras
+   Mostra todas as carteiras, com titular e corretora.
 3. Editar carteira
-   Informe o identificador; o sistema mostra os dados atuais e
-   pede o novo titular e a nova corretora.
+   Escolha a carteira; o sistema mostra os dados atuais e pede
+   o novo titular e a nova corretora.
 4. Excluir carteira
-   Informe o identificador e confirme com S. Carteiras que já têm
+   Escolha a carteira e confirme com S. Carteiras que já têm
    movimentações não podem ser excluídas, para não perder o
    histórico de compras e vendas.
-
-Dica: para encontrar o identificador de uma carteira, use
-Relatórios > Listar carteiras por identificador ou por titular.

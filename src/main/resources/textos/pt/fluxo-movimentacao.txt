@@ -6,7 +6,7 @@ Toda operação é registrada na data de hoje, à cotação do dia
 informada pelo Oráculo (menu 3).
 
 1. Compra de moeda virtual
-   Informe o identificador da carteira. O sistema mostra a
+   Escolha a carteira na lista. O sistema mostra a
    cotação de hoje e o saldo em reais, e pede a quantidade de
    FTCoins. O valor da compra (quantidade x cotação) é debitado
    do saldo em reais; sem saldo suficiente, a compra é recusada.

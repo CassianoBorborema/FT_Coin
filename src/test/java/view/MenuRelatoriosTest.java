@@ -49,7 +49,7 @@ class MenuRelatoriosTest {
         Path arquivo = diretorio.resolve("saldo-carteira-1-2026-01-30.txt");
         assertTrue(Files.exists(arquivo));
         String conteudo = Files.readString(arquivo, StandardCharsets.UTF_8);
-        assertTrue(conteudo.contains("Saldo atual da carteira 1 em 30/01/2026"));
+        assertTrue(conteudo.contains("Saldo atual da carteira Ana (corretora: XP) em 30/01/2026"));
         assertTrue(conteudo.contains("R$ 120,00"));
         assertTrue(texto().contains("Saldo impresso em " + arquivo));
     }
@@ -61,6 +61,35 @@ class MenuRelatoriosTest {
         try (var arquivos = Files.list(diretorio)) {
             assertFalse(arquivos.findAny().isPresent());
         }
+    }
+
+    @Test
+    void carteiraEhEscolhidaPelaListaSemDigitarOIdentificador() {
+        executar("3\n1\nN\n0\n");
+
+        assertTrue(texto().contains("Escolha a carteira:"));
+        assertTrue(texto().contains("  1. Ana (corretora: XP)"));
+        assertTrue(texto().contains("Valor a mercado"));
+    }
+
+    @Test
+    void escolhaInvalidaPedeDeNovoECancelarVoltaAoMenu() {
+        executar("3\n7\n0\n0\n");
+
+        assertTrue(texto().contains("Opção inválida"));
+        assertFalse(texto().contains("Valor a mercado"));
+        assertFalse(texto().contains("Erro:"));
+    }
+
+    @Test
+    void semCarteirasAvisaQueEPrecisoIncluirUma() throws AppException {
+        Persistencia vazia = Persistencia.emMemoria();
+        controller = new RelatorioController(vazia.carteiras(), vazia.movimentacoes(), new CotacoesFixas(),
+                CotacoesFixas.relogioEm(HOJE), LocalDate.MAX);
+
+        executar("3\n0\n");
+
+        assertTrue(texto().contains("Erro: Nenhuma carteira cadastrada."));
     }
 
     @Test
