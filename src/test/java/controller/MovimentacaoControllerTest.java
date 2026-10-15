@@ -104,7 +104,7 @@ class MovimentacaoControllerTest {
     @Test
     void movimentacaoEmCarteiraInexistenteEhRecusada() {
         assertThrows(AppException.class, () -> controller.creditar(99, 10));
-        assertThrows(AppException.class, () -> controller.validarCarteiraExiste(0));
+        assertThrows(AppException.class, () -> controller.registrarCompra(0, 1));
     }
 
     @Test

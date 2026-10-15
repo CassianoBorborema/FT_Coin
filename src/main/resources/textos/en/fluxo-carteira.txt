@@ -2,19 +2,18 @@
 A wallet holds a holder's virtual coins at a broker.
 Open it from the main menu: 1. Wallet.
 
-1. Add wallet
-   Enter the holder name and the broker. The system generates
-   the wallet ID: write it down, it is used in transactions
-   and reports.
-2. Find wallet
-   Enter the ID to see the holder and the broker.
-3. Edit wallet
-   Enter the ID; the system shows the current data and asks
-   for the new holder and the new broker.
-4. Delete wallet
-   Enter the ID and confirm with Y. Wallets that already have
-   transactions cannot be deleted, so the history of
-   purchases and sales is not lost.
+Whenever an operation needs a wallet, the system shows the list
+of wallets (holder and broker) and you choose by the number in
+the list. Use 0 to cancel.
 
-Tip: to find a wallet ID, use Reports > List wallets by ID
-or by holder.
+1. Add wallet
+   Enter the holder name and the broker.
+2. List wallets
+   Shows all wallets, with holder and broker.
+3. Edit wallet
+   Choose the wallet; the system shows the current data and
+   asks for the new holder and the new broker.
+4. Delete wallet
+   Choose the wallet and confirm with Y. Wallets that already
+   have transactions cannot be deleted, so the history of
+   purchases and sales is not lost.

@@ -4,6 +4,9 @@ import config.Mensagens;
 import controller.CarteiraController;
 import dto.CarteiraDTO;
 import exception.AppException;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Cadastro de carteiras: inclusão, consulta, edição e exclusão.
@@ -16,7 +19,7 @@ public class MenuCarteira extends Menu {
         super(console, Mensagens.get("carteira.titulo"));
         this.controller = controller;
         adicionarOpcao(Mensagens.get("carteira.incluir"), this::incluirCarteira);
-        adicionarOpcao(Mensagens.get("carteira.consultar"), this::consultarCarteira);
+        adicionarOpcao(Mensagens.get("carteira.listar"), this::listarCarteiras);
         adicionarOpcao(Mensagens.get("carteira.editar"), this::editarCarteira);
         adicionarOpcao(Mensagens.get("carteira.excluir"), this::excluirCarteira);
     }
@@ -28,16 +31,26 @@ public class MenuCarteira extends Menu {
         console.exibir(Mensagens.get("carteira.incluida", Formatador.carteira(carteira)));
     }
 
-    private void consultarCarteira() throws AppException {
-        int identificador = console.lerInteiro(Mensagens.get("pedir.carteira"));
-        CarteiraDTO carteira = controller.consultar(identificador);
-        console.exibir(Mensagens.get("carteira.encontrada", Formatador.carteira(carteira)));
+    private void listarCarteiras() throws AppException {
+        List<CarteiraDTO> carteiras = controller.listarTodas();
+        if (carteiras.isEmpty()) {
+            console.exibir(Mensagens.get("relatorios.semCarteiras"));
+            return;
+        }
+        carteiras.sort(Comparator.comparing(CarteiraDTO::getNomeTitular, String.CASE_INSENSITIVE_ORDER));
+        console.exibir(Mensagens.get("carteira.cadastradas"));
+        for (CarteiraDTO carteira : carteiras) {
+            console.exibir("  " + Formatador.carteira(carteira));
+        }
     }
 
     private void editarCarteira() throws AppException {
-        int identificador = console.lerInteiro(Mensagens.get("carteira.pedirEditar"));
-        CarteiraDTO atual = controller.consultar(identificador);
-        console.exibir(Mensagens.get("carteira.atual", Formatador.carteira(atual)));
+        Optional<CarteiraDTO> escolhida = escolherCarteira(controller.listarTodas());
+        if (escolhida.isEmpty()) {
+            return;
+        }
+        int identificador = escolhida.get().getIdentificador();
+        console.exibir(Mensagens.get("carteira.atual", Formatador.carteira(escolhida.get())));
 
         String nomeTitular = console.lerLinha(Mensagens.get("carteira.pedirNovoTitular"));
         String corretora = console.lerLinha(Mensagens.get("carteira.pedirNovaCorretora"));
@@ -46,9 +59,12 @@ public class MenuCarteira extends Menu {
     }
 
     private void excluirCarteira() throws AppException {
-        int identificador = console.lerInteiro(Mensagens.get("carteira.pedirExcluir"));
-        CarteiraDTO carteira = controller.consultar(identificador);
-        console.exibir(Mensagens.get("carteira.aExcluir", Formatador.carteira(carteira)));
+        Optional<CarteiraDTO> escolhida = escolherCarteira(controller.listarTodas());
+        if (escolhida.isEmpty()) {
+            return;
+        }
+        int identificador = escolhida.get().getIdentificador();
+        console.exibir(Mensagens.get("carteira.aExcluir", Formatador.carteira(escolhida.get())));
 
         if (console.confirmar(Mensagens.get("carteira.confirmarExclusao"))) {
             controller.excluir(identificador);

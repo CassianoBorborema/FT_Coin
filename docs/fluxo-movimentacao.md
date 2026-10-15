@@ -38,7 +38,7 @@ flowchart TB
 
 | Componente | Responsabilidade |
 | ---------- | ---------------- |
-| [MenuMovimentacao](../src/main/java/view/MenuMovimentacao.java) | Lê a carteira, mostra a cotação de hoje e o saldo em reais, lê a quantidade ou o valor |
+| [MenuMovimentacao](../src/main/java/view/MenuMovimentacao.java) | Pede a escolha da carteira na lista, mostra a cotação de hoje e o saldo em reais, lê a quantidade ou o valor |
 | [MovimentacaoController](../src/main/java/controller/MovimentacaoController.java) | Registra a operação na data do sistema (`Clock`), à cotação do dia |
 | [TipoMovimentacao](../src/main/java/model/TipoMovimentacao.java) | Enum polimórfico: cada tipo (`COMPRA`, `VENDA`, `CREDITO`, `SAQUE`) sabe como altera a posição |
 | [Posicao](../src/main/java/model/Posicao.java) | FTCoins, custo médio, totais e saldo em reais; recusa operações sem saldo |
@@ -60,7 +60,7 @@ sequenceDiagram
     participant T as TipoMovimentacao
     participant D as MovimentacaoDAO
 
-    U->>MM: 1 (Compra), id da carteira
+    U->>MM: 1 (Compra), escolhe a carteira na lista
     MM->>C: cotacaoDeHoje(), saldoEmReais(id)
     MM->>U: Cotação de hoje: R$ 12,06 | Saldo em reais: R$ 200,00
     U->>MM: quantidade
@@ -101,7 +101,7 @@ histórico.
 
 | Situação | Mensagem (pt) |
 | -------- | ------------- |
-| Carteira inexistente | Carteira com identificador X não encontrada. |
+| Nenhuma carteira cadastrada | Nenhuma carteira cadastrada. Inclua uma em Carteira > Incluir carteira. |
 | Quantidade ≤ 0 ou texto inválido | Quantidade deve ser maior que zero. / Valor decimal inválido: X. |
 | Venda acima do saldo | A venda de X FTCoins excede o saldo de Y FTCoins. |
 | Compra ou saque sem saldo em reais | Saldo em reais insuficiente para a compra: disponível R$ X, necessário R$ Y. |

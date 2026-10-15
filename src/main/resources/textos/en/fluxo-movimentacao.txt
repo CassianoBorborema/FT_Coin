@@ -6,8 +6,8 @@ Every operation is recorded with today's date, at today's
 price from the Oracle (menu 3).
 
 1. Buy virtual coins
-   Enter the wallet ID. The system shows today's price and the
-   cash balance, and asks for the amount of FTCoins. The
+   Choose the wallet in the list. The system shows today's price
+   and the cash balance, and asks for the amount of FTCoins. The
    purchase value (amount x price) is debited from the cash
    balance; without enough cash, the purchase is refused.
 2. Sell virtual coins

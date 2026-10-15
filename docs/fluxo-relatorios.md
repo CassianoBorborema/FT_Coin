@@ -24,7 +24,7 @@ flowchart TB
 
 | Componente | Responsabilidade |
 | ---------- | ---------------- |
-| [MenuRelatorios](../src/main/java/view/MenuRelatorios.java) | Lê a carteira, formata as tabelas e o resumo, imprime o saldo em arquivo |
+| [MenuRelatorios](../src/main/java/view/MenuRelatorios.java) | Pede a escolha da carteira na lista, formata as tabelas e o resumo, imprime o saldo em arquivo |
 | [RelatorioController](../src/main/java/controller/RelatorioController.java) | Listagens ordenadas, `apurar(id)` e `evolucaoDiaria(id)`; guarda a apuração em cache |
 | [ApuracaoCarteira](../src/main/java/model/ApuracaoCarteira.java) | Aplica as movimentações em ordem cronológica e gera o histórico e a evolução diária |
 | [ApuracaoDTO](../src/main/java/dto/ApuracaoDTO.java) | Record com o resumo, as linhas do histórico (`Linha`) e os dias da evolução (`Dia`) |
@@ -35,7 +35,7 @@ flowchart TB
 
 | Opção | Conteúdo |
 | ----- | -------- |
-| **1 e 2. Listar carteiras** | Por identificador ou por titular (sem diferenciar maiúsculas) |
+| **1 e 2. Listar carteiras** | Por ordem de cadastro ou por titular (sem diferenciar maiúsculas) |
 | **3. Saldo atual** | FTCoins, custo médio, valor a custo médio, cotação atual, valor a mercado e saldo em reais; opção de gravar em `saldo-carteira-<id>-<data>.txt` |
 | **4. Histórico** | Uma linha por operação, com a posição logo após ela e o resultado de cada venda |
 | **5. Evolução diária** | Uma linha por dia, da primeira operação até hoje, como na planilha |
@@ -99,7 +99,8 @@ apuração guardada continua válida enquanto a quantidade e o maior identificad
 
 | Situação | Quem lança |
 | -------- | ---------- |
-| Identificador ≤ 0 ou carteira inexistente | `CarteiraDAO.validarExistente` |
+| Nenhuma carteira cadastrada | `Menu.escolherCarteira` |
+| Carteira excluída entre a escolha e o relatório | `CarteiraDAO.validarExistente` |
 | Sem cotação em uma data com operação, ou nenhuma nos últimos 31 dias | `ProvedorCotacao` |
 | Histórico inconsistente (ex.: venda maior que o saldo na data) | `ApuracaoCarteira` |
 | Falha ao gravar o arquivo do saldo | `Console.salvarArquivo` |

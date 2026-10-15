@@ -2,7 +2,7 @@
 Open it from the main menu: 4. Reports. Values in R$.
 
 1 and 2. List wallets
-   All wallets, sorted by ID or by holder name.
+   All wallets, in order of creation or by holder name.
 3. Current balance
    Amount of FTCoins, average cost, value of the coins at
    average cost and at market price (latest price) and the
