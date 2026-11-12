@@ -13,7 +13,7 @@ Sistema de apuração de ganhos e perdas em carteira de moedas virtuais, desenvo
 | **Carteira (CRUD)**      | Implementado | Incluir, listar, editar e excluir com validações e confirmação de exclusão      |
 | **Exclusão de carteira** | Implementado | Bloqueada quando existem movimentações vinculadas                                  |
 | **Movimentação**         | Implementado | Compra, venda, crédito e saque na data do sistema; compra usa o saldo em reais     |
-| **Oráculo**              | Simulado     | Cotação de hoje, por data e por período, gerada pela fórmula da planilha           |
+| **Oráculo**              | Implementado | Cotação de hoje, por data e por período, obtida do servidor do Oráculo             |
 | **Relatórios**           | Implementado | Listagens, saldo (com impressão), histórico, evolução diária e resumo de ganho/perda |
 | **Ajuda**                | Implementado | Como funciona, fluxos de carteira, movimentação e relatórios, e créditos          |
 | **Persistência**         | Implementado | MariaDB; se o banco não estiver acessível, segue em memória                        |
@@ -28,7 +28,7 @@ A aplicação **compila e executa** todos os fluxos ponta a ponta.
 | -------------------------------------------------------- | ----------------------------------------------------- |
 | [docs/fluxo-carteira.md](docs/fluxo-carteira.md)         | Arquitetura, inicialização e cadastro de carteiras    |
 | [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra, venda, crédito e saque e regras de saldo      |
-| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Cotação simulada, histórico e consultas               |
+| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Cotação do servidor, histórico e consultas            |
 | [docs/fluxo-relatorios.md](docs/fluxo-relatorios.md)     | Listagens, saldo, evolução diária e ganho/perda       |
 
 
@@ -62,7 +62,7 @@ FT_Coin/
     │   │   │   ├── ApuracaoCarteira.java    # Histórico e resultados da carteira
     │   │   │   └── ProvedorCotacao.java     # Contrato de cotação por data
     │   │   ├── oraculo/
-    │   │   │   ├── OraculoSimulado.java     # Cotação pela fórmula da planilha
+    │   │   │   ├── Oraculo.java       # Cotação obtida do servidor do Oráculo
     │   │   │   └── CotacaoComHistorico.java # Registra cada cotação obtida no OraculoDAO
     │   │   ├── dto/
     │   │   │   ├── CarteiraDTO.java
@@ -110,7 +110,7 @@ FT_Coin/
             │   └── ApuracaoCarteiraPlanilhaTest.java   # Reproduz a planilha de apuração de referência
             ├── controller/                              # Controllers com DAOs em memória
             ├── dao/                                     # Contrato dos DAOs (memória e MariaDB em contêiner) e conexão
-            ├── oraculo/                                 # Oráculo simulado e histórico de cotações
+            ├── oraculo/                                 # Oráculo (servidor), cliente de rede e histórico
             ├── view/                                    # Menu e Console
             └── testutil/                                # Cotações fixas e relógio parado para testes
 ```
@@ -125,7 +125,7 @@ FT_Coin/
 | **DAO**        | `dao`                       | Interfaces seladas e persistência em memória e MariaDB |
 | **Controller** | `controller`                | Regras de negócio e orquestração                    |
 | **View**       | `view`                      | Menus CLI, entrada/saída e formatação               |
-| **Oráculo**    | `oraculo`                   | Fontes de cotação (simulada) e histórico            |
+| **Oráculo**    | `oraculo`, `client`, `network` | Cotação do servidor, cliente de rede e histórico |
 | **Config**     | `config`                    | Configuração (`ftcoin.properties`) e idioma (`Mensagens`) |
 | **Exception**  | `exception`                 | Erros de aplicação centralizados                    |
 
@@ -149,7 +149,7 @@ O script completo está em [schema.sql](src/main/resources/db/schema.sql).
 - **Interface:** CLI com menu principal (Carteira, Movimentação, Oráculo, Relatórios, Ajuda, Sair) e submenus.
 - **Carteira:** incluir, listar, editar e excluir.
 - **Movimentação:** compra e venda de moeda virtual, crédito e saque em reais.
-- **Oráculo:** consultar cotações diárias, usadas nas movimentações e nos cálculos. Até a API existir, as cotações são simuladas pela fórmula da planilha de referência.
+- **Oráculo:** consultar cotações diárias, usadas nas movimentações e nos cálculos. As cotações vêm do servidor do Oráculo (`oraculo.host` e `oraculo.porta`); sem conexão, o menu informa a indisponibilidade.
 - **Relatórios:** listagens ordenadas, saldo, histórico e ganho/perda por carteira, valorizados a custo médio e a mercado.
 - **Persistência:** padrão DAO com implementações **em memória** e **MariaDB**; tudo funciona nas duas.
 - **Idiomas:** português, inglês e espanhol, escolhidos ao iniciar.
@@ -261,19 +261,20 @@ esperar o tempo de conexão), use `persistencia=memoria` por qualquer uma das fo
 3. **4 (Histórico)** e **5 (Evolução diária)** → escolher a carteira
 4. **6 (Ganhos e perdas)** → resumo de cada carteira no formato da planilha de apuração, a custo médio e a mercado (última cotação)
 
-### Oráculo simulado
+### Oráculo
 
-Até a API do Oráculo existir, cada cotação é calculada pela fórmula da planilha de referência:
+As cotações são pedidas ao servidor do Oráculo pelo cliente em `src/main/java/client/OracleSimpleClient.java`.
+O endereço fica em `ftcoin.properties` (`oraculo.host`, `oraculo.porta`). Grupo e senha devem ir para
+`ftcoin.local.properties`, que fica fora do Git:
 
 ```
-cotação = base + flutuação + valorização
-valorização = 1,40 + 0,435 · ln(n)        (n = dias desde a data inicial; a data inicial é o dia 1)
-flutuação   = sorteio em [-2,5; +2,5], sempre o mesmo para a mesma data
+oraculo.grupo=NOME_DO_GRUPO
+oraculo.senha=SENHA_DO_GRUPO
 ```
 
-Não há cotação antes da data inicial (`01/01/2026`) nem para datas futuras. Os parâmetros ficam em
-`src/main/resources/ftcoin.properties` e podem ser sobrescritos na execução, por exemplo
-`java -Doraculo.base=20 -jar target/ft-coin-1.0.0-SNAPSHOT.jar`.
+Datas futuras não são consultadas no servidor. Uma data sem cotação volta para o dia anterior, até 31 dias,
+como na busca da última cotação. Falha de conexão ou erro do servidor é mostrado ao usuário sem essa busca.
+Detalhes em [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md).
 
 ---
 
@@ -284,7 +285,7 @@ Não há cotação antes da data inicial (`01/01/2026`) nem para datas futuras. 
 | -------------------------------------------------------- | ------------------------------------------------ |
 | [docs/fluxo-carteira.md](docs/fluxo-carteira.md)         | Arquitetura, inicialização e cadastro            |
 | [docs/fluxo-movimentacao.md](docs/fluxo-movimentacao.md) | Compra, venda, crédito, saque e regras de saldo  |
-| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Cotação simulada, histórico e consultas          |
+| [docs/fluxo-oraculo.md](docs/fluxo-oraculo.md)           | Cotação do servidor, histórico e consultas       |
 | [docs/fluxo-relatorios.md](docs/fluxo-relatorios.md)     | Listagens, saldo, evolução diária e ganho/perda  |
 | [docs/README.md](docs/README.md)                         | Índice da pasta de documentação                  |
 | Javadoc (`mvn javadoc:javadoc`)                          | Referência das classes                           |

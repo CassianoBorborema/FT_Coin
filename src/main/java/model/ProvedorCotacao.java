@@ -2,6 +2,7 @@ package model;
 
 import dto.OraculoDTO;
 import exception.AppException;
+import exception.OraculoIndisponivelException;
 import exception.PersistenciaException;
 import java.time.LocalDate;
 
@@ -28,8 +29,8 @@ public interface ProvedorCotacao {
 
     /**
      * Procura a cotação mais recente até {@code data}, voltando no máximo
-     * {@value #DIAS_BUSCA_ULTIMA_COTACAO} dias. Falhas de acesso ao banco não são tratadas como
-     * "sem cotação no dia" e interrompem a busca.
+     * {@value #DIAS_BUSCA_ULTIMA_COTACAO} dias. Falhas de acesso ao banco ou ao Oráculo não são
+     * tratadas como "sem cotação no dia" e interrompem a busca.
      *
      * @throws AppException se não houver cotação no período
      */
@@ -38,7 +39,7 @@ public interface ProvedorCotacao {
             LocalDate dia = data.minusDays(dias);
             try {
                 return new OraculoDTO(dia, cotacaoEm(dia));
-            } catch (PersistenciaException e) {
+            } catch (PersistenciaException | OraculoIndisponivelException e) {
                 throw e;
             } catch (AppException _) {
                 // sem cotação neste dia: tenta o anterior

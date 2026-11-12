@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.NoSuchElementException;
 import model.ProvedorCotacao;
 import oraculo.CotacaoComHistorico;
-import oraculo.OraculoSimulado;
+import oraculo.Oraculo;
 import view.Console;
 import view.MenuAjuda;
 import view.MenuCarteira;
@@ -74,7 +74,7 @@ public final class Main {
         console.exibir(Mensagens.get("app.persistencia", persistencia.descricao()));
 
         ProvedorCotacao cotacoes = new CotacaoComHistorico(
-                new OraculoSimulado(OraculoSimulado.Parametros.carregar(configuracao), relogio),
+                new Oraculo(configuracao, relogio),
                 persistencia.cotacoes());
 
         CarteiraController carteiraController =

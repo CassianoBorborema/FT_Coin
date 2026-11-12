@@ -6,8 +6,8 @@ De onde vêm as cotações e como elas são consultadas.
 
 ## 1. Arquitetura
 
-O resto da aplicação só conhece a interface `ProvedorCotacao` (`cotacaoEm(data)`). Hoje a cotação é
-**simulada**; quando a API do Oráculo existir, basta outra implementação da interface.
+O resto da aplicação só conhece a interface `ProvedorCotacao` (`cotacaoEm(data)`). A cotação vem do
+servidor do Oráculo, consultado pelo cliente de rede `client.OracleSimpleClient`.
 
 ```mermaid
 flowchart LR
@@ -18,31 +18,33 @@ flowchart LR
     Provedor -.->|"implementado por"| Historico["oraculo.CotacaoComHistorico"]
     Historico -->|"1. memória"| Cache["Map data → cotação"]
     Historico -->|"2. histórico"| OraculoDAO["dao.OraculoDAO"]
-    Historico -->|"3. fonte"| Simulado["oraculo.OraculoSimulado"]
+    Historico -->|"3. fonte"| Remoto["oraculo.Oraculo"]
+    Remoto --> Cliente["client.OracleSimpleClient"]
+    Cliente -->|"Socket + ObjectStreams"| Servidor[("Servidor do Oráculo")]
 ```
 
 | Componente | Responsabilidade |
 | ---------- | ---------------- |
-| [OraculoSimulado](../src/main/java/oraculo/OraculoSimulado.java) | Calcula a cotação de um dia pela fórmula da planilha de apuração |
+| [Oraculo](../src/main/java/oraculo/Oraculo.java) | Pede a cotação de um dia ao servidor e converte a resposta em `double` |
+| [OracleSimpleClient](../src/main/java/client/OracleSimpleClient.java) | Abre a conexão, envia `NetworkRequest` e lê `NetworkResponse` (pacote `network`) |
 | [CotacaoComHistorico](../src/main/java/oraculo/CotacaoComHistorico.java) | Decorator: grava no `OraculoDAO` cada cotação obtida da fonte e responde pelo registro nas consultas seguintes |
 | [ProvedorCotacao](../src/main/java/model/ProvedorCotacao.java) | Contrato da cotação por data; `ultimaCotacaoAte(data)` volta até 31 dias procurando a mais recente |
 | [OraculoController](../src/main/java/controller/OraculoController.java) | Cotação de hoje, de uma data e de um período (até 366 dias) |
 
 ---
 
-## 2. Cotação simulada
+## 2. Cotação do servidor
 
-```
-cotação     = base + flutuação + valorização
-valorização = valorizacaoInicial + fatorValorizacao · ln(n)    (n = 1 na data inicial)
-flutuação   = sorteio uniforme em [-amplitude, +amplitude)
-```
+`oraculo.Oraculo` monta um `NetworkRequest` com grupo, senha e a data pedida, envia pelo socket e
+lê a `NetworkResponse`. A conexão é aberta a cada consulta e não há tempo limite: um servidor que não responde trava a consulta.
 
-- A flutuação usa uma semente derivada da data, então **a cotação de um dia é sempre a mesma**.
-- O resultado é arredondado para 2 casas.
-- Não há cotação antes de `oraculo.dataInicial` nem depois de hoje.
-- Os parâmetros ficam nas chaves `oraculo.*` do `ftcoin.properties`. A configuração é recusada se
-  permitir cotação ≤ 0 (`base + valorizacaoInicial - amplitude ≤ 0`).
+- Data futura: não vai ao servidor; responde "não há cotação para a data futura".
+- Data sem cotação no servidor (`exchangeRates` vazio ou sem a data pedida): `erro.cotacao.naoEncontrada`.
+  É uma falha de negócio comum, então `ultimaCotacaoAte` volta para o dia anterior.
+- Conexão recusada ou interrompida, resposta inválida ou `errorMessage` do servidor: `OraculoIndisponivelException`. Essa exceção
+  interrompe `ultimaCotacaoAte`, para que uma queda do servidor não vire "sem cotação" em 31 dias.
+- Grupo e senha vêm de `oraculo.grupo` e `oraculo.senha`, que devem ficar em `ftcoin.local.properties`.
+  Endereço em `oraculo.host` e `oraculo.porta`.
 
 **Por que gravar o histórico?** Uma cotação usada numa movimentação não pode mudar depois, senão a
 apuração do passado mudaria. Com o `CotacaoComHistorico`, a primeira consulta de uma data grava a
@@ -69,6 +71,7 @@ O usuário **não cadastra** cotações: elas sempre vêm do Oráculo.
 | ------ | -------- |
 | View | `view/MenuOraculo.java` |
 | Controller | `controller/OraculoController.java` |
-| Oráculo | `oraculo/OraculoSimulado.java`, `oraculo/CotacaoComHistorico.java`, `model/ProvedorCotacao.java` |
+| Oráculo | `oraculo/Oraculo.java`, `oraculo/CotacaoComHistorico.java`, `model/ProvedorCotacao.java` |
+| Cliente de rede | `client/OracleSimpleClient.java`, `network/NetworkRequest.java`, `network/NetworkResponse.java`, `network/ExchangeRate.java` |
 | DAO | `dao/OraculoDAO.java`, `dao/OraculoDAOMemoria.java`, `dao/OraculoDAOMariaDB.java` |
-| Testes | `OraculoSimuladoTest`, `CotacaoComHistoricoTest`, `ProvedorCotacaoTest`, `OraculoControllerTest` |
+| Testes | `OraculoTest` (servidor falso no loopback), `CotacaoComHistoricoTest`, `ProvedorCotacaoTest`, `OraculoControllerTest` |
