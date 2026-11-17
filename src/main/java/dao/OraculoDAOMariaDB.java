@@ -11,7 +11,7 @@ import java.util.List;
 import model.Oraculo;
 
 /**
- * Cotações na tabela {@code cotacao} do MariaDB.
+ * Cotações na tabela {@code COTACAO} do MariaDB.
  */
 final class OraculoDAOMariaDB implements OraculoDAO {
 
@@ -29,7 +29,7 @@ final class OraculoDAOMariaDB implements OraculoDAO {
         }
         conexoes.executar("banco.incluirCotacao", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
-                    "INSERT INTO cotacao (data, valor) VALUES (?, ?)")) {
+                    "INSERT INTO COTACAO (Data, Valor) VALUES (?, ?)")) {
                 ps.setObject(1, oraculo.getData());
                 ps.setDouble(2, oraculo.getCotacao());
                 return ps.executeUpdate();
@@ -41,7 +41,7 @@ final class OraculoDAOMariaDB implements OraculoDAO {
     public OraculoDTO consultarPorData(LocalDate data) throws AppException {
         OraculoDTO cotacao = conexoes.executar("banco.consultarCotacao", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
-                    "SELECT data, valor FROM cotacao WHERE data = ?")) {
+                    "SELECT Data, Valor FROM COTACAO WHERE Data = ?")) {
                 ps.setObject(1, data);
                 try (ResultSet rs = ps.executeQuery()) {
                     return rs.next() ? mapear(rs) : null;
@@ -57,7 +57,7 @@ final class OraculoDAOMariaDB implements OraculoDAO {
     @Override
     public List<OraculoDTO> listarTodas() throws AppException {
         return conexoes.executar("banco.listarCotacoes", conexao -> {
-            try (PreparedStatement ps = conexao.prepareStatement("SELECT data, valor FROM cotacao ORDER BY data");
+            try (PreparedStatement ps = conexao.prepareStatement("SELECT Data, Valor FROM COTACAO ORDER BY Data");
                  ResultSet rs = ps.executeQuery()) {
                 List<OraculoDTO> lista = new ArrayList<>();
                 while (rs.next()) {
@@ -71,7 +71,7 @@ final class OraculoDAOMariaDB implements OraculoDAO {
     @Override
     public boolean existe(LocalDate data) throws AppException {
         return conexoes.executar("banco.verificarCotacao", conexao -> {
-            try (PreparedStatement ps = conexao.prepareStatement("SELECT 1 FROM cotacao WHERE data = ?")) {
+            try (PreparedStatement ps = conexao.prepareStatement("SELECT 1 FROM COTACAO WHERE Data = ?")) {
                 ps.setObject(1, data);
                 try (ResultSet rs = ps.executeQuery()) {
                     return rs.next();
@@ -81,6 +81,6 @@ final class OraculoDAOMariaDB implements OraculoDAO {
     }
 
     private static OraculoDTO mapear(ResultSet rs) throws SQLException {
-        return new OraculoDTO(rs.getObject("data", LocalDate.class), rs.getDouble("valor"));
+        return new OraculoDTO(rs.getObject("Data", LocalDate.class), rs.getDouble("Valor"));
     }
 }

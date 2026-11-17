@@ -64,7 +64,7 @@ sequenceDiagram
     Main->>U: pergunta o idioma (se idioma não estiver configurado)
     Main->>P: mariaDB(configuração)
     alt banco acessível
-        P-->>Main: DAOs do MariaDB (tabelas criadas se faltarem)
+        P-->>Main: DAOs do MariaDB (cria COTACAO se faltar)
     else banco inacessível
         Main->>U: aviso com o motivo
         Main->>P: emMemoria()

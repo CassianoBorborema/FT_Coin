@@ -133,11 +133,11 @@ public abstract class PersistenciaContrato {
     @Test
     void quantidadeFracionariaEhPreservada() throws AppException {
         int carteira = novaCarteira();
-        MovimentacaoDTO compra = new MovimentacaoDTO(0, carteira, DIA_1, TipoMovimentacao.COMPRA, 0.12345678);
+        MovimentacaoDTO compra = new MovimentacaoDTO(0, carteira, DIA_1, TipoMovimentacao.COMPRA, 0.123);
 
         movimentacoes.incluir(compra);
 
-        assertEquals(0.12345678, movimentacoes.consultarPorId(compra.getIdMovimento()).getQuantidade(), TOLERANCIA);
+        assertEquals(0.123, movimentacoes.consultarPorId(compra.getIdMovimento()).getQuantidade(), TOLERANCIA);
     }
 
     @Test

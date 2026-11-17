@@ -14,6 +14,8 @@ import java.util.NoSuchElementException;
 import model.ProvedorCotacao;
 import oraculo.CotacaoComHistorico;
 import oraculo.Oraculo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import view.Console;
 import view.MenuAjuda;
 import view.MenuCarteira;
@@ -27,21 +29,27 @@ import view.MenuRelatorios;
  */
 public final class Main {
 
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
+
     private Main() {
     }
 
     public static void main(String[] args) {
         Console console = Console.doTerminal();
+        log.info("Aplicação iniciada");
         try {
             Configuracao configuracao = Configuracao.carregar();
             escolherIdioma(configuracao, console);
             MenuPrincipal menu = montarAplicacao(configuracao, console);
             console.exibir(Mensagens.get("app.boasVindas"));
             menu.exibir();
+            log.info("Aplicação encerrada");
             console.exibir(Mensagens.get("app.saindo"));
         } catch (AppException e) {
+            log.error("Falha ao iniciar a aplicação", e);
             console.exibirErro(Mensagens.get("app.falhaInicio", e));
         } catch (NoSuchElementException _) {
+            log.info("Entrada encerrada");
             console.exibir(Mensagens.get("app.entradaEncerrada"));
         }
     }
@@ -72,6 +80,7 @@ public final class Main {
         LocalDate vigenciaCredito = configuracao.getData("credito.vigencia");
         Persistencia persistencia = escolherPersistencia(configuracao, console);
         console.exibir(Mensagens.get("app.persistencia", persistencia.descricao()));
+        log.info("Persistência: {}", persistencia.descricao());
 
         ProvedorCotacao cotacoes = new CotacaoComHistorico(
                 new Oraculo(configuracao, relogio),
@@ -105,6 +114,7 @@ public final class Main {
                 try {
                     yield Persistencia.mariaDB(configuracao);
                 } catch (AppException e) {
+                    log.warn("MariaDB indisponível ({}); usando persistência em memória", e.getChave());
                     console.exibir(Mensagens.get("app.mariaDBIndisponivel", e));
                     yield Persistencia.emMemoria();
                 }

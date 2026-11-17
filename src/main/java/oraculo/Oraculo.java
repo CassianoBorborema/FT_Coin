@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Objects;
 import model.ProvedorCotacao;
 import network.ExchangeRate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Cotação obtida do servidor do Oráculo pelo {@link OracleSimpleClient}.
@@ -20,6 +22,8 @@ import network.ExchangeRate;
  * </p>
  */
 public class Oraculo implements ProvedorCotacao {
+
+    private static final Logger log = LoggerFactory.getLogger(Oraculo.class);
 
     private final OracleSimpleClient cliente;
     private final Clock relogio;
@@ -47,6 +51,7 @@ public class Oraculo implements ProvedorCotacao {
             throw new AppException("erro.cotacao.futura", data);
         }
 
+        log.debug("Consultando o Oráculo: {}", data);
         List<ExchangeRate> recebidas = buscar(data);
         for (ExchangeRate recebida : recebidas) {
             if (data.equals(recebida.getDate()) && recebida.getValue() != null) {
@@ -55,6 +60,7 @@ public class Oraculo implements ProvedorCotacao {
                 return cotacao.getCotacao();
             }
         }
+        log.debug("O Oráculo não tem cotação em {}", data);
         throw new AppException("erro.cotacao.naoEncontrada", data);
     }
 
@@ -63,6 +69,7 @@ public class Oraculo implements ProvedorCotacao {
             List<ExchangeRate> recebidas = cliente.consultar(data, data);
             return Objects.requireNonNullElse(recebidas, List.of());
         } catch (Exception e) {
+            log.warn("Oráculo indisponível ao consultar {}", data, e);
             throw new OraculoIndisponivelException(e, Objects.toString(e.getMessage(), e.getClass().getSimpleName()));
         }
     }

@@ -3,6 +3,7 @@ package oraculo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import client.OracleSimpleClient;
 import dto.OraculoDTO;
@@ -25,6 +26,7 @@ import network.NetworkResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import testutil.CotacoesFixas;
+import testutil.RegistroDeLogs;
 
 class OraculoTest {
 
@@ -81,6 +83,18 @@ class OraculoTest {
         Oraculo oraculo = servidorQue(pedido -> new NetworkResponse(null, "Senha inválida"));
 
         assertThrows(OraculoIndisponivelException.class, () -> oraculo.cotacaoEm(HOJE));
+    }
+
+    @Test
+    void falhaDoServidorEhRegistradaComAviso() throws Exception {
+        Oraculo oraculo = servidorQue(pedido -> new NetworkResponse(null, "Senha inválida"));
+
+        try (RegistroDeLogs logs = new RegistroDeLogs(Oraculo.class)) {
+            assertThrows(OraculoIndisponivelException.class, () -> oraculo.cotacaoEm(HOJE));
+
+            assertTrue(logs.texto().contains("WARN Oráculo indisponível ao consultar 2026-01-30"));
+            assertFalse(logs.texto().contains(SENHA));
+        }
     }
 
     @Test

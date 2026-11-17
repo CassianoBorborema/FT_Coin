@@ -13,12 +13,16 @@ import model.Movimentacao;
 import model.Posicao;
 import model.ProvedorCotacao;
 import model.TipoMovimentacao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Registro de compras, vendas, créditos e saques. Toda movimentação é feita na data do sistema,
  * à cotação do dia informada pelo Oráculo.
  */
 public class MovimentacaoController {
+
+    private static final Logger log = LoggerFactory.getLogger(MovimentacaoController.class);
 
     private final MovimentacaoDAO movimentacaoDAO;
     private final CarteiraDAO carteiraDAO;
@@ -84,6 +88,8 @@ public class MovimentacaoController {
 
         MovimentacaoDTO dto = movimentacao.toDTO();
         movimentacaoDAO.incluir(dto);
+        log.info("Movimentação registrada: id={}, carteira={}, tipo={}, quantidade={}, cotação={}",
+                dto.getIdMovimento(), idCarteira, tipo, quantidade, cotacao);
         return movimentacaoDAO.consultarPorId(dto.getIdMovimento());
     }
 

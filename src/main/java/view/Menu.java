@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base dos menus: numera as opções na ordem em que foram adicionadas, executa a escolhida e
@@ -14,6 +16,7 @@ import java.util.Optional;
  */
 public abstract class Menu {
 
+    private static final Logger log = LoggerFactory.getLogger(Menu.class);
     private static final int OPCAO_SAIR = 0;
 
     protected final Console console;
@@ -104,8 +107,10 @@ public abstract class Menu {
         try {
             opcao.acao().executar();
         } catch (AppException e) {
+            log.warn("Operação recusada: {}", e.getChave());
             console.exibirErro(e.getMessage());
         } catch (RuntimeException e) {
+            log.error("Erro inesperado em uma opção do menu", e);
             console.exibirErro(Mensagens.get("menu.erroInesperado", e.getClass().getSimpleName(), e.getMessage()));
         }
     }

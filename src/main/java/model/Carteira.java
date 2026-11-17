@@ -8,6 +8,9 @@ import exception.AppException;
  */
 public class Carteira {
 
+    /** Tamanho das colunas {@code Titular} e {@code Corretora} da tabela {@code CARTEIRA}. */
+    public static final int TAMANHO_MAXIMO = 50;
+
     private int identificador;
     private String nomeTitular;
     private String corretora;
@@ -49,8 +52,14 @@ public class Carteira {
         if (nomeTitular == null || nomeTitular.trim().isEmpty()) {
             throw new AppException("erro.carteira.semTitular");
         }
+        if (nomeTitular.length() > TAMANHO_MAXIMO) {
+            throw new AppException("erro.carteira.titularLongo", TAMANHO_MAXIMO);
+        }
         if (corretora == null || corretora.trim().isEmpty()) {
             throw new AppException("erro.carteira.semCorretora");
+        }
+        if (corretora.length() > TAMANHO_MAXIMO) {
+            throw new AppException("erro.carteira.corretoraLonga", TAMANHO_MAXIMO);
         }
     }
 

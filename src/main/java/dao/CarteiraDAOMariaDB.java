@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Carteiras na tabela {@code carteira} do MariaDB.
+ * Carteiras na tabela {@code CARTEIRA} do MariaDB.
  */
 final class CarteiraDAOMariaDB implements CarteiraDAO {
 
-    private static final String COLUNAS = "id, nome_titular, corretora";
+    private static final String COLUNAS = "IdCarteira, Titular, Corretora";
 
     private final FabricaConexao conexoes;
 
@@ -32,8 +32,8 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
         }
         int id = conexoes.executar("banco.incluirCarteira", conexao -> {
             String sql = informado == 0
-                    ? "INSERT INTO carteira (nome_titular, corretora) VALUES (?, ?)"
-                    : "INSERT INTO carteira (nome_titular, corretora, id) VALUES (?, ?, ?)";
+                    ? "INSERT INTO CARTEIRA (Titular, Corretora) VALUES (?, ?)"
+                    : "INSERT INTO CARTEIRA (Titular, Corretora, IdCarteira) VALUES (?, ?, ?)";
             try (PreparedStatement ps = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, carteira.getNomeTitular());
                 ps.setString(2, carteira.getCorretora());
@@ -51,7 +51,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
     public CarteiraDTO consultarPorId(int identificador) throws AppException {
         CarteiraDTO carteira = conexoes.executar("banco.consultarCarteira", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
-                    "SELECT " + COLUNAS + " FROM carteira WHERE id = ?")) {
+                    "SELECT " + COLUNAS + " FROM CARTEIRA WHERE IdCarteira = ?")) {
                 ps.setInt(1, identificador);
                 try (ResultSet rs = ps.executeQuery()) {
                     return rs.next() ? mapear(rs) : null;
@@ -68,7 +68,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
     public List<CarteiraDTO> listarTodas() throws AppException {
         return conexoes.executar("banco.listarCarteiras", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
-                    "SELECT " + COLUNAS + " FROM carteira ORDER BY id");
+                    "SELECT " + COLUNAS + " FROM CARTEIRA ORDER BY IdCarteira");
                  ResultSet rs = ps.executeQuery()) {
                 List<CarteiraDTO> lista = new ArrayList<>();
                 while (rs.next()) {
@@ -83,7 +83,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
     public void atualizar(CarteiraDTO carteira) throws AppException {
         int alteradas = conexoes.executar("banco.atualizarCarteira", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
-                    "UPDATE carteira SET nome_titular = ?, corretora = ? WHERE id = ?")) {
+                    "UPDATE CARTEIRA SET Titular = ?, Corretora = ? WHERE IdCarteira = ?")) {
                 ps.setString(1, carteira.getNomeTitular());
                 ps.setString(2, carteira.getCorretora());
                 ps.setInt(3, carteira.getIdentificador());
@@ -98,7 +98,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
     @Override
     public void excluir(int identificador) throws AppException {
         int excluidas = conexoes.executar("banco.excluirCarteira", conexao -> {
-            try (PreparedStatement ps = conexao.prepareStatement("DELETE FROM carteira WHERE id = ?")) {
+            try (PreparedStatement ps = conexao.prepareStatement("DELETE FROM CARTEIRA WHERE IdCarteira = ?")) {
                 ps.setInt(1, identificador);
                 return ps.executeUpdate();
             }
@@ -111,7 +111,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
     @Override
     public boolean existe(int identificador) throws AppException {
         return conexoes.executar("banco.verificarCarteira", conexao -> {
-            try (PreparedStatement ps = conexao.prepareStatement("SELECT 1 FROM carteira WHERE id = ?")) {
+            try (PreparedStatement ps = conexao.prepareStatement("SELECT 1 FROM CARTEIRA WHERE IdCarteira = ?")) {
                 ps.setInt(1, identificador);
                 try (ResultSet rs = ps.executeQuery()) {
                     return rs.next();
@@ -121,7 +121,7 @@ final class CarteiraDAOMariaDB implements CarteiraDAO {
     }
 
     private static CarteiraDTO mapear(ResultSet rs) throws SQLException {
-        return new CarteiraDTO(rs.getInt("id"), rs.getString("nome_titular"), rs.getString("corretora"));
+        return new CarteiraDTO(rs.getInt("IdCarteira"), rs.getString("Titular"), rs.getString("Corretora"));
     }
 
     private static int chaveGerada(PreparedStatement ps) throws SQLException {

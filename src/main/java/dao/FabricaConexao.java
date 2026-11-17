@@ -14,12 +14,16 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Conexões JDBC com o MariaDB. Cada operação abre e fecha a própria conexão, o que basta para uma
  * aplicação de console com um usuário por vez.
  */
 final class FabricaConexao {
+
+    private static final Logger log = LoggerFactory.getLogger(FabricaConexao.class);
 
     private static final String SCRIPT_SCHEMA = "/db/schema.sql";
 
@@ -79,6 +83,7 @@ final class FabricaConexao {
         try {
             return DriverManager.getConnection(configuracao.url(), propriedades);
         } catch (SQLException e) {
+            log.warn("Falha ao conectar ao banco {} com o usuário {}", configuracao.url(), configuracao.usuario(), e);
             throw new PersistenciaException(e, "banco.semConexao", configuracao.url(), configuracao.usuario(),
                     e.getMessage());
         }
@@ -101,6 +106,7 @@ final class FabricaConexao {
         try (Connection conexao = abrir()) {
             return operacao.executar(conexao);
         } catch (SQLException e) {
+            log.error("Falha na operação do banco ({})", chaveErro, e);
             throw new PersistenciaException(e, chaveErro, e.getMessage());
         }
     }
@@ -132,6 +138,7 @@ final class FabricaConexao {
             }
             return null;
         });
+        log.info("Tabelas do banco verificadas");
     }
 
     private static String lerScript() throws AppException {

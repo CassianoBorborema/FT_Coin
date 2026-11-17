@@ -38,7 +38,8 @@ A aplicação **compila e executa** todos os fluxos ponta a ponta.
 
 ```
 FT_Coin/
-├── pom.xml                                  # Build Maven (Java 25, JUnit, Mockito, JaCoCo, MariaDB)
+├── pom.xml                                  # Build Maven (Java 25, JUnit, Mockito, JaCoCo, MariaDB, Logback)
+├── ftcoin.local.properties.example          # Modelo do ftcoin.local.properties (credenciais, fora do Git)
 ├── docs/
 │   ├── README.md
 │   ├── fluxo-carteira.md
@@ -96,7 +97,8 @@ FT_Coin/
     │   │       ├── AppException.java        # Chave da mensagem + argumentos, traduzida ao ser lida
     │   │       └── PersistenciaException.java
     │   └── resources/
-    │       ├── ftcoin.properties            # Configuração (idioma, persistência, banco, crédito e oráculo)
+    │       ├── ftcoin.properties            # Configuração padrão, sem credenciais (idioma, persistência, banco, crédito e oráculo)
+│       ├── logback.xml                  # Logs em arquivo com rotação
     │       ├── db/
     │       │   └── schema.sql               # Tabelas do MariaDB
     │       ├── i18n/
@@ -133,13 +135,20 @@ FT_Coin/
 ### Modelo de dados (referência)
 
 
-| Tabela           | Campos principais                                                               |
-| ---------------- | ------------------------------------------------------------------------------- |
-| **carteira**     | `id` (PK), `nome_titular`, `corretora`                                          |
-| **movimentacao** | `id` (PK), `id_carteira` (FK), `data`, `tipo` (`C`/`V`/`D`/`S`), `quantidade`   |
-| **cotacao**      | `data` (PK), `valor`                                                            |
+| Tabela           | Origem                                  | Campos principais                                                                          |
+| ---------------- | --------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **CARTEIRA**     | Já existia no banco (oficial, 2022)     | `IdCarteira` (PK), `Titular` (até 50), `Corretora` (até 50)                                |
+| **MOVIMENTACAO** | Já existia no banco (oficial, 2022)     | `IdMovimento` (PK), `IdCarteira` (FK), `Data`, `TipoOperacao` (`C`/`V`/`D`/`S`), `Quantidade` (até 3 casas, menor que 10.000.000) |
+| **COTACAO**      | Criada pelo projeto                     | `Data` (PK), `Valor`                                                                       |
 
-O script completo está em [schema.sql](src/main/resources/db/schema.sql).
+Tabelas criadas pelo projeto têm o nome em maiúsculas. O servidor diferencia maiúsculas de minúsculas,
+então o SQL usa os nomes exatos. A aplicação só executa `CREATE TABLE IF NOT EXISTS` (nunca `ALTER` nem
+`DROP`): no banco do grupo, `CARTEIRA` e `MOVIMENTACAO` já existem e só `COTACAO` é criada. Num banco vazio,
+o script cria as três. Os limites de tamanho e de casas decimais são validados no modelo, para a memória e o
+banco aceitarem os mesmos valores.
+
+O script completo está em [schema.sql](src/main/resources/db/schema.sql). A especificação da mudança está em
+[docs/spec-banco.md](docs/spec-banco.md).
 
 
 ---
@@ -185,7 +194,7 @@ Outros comandos úteis:
 
 ### Usando o MariaDB
 
-Ao iniciar, a aplicação tenta conectar ao MariaDB. Se conseguir, cria as tabelas que faltarem e grava
+Ao iniciar, a aplicação tenta conectar ao MariaDB. Se conseguir, cria as tabelas que faltarem (no banco do grupo, só `COTACAO`) e grava
 tudo no banco. Se não conseguir (banco fora do ar, senha errada ou ausente), mostra o motivo e segue
 com a **persistência em memória**, em que os dados são perdidos ao sair.
 
@@ -200,7 +209,8 @@ Para que a conexão funcione:
      mariadb:11.4
    ```
 
-2. Informe a senha, sem colocá-la no `ftcoin.properties` versionado. Qualquer uma das formas serve:
+2. Informe a senha, sem colocá-la no `ftcoin.properties` versionado. Qualquer uma das formas serve
+   (a ordem de precedência está em [Configuração local](#configuração-local)):
 
    | Forma                          | Exemplo                                     |
    | ------------------------------ | ------------------------------------------- |
@@ -211,6 +221,36 @@ Para que a conexão funcione:
    URL e usuário padrão: `jdbc:mariadb://localhost:3306/ftcoin` e `ftcoin` (chaves `db.url` e `db.usuario`).
 
 3. Rode normalmente. A primeira linha mostra qual persistência está em uso.
+
+### Configuração local
+
+O `ftcoin.properties` versionado traz só os valores padrão, sem credenciais. Endereço do banco, senha e dados
+do Oráculo ficam no **`ftcoin.local.properties`**, na pasta de onde a aplicação é executada. O arquivo é
+ignorado pelo Git. Para criá-lo, copie o modelo e preencha:
+
+```bash
+cp ftcoin.local.properties.example ftcoin.local.properties
+```
+
+Cada chave é procurada nesta ordem: propriedade `-D`, variável de ambiente `FTCOIN_<CHAVE>`, o
+`ftcoin.local.properties` e, por fim, o `ftcoin.properties`.
+
+### Logs
+
+A aplicação registra eventos em `logs/ftcoin.log` (pasta ignorada pelo Git), com Logback via SLF4J. Cada linha
+tem data, hora, nível, classe e mensagem; erros trazem a pilha da exceção. O arquivo é trocado a cada 1 MB e
+são guardados até 5 anteriores (`logs/ftcoin.1.log` a `ftcoin.5.log`). O console fica livre para os menus.
+
+| Nível | O que registra |
+| ----- | -------------- |
+| `INFO` | Início e fim, persistência em uso, tabelas verificadas, carteira incluída, editada ou excluída, movimentação registrada e cotação gravada no histórico |
+| `WARN` | MariaDB indisponível, Oráculo indisponível e operações recusadas por regra de negócio (só a chave da mensagem) |
+| `ERROR` | Falha em comando do banco, erro inesperado em um menu e falha ao iniciar |
+| `DEBUG` | Consultas ao Oráculo e cotações lidas do histórico |
+
+O nível padrão é `INFO`. Para ver `DEBUG`, use `FTCOIN_LOG_NIVEL=DEBUG` ou `-DFTCOIN_LOG_NIVEL=DEBUG`.
+Senhas e nomes de titulares não são registrados. A configuração está em
+[logback.xml](src/main/resources/logback.xml); os testes usam um `logback-test.xml` silencioso.
 
 ### Idioma
 
@@ -264,13 +304,10 @@ esperar o tempo de conexão), use `persistencia=memoria` por qualquer uma das fo
 ### Oráculo
 
 As cotações são pedidas ao servidor do Oráculo pelo cliente em `src/main/java/client/OracleSimpleClient.java`.
-O endereço fica em `ftcoin.properties` (`oraculo.host`, `oraculo.porta`). Grupo e senha devem ir para
-`ftcoin.local.properties`, que fica fora do Git:
-
-```
-oraculo.grupo=NOME_DO_GRUPO
-oraculo.senha=SENHA_DO_GRUPO
-```
+Endereço, grupo e senha vêm das chaves `oraculo.host`, `oraculo.porta`, `oraculo.grupo` e `oraculo.senha`,
+que não têm valor no `ftcoin.properties` versionado. Preencha-as no `ftcoin.local.properties` (veja
+[Configuração local](#configuração-local)). O mesmo cliente pode ser rodado sozinho para testar a conexão:
+`java -cp target/classes client.OracleSimpleClient`.
 
 Datas futuras não são consultadas no servidor. Uma data sem cotação volta para o dia anterior, até 31 dias,
 como na busca da última cotação. Falha de conexão ou erro do servidor é mostrado ao usuário sem essa busca.

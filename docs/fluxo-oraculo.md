@@ -48,8 +48,8 @@ lê a `NetworkResponse`. A conexão é aberta a cada consulta e não há tempo l
 
 **Por que gravar o histórico?** Uma cotação usada numa movimentação não pode mudar depois, senão a
 apuração do passado mudaria. Com o `CotacaoComHistorico`, a primeira consulta de uma data grava a
-cotação, e as seguintes leem o que foi gravado, mesmo que a fonte seja trocada pela API real. O mapa em
-memória evita ir ao banco mais de uma vez por data.
+cotação na tabela `COTACAO` (criada pelo projeto; no MariaDB), e as seguintes leem o que foi gravado,
+inclusive com o servidor do Oráculo fora do ar. O mapa em memória evita ir ao banco mais de uma vez por data.
 
 ---
 

@@ -11,6 +11,7 @@ import dto.CarteiraDTO;
 import dto.MovimentacaoDTO;
 import exception.AppException;
 import java.time.LocalDate;
+import model.Carteira;
 import model.TipoMovimentacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,18 @@ class CarteiraControllerTest {
     void incluirExigeTitularECorretora() {
         assertThrows(AppException.class, () -> controller.incluir(" ", "XP"));
         assertThrows(AppException.class, () -> controller.incluir("Ana", null));
+    }
+
+    @Test
+    void titularECorretoraAceitamNoMaximoOTamanhoDaColuna() throws AppException {
+        String limite = "a".repeat(Carteira.TAMANHO_MAXIMO);
+        String acima = "a".repeat(Carteira.TAMANHO_MAXIMO + 1);
+
+        assertEquals(1, controller.incluir(limite, limite).getIdentificador());
+        assertEquals("erro.carteira.titularLongo",
+                assertThrows(AppException.class, () -> controller.incluir(acima, "XP")).getChave());
+        assertEquals("erro.carteira.corretoraLonga",
+                assertThrows(AppException.class, () -> controller.editar(1, "Ana", acima)).getChave());
     }
 
     @Test

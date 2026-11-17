@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import model.ProvedorCotacao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Registra no {@link OraculoDAO} cada cotação obtida da fonte e responde pelo registro nas
@@ -15,6 +17,8 @@ import model.ProvedorCotacao;
  * fica em memória e o banco é consultado só uma vez por data.
  */
 public class CotacaoComHistorico implements ProvedorCotacao {
+
+    private static final Logger log = LoggerFactory.getLogger(CotacaoComHistorico.class);
 
     private final ProvedorCotacao fonte;
     private final OraculoDAO historico;
@@ -34,9 +38,11 @@ public class CotacaoComHistorico implements ProvedorCotacao {
         double cotacao;
         if (data != null && historico.existe(data)) {
             cotacao = historico.consultarPorData(data).getCotacao();
+            log.debug("Cotação de {} lida do histórico: {}", data, cotacao);
         } else {
             cotacao = fonte.cotacaoEm(data);
             historico.incluir(new OraculoDTO(data, cotacao));
+            log.info("Cotação de {} obtida da fonte e gravada no histórico: {}", data, cotacao);
         }
         emMemoria.put(data, cotacao);
         return cotacao;

@@ -17,6 +17,7 @@ import exception.AppException;
 import exception.PersistenciaException;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import model.Movimentacao;
 import model.ProvedorCotacao;
 import model.TipoMovimentacao;
 import org.junit.jupiter.api.BeforeEach;
@@ -134,6 +135,17 @@ class MovimentacaoControllerTest {
     void quantidadeDeveSerPositiva() {
         assertThrows(AppException.class, () -> controller.creditar(1, 0));
         assertThrows(AppException.class, () -> controller.registrarCompra(1, -1));
+    }
+
+    @Test
+    void quantidadeRespeitaOsLimitesDaColuna() throws AppException {
+        controller.creditar(1, 9_999_999.999);
+
+        assertEquals("erro.movimentacao.quantidadeCasas",
+                assertThrows(AppException.class, () -> controller.creditar(1, 1.0001)).getChave());
+        assertEquals("erro.movimentacao.quantidadeMaxima",
+                assertThrows(AppException.class, () -> controller.creditar(1, Movimentacao.QUANTIDADE_MAXIMA))
+                        .getChave());
     }
 
     private MovimentacaoController criarController(ProvedorCotacao cotacoes, LocalDate vigencia) {

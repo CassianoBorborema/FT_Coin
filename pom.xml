@@ -20,6 +20,8 @@
 
         <junit.version>5.11.4</junit.version>
         <mariadb.version>3.5.10</mariadb.version>
+        <slf4j.version>2.0.17</slf4j.version>
+        <logback.version>1.5.18</logback.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <mockito.version>5.24.0</mockito.version>
         <jacoco.version>0.8.15</jacoco.version>
@@ -43,6 +45,17 @@
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <version>${mariadb.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
 
         <dependency>

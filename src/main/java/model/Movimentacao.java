@@ -2,11 +2,16 @@ package model;
 
 import dto.MovimentacaoDTO;
 import exception.AppException;
+import java.math.BigDecimal;
 
 /**
  * Compra, venda, crédito ou saque registrado em uma carteira.
  */
 public class Movimentacao {
+
+    /** Limites da coluna {@code Quantidade DECIMAL(10,3)} da tabela {@code MOVIMENTACAO}. */
+    public static final int CASAS_DECIMAIS = 3;
+    public static final int QUANTIDADE_MAXIMA = 10_000_000;
 
     private int idMovimento;
     private int idCarteira;
@@ -77,6 +82,12 @@ public class Movimentacao {
         }
         if (quantidade <= 0) {
             throw new AppException("erro.movimentacao.quantidade");
+        }
+        if (quantidade >= QUANTIDADE_MAXIMA) {
+            throw new AppException("erro.movimentacao.quantidadeMaxima", (long) QUANTIDADE_MAXIMA);
+        }
+        if (BigDecimal.valueOf(quantidade).scale() > CASAS_DECIMAIS) {
+            throw new AppException("erro.movimentacao.quantidadeCasas", CASAS_DECIMAIS);
         }
     }
 

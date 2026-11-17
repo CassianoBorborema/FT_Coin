@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import testutil.CotacoesFixas;
+import testutil.RegistroDeLogs;
 
 class CotacaoComHistoricoTest {
 
@@ -35,6 +36,17 @@ class CotacaoComHistoricoTest {
 
         assertTrue(historico.existe(DIA));
         assertEquals(13.84, historico.consultarPorData(DIA).getCotacao());
+    }
+
+    @Test
+    void gravacaoNoHistoricoEhRegistradaNoLog() throws AppException {
+        try (RegistroDeLogs logs = new RegistroDeLogs(CotacaoComHistorico.class)) {
+            cotacoes.cotacaoEm(DIA);
+            cotacoes.cotacaoEm(DIA);
+
+            assertEquals(1, logs.eventos().size());
+            assertTrue(logs.texto().contains("INFO Cotação de 2026-01-10 obtida da fonte e gravada no histórico: 13.84"));
+        }
     }
 
     @Test

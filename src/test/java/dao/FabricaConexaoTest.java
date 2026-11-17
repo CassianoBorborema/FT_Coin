@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.junit.jupiter.api.Test;
+import testutil.RegistroDeLogs;
 
 class FabricaConexaoTest {
 
@@ -61,5 +62,18 @@ class FabricaConexaoTest {
 
         PersistenciaException erro = assertThrows(PersistenciaException.class, conexoes::testarConexao);
         assertTrue(erro.getMessage().contains("Não foi possível conectar"));
+    }
+
+    @Test
+    void falhaDeConexaoEhRegistradaSemASenha() {
+        FabricaConexao conexoes = new FabricaConexao(
+                new FabricaConexao.ConfiguracaoBanco("jdbc:mariadb://127.0.0.1:1/ftcoin", "ftcoin", "segredo", 1));
+
+        try (RegistroDeLogs logs = new RegistroDeLogs(FabricaConexao.class)) {
+            assertThrows(PersistenciaException.class, conexoes::testarConexao);
+
+            assertTrue(logs.texto().contains("WARN Falha ao conectar ao banco jdbc:mariadb://127.0.0.1:1/ftcoin"));
+            assertFalse(logs.texto().contains("segredo"));
+        }
     }
 }

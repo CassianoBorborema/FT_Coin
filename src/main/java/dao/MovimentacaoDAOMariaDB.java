@@ -13,11 +13,11 @@ import java.util.List;
 import model.TipoMovimentacao;
 
 /**
- * Movimentações na tabela {@code movimentacao} do MariaDB.
+ * Movimentações na tabela {@code MOVIMENTACAO} do MariaDB.
  */
 final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
-    private static final String COLUNAS = "id, id_carteira, data, tipo, quantidade";
+    private static final String COLUNAS = "IdMovimento, IdCarteira, Data, TipoOperacao, Quantidade";
 
     private final FabricaConexao conexoes;
 
@@ -34,8 +34,8 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
         }
         int id = conexoes.executar("banco.incluirMovimentacao", conexao -> {
             String sql = informado == 0
-                    ? "INSERT INTO movimentacao (id_carteira, data, tipo, quantidade) VALUES (?, ?, ?, ?)"
-                    : "INSERT INTO movimentacao (id_carteira, data, tipo, quantidade, id) VALUES (?, ?, ?, ?, ?)";
+                    ? "INSERT INTO MOVIMENTACAO (IdCarteira, Data, TipoOperacao, Quantidade) VALUES (?, ?, ?, ?)"
+                    : "INSERT INTO MOVIMENTACAO (IdCarteira, Data, TipoOperacao, Quantidade, IdMovimento) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement ps = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, movimentacao.getIdCarteira());
                 ps.setObject(2, movimentacao.getData());
@@ -55,7 +55,7 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     public MovimentacaoDTO consultarPorId(int idMovimento) throws AppException {
         MovimentacaoDTO movimentacao = conexoes.executar("banco.consultarMovimentacao", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
-                    "SELECT " + COLUNAS + " FROM movimentacao WHERE id = ?")) {
+                    "SELECT " + COLUNAS + " FROM MOVIMENTACAO WHERE IdMovimento = ?")) {
                 ps.setInt(1, idMovimento);
                 try (ResultSet rs = ps.executeQuery()) {
                     return rs.next() ? mapear(rs) : null;
@@ -72,7 +72,7 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     public List<MovimentacaoDTO> listarPorCarteira(int idCarteira) throws AppException {
         return conexoes.executar("banco.listarMovimentacoes", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
-                    "SELECT " + COLUNAS + " FROM movimentacao WHERE id_carteira = ? ORDER BY data, id")) {
+                    "SELECT " + COLUNAS + " FROM MOVIMENTACAO WHERE IdCarteira = ? ORDER BY Data, IdMovimento")) {
                 ps.setInt(1, idCarteira);
                 try (ResultSet rs = ps.executeQuery()) {
                     List<MovimentacaoDTO> lista = new ArrayList<>();
@@ -89,7 +89,7 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     public boolean possuiMovimentacoes(int idCarteira) throws AppException {
         return conexoes.executar("banco.verificarMovimentacoes", conexao -> {
             try (PreparedStatement ps = conexao.prepareStatement(
-                    "SELECT 1 FROM movimentacao WHERE id_carteira = ? LIMIT 1")) {
+                    "SELECT 1 FROM MOVIMENTACAO WHERE IdCarteira = ? LIMIT 1")) {
                 ps.setInt(1, idCarteira);
                 try (ResultSet rs = ps.executeQuery()) {
                     return rs.next();
@@ -100,7 +100,7 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
     private boolean existeId(int idMovimento) throws AppException {
         return conexoes.executar("banco.verificarMovimentacao", conexao -> {
-            try (PreparedStatement ps = conexao.prepareStatement("SELECT 1 FROM movimentacao WHERE id = ?")) {
+            try (PreparedStatement ps = conexao.prepareStatement("SELECT 1 FROM MOVIMENTACAO WHERE IdMovimento = ?")) {
                 ps.setInt(1, idMovimento);
                 try (ResultSet rs = ps.executeQuery()) {
                     return rs.next();
@@ -111,11 +111,11 @@ final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
     private static MovimentacaoDTO mapear(ResultSet rs) throws SQLException {
         return new MovimentacaoDTO(
-                rs.getInt("id"),
-                rs.getInt("id_carteira"),
-                rs.getObject("data", LocalDate.class),
-                tipo(rs.getString("tipo")),
-                rs.getDouble("quantidade"));
+                rs.getInt("IdMovimento"),
+                rs.getInt("IdCarteira"),
+                rs.getObject("Data", LocalDate.class),
+                tipo(rs.getString("TipoOperacao")),
+                rs.getDouble("Quantidade"));
     }
 
     private static TipoMovimentacao tipo(String codigo) throws SQLException {

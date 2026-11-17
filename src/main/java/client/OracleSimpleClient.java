@@ -25,6 +25,7 @@
 
 package client;
 
+import config.Configuracao;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -37,17 +38,10 @@ import network.NetworkResponse;
 
 public final class OracleSimpleClient
    {
-   private final static String GROUP_NAME     = "GROUP";
-   private final static String GROUP_PASSWORD = "PASSWORD";
    private final String        host;
    private final int           port;
    private final String        groupName;
    private final String        groupPassword;
-
-   public OracleSimpleClient(String host, int port)
-      {
-      this(host, port, GROUP_NAME, GROUP_PASSWORD);
-      }
 
    public OracleSimpleClient(String host, int port, String groupName, String groupPassword)
       {
@@ -63,24 +57,14 @@ public final class OracleSimpleClient
       final LocalDate lastDate   = LocalDate.now();
       final LocalDate firstDate  = lastDate.minusDays(7);
 
-      // default values; use line arguments to modify
-      String          serverIP   = "localhost";
-      int             serverPort = 1234;
-
       try
          {
-         if (args.length != 2)
-            {
-            System.out.println("Usage: java OracleSimpleClient <host> <port>");
-            System.out.println("Using defaults: " + serverIP + ", " + serverPort);
-            }
-         else
-            {
-            serverIP   = args[0];
-            serverPort = Integer.parseInt(args[1]);
-            }
-
-         final OracleSimpleClient client = new OracleSimpleClient(serverIP, serverPort);
+         final Configuracao configuracao = Configuracao.carregar();
+         final OracleSimpleClient client = new OracleSimpleClient(
+               configuracao.getTexto("oraculo.host"),
+               (int) configuracao.getInteiro("oraculo.porta"),
+               configuracao.getTexto("oraculo.grupo"),
+               configuracao.getTexto("oraculo.senha"));
          client.go(firstDate, lastDate);
 
          }
