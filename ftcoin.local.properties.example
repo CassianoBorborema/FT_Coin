@@ -1,9 +1,0 @@
-# Copie para ftcoin.local.properties (ignorado pelo Git) e preencha. Sobrescreve o ftcoin.properties.
-db.url=jdbc:mariadb://<host>:3306/<schema>
-db.usuario=<usuario>
-db.senha=<senha>
-
-oraculo.host=<host>
-oraculo.porta=1234
-oraculo.grupo=<grupo>
-oraculo.senha=<senha>
